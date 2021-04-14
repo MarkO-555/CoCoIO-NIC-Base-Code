@@ -1,0 +1,100 @@
+﻿This doc is the Cliff’s notes version of both the W5100s datasheet and the Uthernet manual, with CoCo translations. NOTE BIG ENDIAN ADDRESSING IS COMPLETELY NORMAL!!!
+
+Chip Addressing
+
+The CCIO can be jumpered to one of two base addresses, FF60 or FF70. The WizNet section has a 4 byte I/O range:
+
+	FF68 or FF78  -  Mode Register 
+	FF69 or FF79  -  Address High  
+	FF6A or FF7A  -  Address Low
+	FF6B or FF7B  -  Data Port     
+
+Note that Wiznet describes it’s lowest system side address as the ‘Mode Register’. They also describe the lowest address in the internal buffer as the ‘Mode Register’, as well as the lowest address in each of 4 socket config sections. 
+
+Writing to the external Mode Register at address &ff68 (or $ff78) controls chip startup, and reading that address returns the active mode. These bits are used:
+
+	7 – Software reset (auto cleared after reset)
+	4 – Ping block - ignore pings when using TCP/IP
+	3 – PPPoE – ADSL without a router, if you’re into that
+	1 – Address auto increment – strongly encouraged
+	0 – Indirect bus mode – MUST be set for CoCoIO
+
+
+Internal RAM
+
+To access the internal RAM, first write the register starting address to FFx9 and FFxA, then read or write the appropriate number of bytes at the data port FFxB. The address will auto-increte for each subsequent access, but it’s up to you to know how big each register is. We’ll cover data buffer handling a bit later (evil grin).
+
+
+Common Registers
+
+These control the local side network setup. Many can be left at default until you know they need changing. These are a must do for TCP/IP: 
+
+				   Start  Length
+	Mode Register (MR)	$0  1
+	Gateway Address 		$1  4
+	Subnet Mask 		$5  4
+	My MAC Address		$9  6
+	My IP Address 		$F  4
+
+
+See pg 18 of the WizNet 5100s datasheet for a complete list.
+
+
+Socket Registers 
+
+Socket registers control up to 4 ethernet connections. Socket 0 uses internal addresses $400-$4FF, with the other three starting at $500, $600, and $700. Here we’ll list socket 0 only. 
+	
+Mode Register ($400) – A logical starting place – define the new socket.  This register’s lower four bits define the socket type, and the upper 3 bits enable certain features:
+
+	  0  Closed
+	  1  TCP
+	  2  UDP
+	  3  IP Raw
+	  4  MAC Raw  (socket 0 only)
+	  5  PPPoE (Socket 0 only
+and maybe add one of these:
+	 32  disable delayed ACK (TCP) or set IGMP1 (multicast)
+ 	 64  promiscous mode (Socket 0, MAC raw mode only)
+	128  enable multicasting (UDP sockets only)
+
+
+Then configure the remote connection for that socket. Again leaving many things defaulted, this will configure a basic TCP/IP connection:
+
+					Start Length
+
+	local port PORT   	$404	2	
+	destination MAC		$406  6
+	foreign IP			$40C  4
+	foreign port DPORT	$410  2
+
+
+Now write to the Socket Command Register at $401 to make it do something
+
+	1   Open
+	2   Listen (wait for SYN)
+   	4   Connect (send SYN)
+   
+And check the Socket Status Register at $403 to see what it did
+
+	00	Closed
+	13	TCP opened
+	14	TCP Waiting for peer
+	17	TCP connected to peer
+	1C	TCP got disconnect request
+	22	UDP opened
+	32	IPRAW opened
+	42	MACraw opened
+
+
+Receiving Data
+
+With the socket opened, it’s time to move some bytes. Thw WizNet has a 16K internal buffer, by default this is split into 2K x 4 sockets xmit and 2K x 4 sockets receive.
+
+	$4000-5FFF Transmit buffers (TX)
+	$6000-7FFF Receive buffers (RX) 
+
+
+Like the register set, the 8 buffers share a common address range. You must provide a starting address and check your work with a mask byte (buffer size -1) for each buffer, from this range: 
+
+
+
