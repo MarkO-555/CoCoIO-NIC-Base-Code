@@ -1,0 +1,1 @@
+decb2 put -a -0 -l cocoio.dsk BASIC/COCOIO12.BAS COCOIO12.BAS
