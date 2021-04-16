@@ -50,6 +50,39 @@ TCNTCL	EQU	$0088
 
 		           **************************************
 		           * SOCKET REGISTERS                   *
+		           * only LSB is defined here           *
+		           * set MSB to $00, $01, $02, $03      *
+		           **************************************
+		           
+_M	EQU	$00	Mode
+_C	EQU	$01	Command
+_I	EQU	$02	Interrupt
+_S	EQU	$03	Status
+_PORT0	EQU	$04	Source Port (2)	
+_DHA0	EQU	$06	Dest Hrdw Addr (6)
+_DIP0	EQU	$0C	Dest IP Addr (4)	
+_DPORT0	EQU	$10	Dest Port (2)
+_MSS0	EQU	$12	Max Seg Size (2)
+_PROTO	EQU	$14	IP Protocol
+_TOS	EQU	$15	IP Type Of Srvc
+_TTL	EQU	$16	IP Time To Live
+_RXBUFSZ	EQU	$1E	RX Buffer Size
+_TXBUFSZ	EQU	$1F	TX Buffer Size
+_TX_FS0	EQU	$20	TX Free Size (2)	
+_TX_RD0	EQU	$22	TX Read Pntr (2)	 
+_TX_WR0	EQU	$24	TX Write Pntr (2)	 
+_RX_RS0	EQU	$26	RX Rcvd Size (2)
+_RX_RD0	EQU	$28	RX Read Pntr (2)	
+_RX_WR0	EQU	$2A	RX Write Pntr (2)
+_IMR	EQU	$2C	Interrupt Mask
+_FRAG0	EQU	$2D	Fragment Offset (2)	
+_MR2	EQU	$2F	Mode 2
+_KPALVT	EQU	$30	Keepalive Timer
+_RTR0	EQU	$32	Retrans Time (2)	
+_RCR	EQU	$34	Retrans Cnt
+
+		           **************************************
+		           * SOCKET REGISTERS                   *
 		           * only socket 0 is defined here      *
 		           * add $100 for 1, $200=2, $300=3     *
 		           **************************************
@@ -68,7 +101,7 @@ S0_TOS	EQU	$0415	IP Type Of Srvc
 S0_TTL	EQU	$0416	IP Time To Live
 S0_RXBUFSZ	EQU	$041E	RX Buffer Size
 S0_TXBUFSZ	EQU	$041F	TX Buffer Size
-S0_TX_FS0	EQU	$0420	TX Free Size (0)	
+S0_TX_FS0	EQU	$0420	TX Free Size (2)	
 S0_TX_RD0	EQU	$0422	TX Read Pntr (2)	 
 S0_TX_WR0	EQU	$0424	TX Write Pntr (2)	 
 S0_RX_RS0	EQU	$0426	RX Rcvd Size (2)
@@ -81,4 +114,28 @@ S0_KPALVT	EQU	$0430	Keepalive Timer
 S0_RTR0	EQU	$0432	Retrans Time (2)	
 S0_RCR	EQU	$0434	Retrans Cnt
 
+		           **************************************
+		           * SOCKET REGISTERS                   *
+		           * only socket 1 is defined here      *
+		           * add $100 for 1, $200=2, $300=3     *
+		           **************************************
 
+		           **************************************
+		           * SOCKET REGISTERS                   *
+		           * only socket 2 is defined here      *
+		           * add $100 for 1, $200=2, $300=3     *
+		           **************************************
+
+		           **************************************
+		           * SOCKET REGISTERS                   *
+		           * only socket 3 is defined here      *
+		           * add $100 for 1, $200=2, $300=3     *
+		           **************************************
+
+		           **************************************
+		           * TX/RX MEMORY BLOCKS                *
+		           * 8KB for TX TOTAL, 8KB for RX TOTAL *
+		           * BUFFERS are 1KB, 2KB, 4KB or 8KB   *
+		           **************************************
+TX_BASE	EQU	$4000	
+RX_BASE	EQU	$6000	
