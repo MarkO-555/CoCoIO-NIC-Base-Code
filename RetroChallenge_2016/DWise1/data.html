@@ -1,0 +1,1454 @@
+<HTML>
+<HEAD>
+<TITLE>Formatting Packet Data</TITLE>
+
+<meta name="Author" content="David C. Wise">
+
+</HEAD>
+<BODY bgcolor="#ffffe0">
+<H1>
+<CENTER>
+<b> DWise1's Sockets Programming Pages</b>
+<P>
+Formatting Packet Data
+</CENTER>
+</H1>
+<hr>
+<CENTER>               
+<FONT size=+2><b> HARD HAT AREA<br>
+<IMG SRC="../Bauarbeiter.gif"><br>
+WATCH YOUR STEP
+</b>
+</FONT>
+</CENTER>
+<HR>
+<H3>Introduction</H3>
+<BLOCKQUOTE>
+I've included this topic in part because the question has arisen a few times in a C programming forum I participate in (<A HREF="http://forums.devshed.com/c-programming-42/">Dev Shed Forums: C Programming</A>)
+and I have so far seen extremely little written on the topic.
+But also because this is really why we all want to do sockets programming:  to pass data between hosts over a network.
+Everything else on my sockets site is concerned solely with making the connections and passing the packets, but that's nothing more than the mechanics.
+The real meat and the goal of all this effort is in the data.
+<P>
+Those packets contain data and we need to know how to insert that data into those packets so that the host receiving those packets can extract that data intact.
+Properly speaking, those operations aren't unique to sockets programming, but rather would apply to any
+programming project where you would embed data into byte arrays; eg, serial data streams, binary data files.
+But at the same time, the networking environment introduces problems and considerations that the programmer must take into account and keep in mind.
+Plus, I have seen so many forum members get completely lost when trying to perform these operations.
+<P>
+</BLOCKQUOTE>
+<HR>
+<H3>Basic Principles and Caveats</H3>
+<BLOCKQUOTE>
+Keep these in mind at all times:
+<OL>
+<LI>Our goal is to send data from one host to another and for that data to arrive intact and uncorrupted.  In other words, we need to receive the exact same data as was sent.
+<P>
+<LI>We're dealing with byte arrays here, so whatever techniques you use in your language of choice would apply.
+And these techniques will vary from language to language.
+<P>
+<LI>Reading a packet's data is like reading a binary file from disk.  
+All you get is a block of bytes, a byte array.  
+There is no intrinsic meaning to the bytes in that array.
+In order to have any chance of interpreting that data, you must have additional information about that data, namely how it is formatted. 
+<P>
+<LI>Therefore, you must define precisely how you are going to format your data in that byte array.
+The sending host must adhere to that format when inserting the data and the receiving host must adhere
+to that format when extracting the data.  
+<I>Otherwise, the data received will be corrupted</I>.
+<P>
+<LI>Insertion and extraction of the data must be platform-independent.
+We cannot allow differences between the client and server and the platforms they run on to corrupt the data.
+<P>
+Some of those differences are:
+<P>
+<UL>
+<LI><B>Byte order</B> -- big-endian vs little-endian.  You already know about this from when you 
+<A HREF="sockets.html#SOCKET_ADDRESS">stuff the sockaddr_in struct with the IP address and port</A>, 
+but you also have to think about it when passing data.
+You can't just tell them "just read these bytes in as int", but rather you must define whether that first byte is the most or least significant byte.
+When working with packet data, I believe that it's normal to use <I>network byte order</I>, in which the MSB is first.
+<P>
+<LI><B>Size of integers</B> -- since the size of an integer can be different on different computers,
+you can't just write an int into the byte array and expect the other host receiving it to pull out an int of the same size.
+Instead, you must specify the exact size of that integer and both hosts need to adhere to that specified size.
+<P>
+<LI><B>Floating-point formats</B> -- even though the <A HREF="http://en.wikipedia.org/wiki/IEEE_754">IEEE 754</A> <I>Standard for Binary Floating-Point Arithmetic</I> appears to be almost universally used,
+I have had to work with protocols that used different floating-point formats.
+When floating-point numbers are used, both sender and receiver must agree on the same format.
+<P>
+<LI><B>Pointers</B> -- let's face it, a pointer points to a location in memory and the data that resides in that location.  
+You cannot just send a pointer, because on the receiving system that memory location would contain something entirely different.
+No, instead of sending a pointer, you need to retrieve the data being pointed to and send the data itself.
+This should be a no-brainer, but I've seen people try to do it.
+<P>
+BTW, the same idea applies to saving pointer data to a disk file:  you cannot just write the pointer to disk, but rather you must write the data that it's pointing to.
+And in the case of saving a data structure, such as a linked list or a tree, you must format the data to disk in such a manner that you can reconstruct the data structure when you read it back in.  
+Not a trivial task.
+<P>
+<LI><B>structs</B> -- a lot of programmers get into the sloppy habit of writing entire structs to disk and then reading them back in.
+That will work if all programs writing and reading those files were written on the same platform with the same compiler, but not necessarily when you cross platforms.
+Compilers throw extra bytes between fields, extra padding, in an effort to line up the fields in such a way that accessing those fields will be more efficient.
+That means that the exact same struct declaration in source code can produce different-sized structs on different platforms and very likely will.
+<P>
+For example, in a class exercise I wrote a C++ program on Linux that output an array of objects simply by using block-writes and read them back in with block-reads.
+I worked on the program at work during lunch on a Windows machine using MinGW gcc.
+But it kept crashing.  The reason was that Linux's object size was slightly greater than on my Windows machine, so the end-of-file didn't line up the same.
+When I deleted the old data file then it ran just fine.
+Two different compilers on two different platforms created the very same objects, but of different size.
+A very good object lesson (no pun intended).
+<P>
+And of course, if you write the entire struct to disk as one block and any of the fields in that struct is a pointer, then all bets are off.
+If you don't understand why, then refer above to my caveat about pointers.
+<P>
+What you will need to do when writing struct data is to specify precisely where each field of the struct will begin in the byte array and then fill each field individually from your struct.
+Each field <I>in network byte order</I>.
+Then the receiving host will need to follow the same specification to extract each field individually into its struct.
+The data format of the Simple Network Time Protocol (SNTP), 
+<A HREF="http://www.faqs.org/rfcs/rfc2030.html">RFC 2030</A>, is a prime example of this approach, 
+so I will use it <A HREF="#EXAMPLE">below</A> to illustrate actual insertion and extraction techniques.
+<P>
+<LI><B>Language</B> -- you can never expect all the servers you connect to, nor all the clients connecting to your server, to be written in the same programming language.
+So don't do anything that's too language-specific and won't be supported by all other languages.
+C-style strings comes immediately to mind; most languages don't use null-terminated strings, so don't expect them to.
+<P>
+I encountered this issue very early.  My first attempts at network programming were an echo server and client written in Perl.
+When I then wrote echo servers and clients in C, I found that they could not communicate with my Perl programs.
+There was apparently something that the Perl apps did or expected that the C apps didn't satisfy.
+<P>
+We mustn't allow those problems to occur, but rather must force whatever programming language we're using to comply exactly to the specification.
+<P>
+</UL>
+</OL>
+<P>
+<HR WIDTH=40%>
+<P>
+Are you starting to see a pattern here?
+<I>Specify the data format and then adhere to that specification!</I>
+<P>
+</BLOCKQUOTE>
+<HR>
+<H3>Format Specifications</H3>
+<BLOCKQUOTE>
+So where do these format specifications come from?
+Depends on your situation, which will normally be one of either implementing an existing protocol or creating your own protocol:
+<P>
+<OL>
+<LI><B>Implementing a pre-defined application protocol</B> (eg, telnet, FTP, NTP).
+In this case, the protocol specification will already exist and be published somewhere, 
+so then you <I>must</I> find that specification, read it, and adhere to it.
+<P>
+Most TCP/IP application protocols are described and specified in Requests for Comment (RFCs).
+Those RFCs, while not always the easiest things to read, will give you the exact format that your data packets and messages will need to follow.
+Some ways to identify the applicable RFCs are:
+<OL TYPE="a">
+<LI>Read it in whatever source you're using to develop your application; eg, a book, an article, a web page.
+If your source is any good, it should reference the applicable RFCs.
+<P>
+<LI>Find a page that discusses the protocol and find the applicable RFCs referenced there.
+For example, <A HREF="http://www.wikipedia.org/">Wikipedia</A> articles on TCP/IP protocols do a good job of linking you to the applicable RFCs.
+<P>
+<LI>Or you could just search the <A HREF="http://www.ietf.org/iesg/1rfc_index.txt">RFC index page</A>.
+Because there are 5133 RFCs from April 1969 to December 2007, you might want to use the browser's Find function.
+Note that if an RFC is obsolete, its entry will tell you what RFC has replaced it; eg, these two RFC entries I just picked at random: 
+<P>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+2406 IP Encapsulating Security Payload (ESP). S. Kent, R. Atkinson.
+     November 1998. (Format: TXT=54202 bytes) <B>(Obsoletes RFC1827)</B>
+     (Obsoleted by RFC4303, RFC4305) (Status: PROPOSED STANDARD)
+
+2407 The Internet IP Security Domain of Interpretation for ISAKMP. D.
+     Piper. November 1998. (Format: TXT=67878 bytes) <B>(Obsoleted by
+     RFC4306)</B> (Status: PROPOSED STANDARD)
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+Thus you can trace from one RFC to another; eg, if you find an obsolete RFC then it will direct you eventually to the most current one, or if you need to read an older RFC then you can trace it back.
+<P>
+<LI>Often one RFC will refer you to another.
+For example, <A HREF="http://www.faqs.org/rfcs/rfc2030.html">RFC-2030</A>, <I>Simple Network Time Protocol (SNTP) Version 4 for IPv4, IPv6 and OSI</I>, references 
+<A HREF="http://www.faqs.org/rfcs/rfc1305.html">RFC-1305</A>, <I>Network Time Protocol (Version 3) Specification, Implementation and Analysis</I> for the standard NTP timestamp format.
+Note that RFC-2030 did not obsolete RFC-1305, but rather RFC-2030 <I>does</I> obsolete  
+<A HREF="http://www.faqs.org/rfcs/rfc1769.html">RFC-1769</A>, which describes SNTP version 3.
+<P>
+Also, while most protocols will have a single RFC which specifies it, some, such as telnet, are specified by several RFCs.
+</OL>
+<P>
+Then once you have identified the applicable RFC, go to that page.
+The IETF site's <A HREF="http://www.ietf.org/rfc.html">IETF RFC Page</A> has a search capability in which you enter the RFC number and it brings up that page.
+Or you could Google on <B>RFC</B> and the number.
+Google'ing will also point you to several other RFC repositories that are out there; 
+the IETF is just the official source, but you might have a personal preference for how another site organizes and presents them 
+-- if you follow my links to individual RFCs, you will find that I do not always use the same site, but rather I used whichever one I had found through Google when writing that part of the page.
+<P>
+And when you read the RFC, be sure to read in the header whether it's been obsoleted.
+Things change, even protocols, and you need to make sure that you're working with the latest version.
+<P>
+BTW, it's advisable that you test your client apps against commercial servers and your server against commercial clients.
+If you were to write both client and server based on your understanding of the protocol and you misunderstood it, then your client and server would work with each other but not with any others.
+The object is for anybody's client to be able to connect to your server and for your client to be able to connect to anybody's server.
+Plus, testing your implementation with somebody else's also verifies your understanding of the protocol.
+<P>
+<P>
+<LI><B>Creating your own custom protocol.</B>
+Here you have the additional tasks of defining the protocol and of specifying the message formats.
+You will have to decide what your protocol is going to do, what transport protocol to use (ie, tcp or udp), how the message exchange is to be handled, what data needs to be exchanged and how it should be formatted, etc.
+In other words, everything.
+<P>
+But before you go this route, you should try your hand at implementing a few pre-defined protocols.
+Besides developing your sockets programming skills, you will become familiar with a number of existing application protocols and will have learned how they format their messages and conduct their sessions, 
+which can then serve as models for your own protocol.
+Legions of programmers have passed this way before you, so why not benefit from their collective experience and wisdom?
+</OL>
+<P>
+</BLOCKQUOTE>
+<HR WIDTH=60%>
+<BLOCKQUOTE>
+<P>
+This is slightly outside the scope of this web page, but you should be aware that some basic components of a protocol specification are:
+<OL>
+<LI><B>A port specification</B>, including a port number and the underlying transport protocol (ie, tcp or udp).
+This could include specifying the use of multiple ports, such as in FTP.
+<P>
+<LI><B>A message exchange specification</B> detailing the command or request messages and the responses thereto, as well as the sequences in which those messages and responses are exchanged between server and client.
+Consideration also needs to be made for how to handle failures (eg, when the recipient fails to respond, when a message is received out of sequence).
+<P>
+<LI><B>Format specifications for each message</B>, including the formatting of the data.
+</OL>
+<P>
+Item #1 is trivial and Item #3 is what this page deals with.
+Item #2, the actual message exchange, is something that you might not have thought of yet.
+If anything, it's a description of how the protocol is supposed to work.  
+All that our topic, data formatting, does is handle the details that support the message exchange.
+If you are going to create your own protocol, then a major part of your work will be in designing the message exchange.
+That is the subject of a discussion of <i>application protocols</i>, which is what network programming is really about; sockets and formatting data are just the supporting mechanics.
+<P>
+</BLOCKQUOTE>
+<HR>
+<A NAME="#EXAMPLE">
+<H3>Example: RFC-2030, <I>Simple Network Time Protocol (SNTP) Version 4 for IPv4, IPv6 and OSI</I></H3>
+<BLOCKQUOTE>
+I've chosen the NTP data format for two reasons:
+<OL>
+<LI>It is an aggregate data packet which contains different types of data and hence its structure is well-defined.
+These two characteristics enhance its pedagogical value.
+<LI>I'm already familiar with it and had already written <A HREF="samples.html#UDPTIMEC">a simple NTP client</A>.
+Thus the sample code has already been developed and proven to work.
+</OL>
+<P>
+Time-keeping can be a surprising complex affair.
+Network Time Protocol (NTP) handles this and is appropriate complex in its support of "strata" within hierarchies of time servers.
+Simple NTP (SNTP) is a simplified form of NTP, though I haven't quite learned in what ways it's simpler.
+I've only used it in its simplest form:  my client sends a request to a time server and receives a response with the time in it.
+There are far simpler time services, <I>time</I> (AKA "timserver", udp port 37) and <I>daytime</I> (port 13, either tcp or udp), which I will cover elsewhere.
+BTW, the ntp service is on udp port 123.
+<P>
+Both the request and the response in SNTP use the same format.
+The client creates an "empty" data packet (ie, most of the fields are zeroed out) and sends it to the server and the server sends a filled data packet back to the client.
+After discussing that data packet format, I will present my code for preparing the query packet and processing the response packet.
+<P>
+</BLOCKQUOTE>
+<HR WIDTH=70%>
+<H4>NTP Timestamp Format</H4>
+<BLOCKQUOTE>
+Since the data packet contains several timestamp fields, 
+<A HREF="http://www.faqs.org/rfcs/rfc2030.html">RFC-2030</A> first defines the format of a timestamp, which it takes from the NTP spec in RFC-1305:
+<P>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+<h4>3. NTP Timestamp Format</h4>
+
+   SNTP uses the standard NTP timestamp format described in <a href="http://tools.ietf.org/html/rfc1305">RFC-1305</a> and
+   previous versions of that document. In conformance with standard
+   Internet practice, NTP data are specified as integer or fixed-point
+   quantities, with bits numbered in <A HREF="http://en.wikipedia.org/wiki/Big-endian">big-endian</A> fashion from 0 starting
+   at the left, or high-order, position. Unless specified otherwise, all
+   quantities are unsigned and may occupy the full field width with an
+   implied 0 preceding bit 0.
+
+   Since NTP timestamps are cherished data and, in fact, represent the
+   main product of the protocol, a special timestamp format has been
+   established. NTP timestamps are represented as a 64-bit unsigned
+   fixed-point number, in seconds relative to 0h on 1 January 1900. The
+   integer part is in the first 32 bits and the fraction part in the
+   last 32 bits. In the fraction part, the non-significant low order can
+   be set to 0.
+      <H2>       . . .</H2>
+                        1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Seconds                             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  Seconds Fraction (0-padded)                  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+Please note that RFC 2030 specifies the byte order as big-endian, which means "big end first", or the most significant byte (MSB) comes first.
+You should recognize this as network byte order, just like I told you.
+<P>
+Also note that the time stamp is in seconds since 01 January 1900, whereas time in the standard C time library is in seconds since 01 January 1970.
+Well, that can be a problem, because we'd have to convert from NTP time to C time (which is UNIX time).
+Does anyone happen to know how many seconds had elapsed from midnight 01 January 1900 to midnight 01 January 1970?
+<P>
+<A NAME="TIMSERVER">
+As a matter of fact, yes, somebody does know.
+From my having first researched into the time service (port 37), I found that it it also based on 01 January 1900 and its RFC, <A HREF="http://tools.ietf.org/html/rfc868">RFC 868</A>, gives a number of examples at the end of the document:
+<P>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+The Time
+
+The time is the number of seconds since 00:00 (midnight) 1 January 1900
+GMT, such that the time 1 is 12:00:01 am on 1 January 1900 GMT; this
+base will serve until the year 2036.
+
+For example:
+
+   the time  2,208,988,800 corresponds to 00:00  1 Jan 1970 GMT,
+
+             2,398,291,200 corresponds to 00:00  1 Jan 1976 GMT,
+
+             2,524,521,600 corresponds to 00:00  1 Jan 1980 GMT,
+
+             2,629,584,000 corresponds to 00:00  1 May 1983 GMT,
+
+        and -1,297,728,000 corresponds to 00:00 17 Nov 1858 GMT.
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+Thus we have a conversion offset which we can use to convert from NTP time to UNIX time:
+<P>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+/* time service time starts on January 1, 1900      */
+/* UNIX time starts on January 1, 1970              */
+/* following #define and the two AdjTime functions  */
+/*      allow us to convert between the two time bases */
+
+/* The time function (UNIX time) returns the number of seconds elapsed    */
+/*      since midnight (00:00:00), January 1, 1970, Universal Coordinated */
+/*      Time, according to the system clock.
+/* time service time then was 2,208,988,800  [83AA 7E80] as per RFC 868   */
+
+#define TIME_OFFSET_1970  2208988800UL
+
+unsigned long AdjTimeToUNIX(unsigned long t)
+{
+	return t - TIME_OFFSET_1970;
+}
+
+unsigned long AdjTimeToNTP(unsigned long t)
+{
+	return t + TIME_OFFSET_1970;
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+A few things to note here:
+<OL>
+<LI>The value returned by the time service is a 32-bit binary value, but RFC-868 fails to
+specify whether it's big-endian or little-endian.
+Examination of the data packet revealed that it is indeed big-endian, but let this be a lesson 
+that, if the byte order is not specified, you should start out assuming it to be big-endian and then verify your assumption.
+Out of my efforts to verify this value grew 
+<A HREF="../misc/hexdump.html">my routine for generating a hex dump</A>.
+<P>
+<LI>The time in seconds on 01 Jan 1970, 2,208,988,800, is greater than the maximum value of a signed 32-bit integer, 2,147,483,647.  
+This means not only that we're forced to declare time as an unsigned long, but also that we cannot work with dates prior to 1900 unless we moved up to 64-bit integers.
+This may not seem like much of a sacrifice until we consider item #3.  
+<P>
+<LI>Why do you think that they gave the time value for 00:00 17 Nov 1858 GMT?
+Well, there's another time system called the 
+<A HREF="http://en.wikipedia.org/wiki/Julian_date">Julian Date</A> (JD).  
+It was devised by historian Joseph Scaliger in 1583 and it counts the number of days starting at noon on 01 January -4713 (AKA "4713 BCE" or "4713 BCE").
+<P>
+Although he had originally devised it as a common calendar to correlate dates from ancient records (which all used different calendars and mostly counted the years by so many years into the reign of King Whoever), astronomers quickly latched onto it as a simple way to measure elapsed time for their calculation of orbits.
+Since the JD has grown into a rather large and unwieldy number (and starts at noon instead of at midnight), astronomers have come up with the Modified Julian Date (MJD) by taking a point in time where it was a nice round number and starting all over from there.
+At midnight on 17 November 1858, the JD was 2,400,000.5, so that date was chosen and we have<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MJD = JD - 2,400,000.5 <BR>
+<P>
+But astronomy is not the only use that the MJD has been put to.
+There are some computer systems that base their own clocks on MJD.
+For example, the DEC VAX 11's system clock counted how many 100's of nanoseconds had elapsed since midnight on 17 November 1858.
+If any such computer systems still exist and are online and using NTP time servers, then they will need to be able to convert NTP time to MJD.
+As a matter of fact, such systems <I>do</I> still exist; eg, 
+<A HREF="http://en.wikipedia.org/wiki/OpenVMS#Timekeeping">OpenVMS</A>.
+</OL>
+<P>
+</BLOCKQUOTE>
+<HR WIDTH=70%>
+<H4>NTP Message Format</H4>
+<BLOCKQUOTE>
+Now that it has a definition for a timestamp, 
+<A HREF="http://www.faqs.org/rfcs/rfc2030.html">RFC-2030</A> defines the format of the data packet:
+<P>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+<h4>4. NTP Message Format</h4>
+
+   Both NTP and SNTP are clients of the User Datagram Protocol (UDP)
+   [...], which itself is a client of the Internet Protocol (IP)
+   [...]. The structure of the IP and UDP headers is described in the
+   cited specification documents and will not be detailed further here.
+   The UDP port number assigned to NTP is 123, which should be used in
+   both the Source Port and Destination Port fields in the UDP header.
+   The remaining UDP header fields should be set as described in the
+   specification.
+
+   Below is a description of the NTP/SNTP Version 4 message format,
+   which follows the IP and UDP headers. This format is identical to
+   that described in <a href="http://tools.ietf.org/html/rfc1305">RFC-1305</a>, with the exception of the contents of the
+   reference identifier field. The header fields are defined as follows:
+
+                           1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |LI | VN  |Mode |    Stratum    |     Poll      |   Precision   |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                          Root Delay                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                       Root Dispersion                         |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                     Reference Identifier                      |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                                                               |
+      |                   Reference Timestamp (64)                    |
+      |                                                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                                                               |
+      |                   Originate Timestamp (64)                    |
+      |                                                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                                                               |
+      |                    Receive Timestamp (64)                     |
+      |                                                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                                                               |
+      |                    Transmit Timestamp (64)                    |
+      |                                                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                 Key Identifier (optional) (32)                |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                                                               |
+      |                                                               |
+      |                 Message Digest (optional) (128)               |
+      |                                                               |
+      |                                                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   As described in the next section, in SNTP most of these fields are
+   initialized with pre-specified data. For completeness, the function
+   of each field is briefly summarized below.
+
+   Leap Indicator (LI): This is a two-bit code warning of an impending
+   leap second to be inserted/deleted in the last minute of the current
+   day, with bit 0 and bit 1, respectively, coded as follows:
+
+      LI       Value     Meaning
+      -------------------------------------------------------
+      00       0         no warning
+      01       1         last minute has 61 seconds
+      10       2         last minute has 59 seconds)
+      11       3         alarm condition (clock not synchronized)
+
+   Version Number (VN): This is a three-bit integer indicating the
+   NTP/SNTP version number. The version number is 3 for Version 3 (IPv4
+   only) and 4 for Version 4 (IPv4, IPv6 and OSI). If necessary to
+   distinguish between IPv4, IPv6 and OSI, the encapsulating context
+   must be inspected.
+
+   Mode: This is a three-bit integer indicating the mode, with values
+   defined as follows:
+
+      Mode     Meaning
+      ------------------------------------
+      0        reserved
+      1        symmetric active
+      2        symmetric passive
+      3        client
+      4        server
+      5        broadcast
+      6        reserved for NTP control message
+      7        reserved for private use
+
+   In unicast and anycast modes, the client sets this field to 3
+   (client) in the request and the server sets it to 4 (server) in the
+   reply. In multicast mode, the server sets this field to 5
+   (broadcast).
+
+   Stratum: This is a eight-bit unsigned integer indicating the stratum
+   level of the local clock, with values defined as follows:
+
+      Stratum  Meaning
+      ----------------------------------------------
+      0        unspecified or unavailable
+      1        primary reference (e.g., radio clock)
+      2-15     secondary reference (via NTP or SNTP)
+      16-255   reserved
+
+   Poll Interval: This is an eight-bit signed integer indicating the
+   maximum interval between successive messages, in seconds to the
+   nearest power of two. The values that can appear in this field
+   presently range from 4 (16 s) to 14 (16284 s); however, most
+   applications use only the sub-range 6 (64 s) to 10 (1024 s).
+
+   Precision: This is an eight-bit signed integer indicating the
+   precision of the local clock, in seconds to the nearest power of two.
+   The values that normally appear in this field range from -6 for
+   mains-frequency clocks to -20 for microsecond clocks found in some
+   workstations.
+
+   Root Delay: This is a 32-bit signed fixed-point number indicating the
+   total roundtrip delay to the primary reference source, in seconds
+   with fraction point between bits 15 and 16. Note that this variable
+   can take on both positive and negative values, depending on the
+   relative time and frequency offsets. The values that normally appear
+   in this field range from negative values of a few milliseconds to
+   positive values of several hundred milliseconds.
+
+   Root Dispersion: This is a 32-bit unsigned fixed-point number
+   indicating the nominal error relative to the primary reference
+   source, in seconds with fraction point between bits 15 and 16. The
+   values that normally appear in this field range from 0 to several
+   hundred milliseconds.
+
+   Reference Identifier: This is a 32-bit bitstring identifying the
+   particular reference source. In the case of NTP Version 3 or Version
+   4 stratum-0 (unspecified) or stratum-1 (primary) servers, this is a
+   four-character ASCII string, left justified and zero padded to 32
+   bits. In NTP Version 3 secondary servers, this is the 32-bit IPv4
+   address of the reference source. In NTP Version 4 secondary servers,
+   this is the low order 32 bits of the latest transmit timestamp of the
+   reference source. NTP primary (stratum 1) servers should set this
+   field to a code identifying the external reference source according
+   to the following list. If the external reference is one of those
+   listed, the associated code should be used. Codes for sources not
+   listed can be contrived as appropriate.
+
+      Code     External Reference Source
+      ----------------------------------------------------------------
+      LOCL     uncalibrated local clock used as a primary reference for
+               a subnet without external means of synchronization
+      PPS      atomic clock or other pulse-per-second source
+               individually calibrated to national standards
+      ACTS     NIST dialup modem service
+      USNO     USNO modem service
+      PTB      PTB (Germany) modem service
+      TDF      Allouis (France) Radio 164 kHz
+      DCF      Mainflingen (Germany) Radio 77.5 kHz
+      MSF      Rugby (UK) Radio 60 kHz
+      WWV      Ft. Collins (US) Radio 2.5, 5, 10, 15, 20 MHz
+      WWVB     Boulder (US) Radio 60 kHz
+      WWVH     Kaui Hawaii (US) Radio 2.5, 5, 10, 15 MHz
+      CHU      Ottawa (Canada) Radio 3330, 7335, 14670 kHz
+      LORC     LORAN-C radionavigation system
+      OMEG     OMEGA radionavigation system
+      GPS      Global Positioning Service
+      GOES     Geostationary Orbit Environment Satellite
+
+   Reference Timestamp: This is the time at which the local clock was
+   last set or corrected, in 64-bit timestamp format.
+
+   Originate Timestamp: This is the time at which the request departed
+   the client for the server, in 64-bit timestamp format.
+
+   Receive Timestamp: This is the time at which the request arrived at
+   the server, in 64-bit timestamp format.
+
+   Transmit Timestamp: This is the time at which the reply departed the
+   server for the client, in 64-bit timestamp format.
+
+   Authenticator (optional): When the NTP authentication scheme is
+   implemented, the Key Identifier and Message Digest fields contain the
+   message authentication code (MAC) information defined in Appendix C
+   of <a href="http://tools.ietf.org/html/rfc1305">RFC-1305</a>.
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+Boy, that was a long one!  But it was necessary so that you could see an actual specification.
+<P>
+Again, please note:
+<OL>
+<LI>The first paragraph gives the port and protocol: "The UDP port number assigned to NTP is 123". 
+Sometimes you have to really search through the RFC for the port number, but it's always there.
+<P>
+<LI>We already know that the data is big-endian, because 
+<A HREF="http://www.faqs.org/rfcs/rfc2030.html">RFC-2030</A> had specified that in the timestamp definition.
+However, here we also see that the order of the <i>bits</I> is also specified:  bit 0 is the MSB and bit 31 is the LSB.
+So when they refer to specific bits, there is absolutely no ambiguity; you know precisely which bit they're referring to, unlike some other specifications I've read in the past.
+<P>
+<LI>When a field contains an integer value, we are told <i>precisely</I> how many bits long it is.
+Nothing is implied here!  Rather, everything is <i>specified</i>.
+<P>
+<LI>The format of a string, the External Reference Source, is precisely specified to be four (4) ASCII characters long and zero-padded on the right as needed (eg, some of the string values are 3 characters long).  Again, nothing is implied, but rather is specified.
+</OL>
+<P>
+</BLOCKQUOTE>
+<HR WIDTH=30%>
+<BLOCKQUOTE>
+<P>
+The purpose of this section was to demonstrate the level of detail that should go into a protocol specification.
+I feel that RFC-2030 does a fairly good job, but not all RFCs do as well.
+For example:
+<UL>
+<LI><A HREF="http://tools.ietf.org/html/rfc868">RFC 868</A>, "Time Protocol", specifies that the server returns "a 32-bit time value" and it explains <A HREF="#TIMSERVER">how to interpret that time value</A>,
+but it says nothing about the byte order of that 32-bit value.
+It turns out to be in network byte order (big-endian), it assumes that you know that.
+Somebody reading it in on an Intel machine and not adjusting for a different byte order would read a nonsense value.
+<P>
+<LI><A HREF="http://tools.ietf.org/html/rfc867">RFC 867</A>, "Daytime Protocol", only specifies that the server responds with "an answering datagram ... containing the current date and time as a ASCII character string" and that "There is no specific syntax for the daytime."
+Of interest to a C programmer is whether that string is null-terminated (ie, has an additional character containing an ASCII code of zero to mark the end of the string, which is how C handles strings).
+Or whether the string ends with an end-of-line sequence, which in turn could be either the UNIX carriage-return or the DOS/Windows carriage-return/line-feed.
+We don't know, though at least the RFC comes right out and tells us to expect almost anything from a daytime server.
+<P>
+For example, I just enabled the daytime service on my XP box and used my time client, 
+<A HREF="samples.html#UDPTIMEC">UDPtimec</A>, to query it:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+C:>udptimec localhost 13
+Sending 0-byte query to localhost:daytime [127.0.0.1:13]
+Received 21 bytes from localhost [127.0.0.1:13]
+39 3A 31 33 3A 35 30 20 41 4D 20 31 2F 31 37 2F    9:13:50 AM 1/17/
+32 30 30 38 0A                                     2008.
+ **********
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+As you can see, the string is <I>not</I> null-terminated and it does end with an end-of-line, but it's just a line-feed (0x0A).
+And this illustrates that when you're working with such a protocol, your program needs to be ready to deal with anything in the response.
+</UL>
+<P>
+The bottom line is:
+<OL>
+<LI>When you're designing your own protocol, make your specification as thorough and as detailed as possible.
+<P>
+<LI>When you're implementing an existing protocol specification, know what questions to ask about how the packets are formatted and realize when the specification is ambiguous.
+</OL>
+<P>
+</BLOCKQUOTE>
+<HR WIDTH=70%>
+<H4>NTP Client and Server Operations</H4>
+<BLOCKQUOTE>
+The next two sections in <A HREF="http://www.faqs.org/rfcs/rfc2030.html">RFC-2030</A> describe how the NTP client and server need to operate.
+The only bearing that has on our discussion is how the client prepares the query packet that it sends to the server:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+<H4>5. SNTP Client Operations</H4>
+
+<B>. . .</B>
+
+   A unicast or anycast client initializes the NTP message header, sends
+   the request to the server and strips the time of day from the
+   Transmit Timestamp field of the reply. For this purpose, all of the
+   NTP header fields shown above can be set to 0, except the first octet
+   and (optional) Transmit Timestamp fields. In the first octet, the LI
+   field is set to 0 (no warning) and the Mode field is set to 3
+   (client). The VN field must agree with the version number of the
+   NTP/SNTP server; however, Version 4 servers will also accept previous
+   versions. Version 3 (RFC-1305) and Version 2 (RFC-1119) servers
+   already accept all previous versions, including Version 1 (RFC-1059).
+   Note that Version 0 (RFC-959) is no longer supported by any other
+   version.
+
+<B>. . .</B>
+
+   While not necessary in a conforming client implementation, in unicast
+   and anycast modes it highly recommended that the transmit timestamp
+   in the request is set to the time of day according to the client
+   clock in NTP timestamp format. This allows a simple calculation to
+   determine the propagation delay between the server and client and to
+   align the local clock generally within a few tens of milliseconds
+   relative to the server. In addition, this provides a simple method to
+   verify that the server reply is in fact a legitimate response to the
+   specific client request and avoid replays. 
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+These paragraphs specify how we are to initialize our query packet, which will be reflected in the code fragments below.
+<P>
+</BLOCKQUOTE>
+<HR WIDTH=70%>
+<H4>C Functions</H4>
+<BLOCKQUOTE>
+Here are the data structures and functions that <A HREF="samples.html#UDPTIMEC">UDPtimec</A> uses to embed and extract the data into and out of the NTP data packet.
+Again, this is in C; whatever language you end up using will doubtless do it a bit differently.
+<P>
+<HR WIDTH=40%>
+<P>
+This is the basic data structure for working with the NTP data.  
+Each field (with one exception) corresponds with a field in the NTP message.
+The program works with the fields of this struct and I had written one function which inserts this struct's data into a packet buffer for sending to the server, and another function which extracts the data received from the server from the packet buffer into the struct.
+<P>
+The one exception I mentioned was the inclusion of a Flags field.  The very first byte of the packet contains three fields (LeapIndicator, VersionNumber, and Mode) which are fields in their own rights in the struct.  
+However, since I display the value of that first byte, I added the Flags field in which to save that value.
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+/////////////////////////////////////////
+// NTP Format (48 bytes):
+// 00  Flags:
+//     00.. .... Leap indicator: no warning
+//     ..00 1... Version Number: reserved
+//     .... .011 Mode: client
+// 01  Peer Clock Stratum: unspecified (0)
+// 02  Peer Polling Interval: invalid (0)
+// 03  Peer Clock Precision: 1.000000 sec
+// 04  Root Delay: 0.0000 sec
+// 08  Clock Dispersion: 0.0000 sec
+// 12  Reference Clock ID: unidentifed ref source ''
+// 16  Reference Clock Update Time: NULL 
+// 24  Originate Time Stamp: 2002-07-18 14:02:09.3300 UTC
+// 32  Receive Time Stamp: NULL
+// 40  Transmit Time Stamp: NULL
+// 
+
+typedef struct 
+{
+	unsigned char   Flags;
+	unsigned char   LeapIndicator;
+	unsigned char   VersionNumber;
+	unsigned char   Mode;
+	unsigned char   PeerClockStratum;
+	unsigned char   PeerPollingInterval;
+	signed char     PeerClockPrecision;
+	long            RootDelay;
+	long            ClockDispersion;
+	char            ReferenceClockID[5];
+	unsigned long   ReferenceClockUpdateTime[2];
+	unsigned long   OriginateTimeStamp[2];
+	unsigned long   ReceiveTimeStamp[2];
+	unsigned long   TransmitTimeStamp[2];
+} NTPpayload;
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<P>
+This function, PrepareNTPqueryPayload, loads the data that will go into the client's query message.
+For the most part, all fields are to be zeroed out with three exceptions:
+<OL>
+<LI>VersionNumber, which we set to the SNTP version that we want supported.
+<LI>Mode, which we set to indicate that we're a client.
+<LI>TransmitTimeStamp, which we set to our current time.  
+The server will return this same value in the OriginateTimeStamp field and we can use it to calculate roundtrip delay and local clock offset.  
+</OL>
+I use the _ftime library function to obtain the time for the transmit timestamp.
+The _timeb struct it fills contains UNIX time in seconds and a fraction of the second in milliseconds.
+Support for it may vary between compilers, but in Visual C++6 and MinGW gcc it's declared in <code>SYS/TIMEB.H</CODE>.
+<P>
+And finally, this function calls the function, ConstructNTPpayload, which actually constructs the message packet with this data.
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+/* loads NTPpayload data struct with required values */
+/* then calls ConstructNTPpayload to create NTP formatted data */
+int PrepareNTPqueryPayload(unsigned char *buffer)
+{
+	NTPpayload  data;
+	int         i;
+	struct _timeb Time;
+
+	data.LeapIndicator = 0;
+	data.VersionNumber = 3;
+	data.Mode = 3;		// client
+	data.PeerClockStratum = 0;
+	data.PeerPollingInterval = 0;
+	data.PeerClockPrecision = 0;
+	data.RootDelay = 0;
+	data.ClockDispersion = 0L;
+	for (i=0; i&lt;4; i++)
+	    data.ReferenceClockID[i] = '\0';
+	data.ReferenceClockUpdateTime[0] = 0L;
+	data.ReferenceClockUpdateTime[1] = 0L;
+	data.OriginateTimeStamp[0] = 0L;
+	data.OriginateTimeStamp[1] = 0L;
+	data.ReceiveTimeStamp[0] = 0L;
+	data.ReceiveTimeStamp[1] = 0L;
+    
+    /* insert our current time into TransmitTimeStamp */
+	_ftime(&Time);
+	data.TransmitTimeStamp[0] = AdjTimeToNTP(Time.time);
+	data.TransmitTimeStamp[1] = (unsigned long)((double)Time.millitm * 4294967.295);
+
+    /* call function to embed data into the packet buffer */
+	ConstructNTPpayload(&data,buffer);
+	return 48;   /* length of NTP formatted data */
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<H4>Inserting Data</H4>
+<BLOCKQUOTE>
+<P>
+ConstructNTPpayload is where the rubber meets the road, where the data is actually prepared to be sent to the server.
+I'm listing it twice with two slightly different techniques for addressing locations in the buffer.
+<P>
+The byte buffer, buffer, will be the actual block of data sent to the server. 
+C does not have an actual "byte" data type, but unsigned char is really the same thing and thus serves the purpose.
+<P>
+This first approach is what I actually used.  Here's how it works:
+<OL>
+<LI>It treats the buffer as a byte array and uses array subscripting notation to access specific bytes within the buffer.
+This also means that I need to have calculated ahead of time the precise array subscript of each field of data.
+<P>
+<LI>For the fields which are individual bytes of data, a simple assignment statement suffices.
+<P>
+<LI>For the fields which are multiple bytes of data (eg, the 32-bit long ints), I need to:
+<OL TYPE="a">
+<LI>Make that position in the buffer appear to be of that value's data type.
+I accomplish this with a bit of pointer-casting magic:
+<OL TYPE="i">
+<LI>I take the address of that particular byte in the buffer; eg, <CODE>&buffer[4]</CODE>
+<LI>I cast it as a pointer to the desired data type; eg, <CODE>(long*)(&buffer[4])</CODE> 
+<LI>I dereference that pointer for the assignment statement; eg, <CODE>*((long*)(&buffer[4]))</CODE>
+</OL>
+<P>
+Of course, this approach is extremely C-ish (though less so than the second technique) and may not translate directly to your particular language.
+But it should at least give you an idea of what you need to do.
+<P>
+<LI>Ensure that the bytes of the multi-byte value are in network byte order.  
+To accomplish this, I use the htonl function ("host to network").
+</OL>
+<P>
+<LI>For multiple fields that fit into the same buffer byte (eg, the Leap Indicator, Version Number, and Mode fields that all fit into the first byte of the buffer), I use C's bit-wise operators of shifting, AND'ing, and OR'ing.
+If you're already familiar with these operations, you'll need no explanation; if you're not, then any explanation I give probably won't make any sense.  Therefore, I'll just discuss if as if you were familiar with bit-wise operations.
+<P>
+Refer below to the construction of data-&gt;Flags. Basically:
+<OL TYPE="i">
+<LI>I shift the data left to its position in the byte (eg, LeapIndicator and VersionNumber).
+Of course, for the right-most field I don't need to shift it because it's already in its position (eg, Mode).  
+The operator for a left-shift is <CODE>&lt;&lt;</CODE> .
+It operates on the value to its left and it shifts that value left for the count that's to its right;
+eg, <CODE>data-&gt;LeapIndicator &lt;&lt; 6</CODE> shifts data-&gt;LeapIndicator to the left by 6 bits.
+<LI>I <i>mask</I> out the parts of the shifted byte that don't correspond to the field.  
+I do this by AND'ing the shifted value with a mask.  
+Where a bit in the mask is set to 1, that bit in the shifted value will remain unchanged; where a bit in the mask is reset to 0, then that bit in the shifted value will also be reset to 0.
+The C operator for AND'ing is <CODE>&</CODE> (not to be confused with the relational AND operator, <CODE>&&</CODE>).
+For example, <CODE>data-&gt;Mode & 0x07</CODE> takes the value of data-&gt;Mode and zeros out all its bits except for the least significant three bits -- if you know how to convert hexadecimal to binary then you will see that this is so.
+<LI>Then finally I OR the masked value to the Flag that I'm building and assign the result to Flag:
+<OL TYPE="1">
+<LI>The C operator for OR'ing is <CODE>|</CODE> (not to be confused with the relational OR operator, <CODE>||</CODE>).
+Comparing the two operands bit-by-bit, if there's a 1 in a given bit position in either (or both) of the operands, then that bit in the result will be a 1; otherwise that bit will be a 0 (ie, if that bit is a zero in both operands).
+<LI><CODE>|=</CODE> is standard C short-hand for OR'ing the l-value and the r-value and assigning it to the l-value.
+In other words, <CODE>a |= b;</CODE> means the same thing as <CODE>a = a | b;</CODE> 
+<LI>In building the Flag byte, the first field (once shifted and AND'ed) is simply assigned to Flag.
+This has the effect of setting that field's value and <i>zeroing out all the other fields</I>.
+It is absolutely essential that the field in the result is all zeros before you OR the field's values in.
+Again, if you're already familiar with bit-wise operations, this should be obvious.
+<LI>OR'ing each other field to Flag results in their values getting inserted into Flag.  
+Because those other fields were prepared by zeroing out the bits outside the field (ie, were <I>masked out</I> by the AND operation), OR'ing does not change the values of any of the other fields.
+</OL>
+</OL>
+<P>
+<LI>The situation does not arise here -- but it could arise -- wherein a field crosses over between bytes, such that part of it is on one byte and the rest is in the next byte.
+For example, if a field is 9 bits long, then its most significant 8 bits would be in the first byte and its least significant ninth bit would be in the most significant position in the next byte.  
+I've had to handle this situation before (albeit in a different context).  
+It involves a lot of bit-wise operations.
+I won't dwell on it here, but just be aware when it happens.
+</OL>
+
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+/* translates NTPpayload data struct into NTP formatted data */
+void ConstructNTPpayload(NTPpayload *data,unsigned char *buffer)
+{
+	int i;
+
+	// just to keep packet format issues all in one place
+	data-&gt;Flags = (data-&gt;LeapIndicator &lt;&lt; 6) & 0xC0;
+	data-&gt;Flags |= (data-&gt;VersionNumber &lt;&lt; 3) & 0x38;
+	data-&gt;Flags |= data-&gt;Mode & 0x07;
+	
+	buffer[0] = data-&gt;Flags;
+	buffer[1] = data-&gt;PeerClockStratum;
+	buffer[2] = data-&gt;PeerPollingInterval;
+	buffer[3] = data-&gt;PeerClockPrecision;
+	*((long*)(&buffer[4])) = htonl(data-&gt;RootDelay);
+	*((long*)(&buffer[8])) = htonl(data-&gt;ClockDispersion);
+	for (i=0; i&lt;4; i++)
+	    buffer[12+i] = data-&gt;ReferenceClockID[i];
+	*((unsigned long*)(&buffer[16])) = htonl(data-&gt;ReferenceClockUpdateTime[0]);
+	*((unsigned long*)(&buffer[20])) = htonl(data-&gt;ReferenceClockUpdateTime[1]);
+	*((unsigned long*)(&buffer[24])) = htonl(data-&gt;OriginateTimeStamp[0]);
+	*((unsigned long*)(&buffer[28])) = htonl(data-&gt;OriginateTimeStamp[1]);
+	*((unsigned long*)(&buffer[32])) = htonl(data-&gt;ReceiveTimeStamp[0]);
+	*((unsigned long*)(&buffer[36])) = htonl(data-&gt;ReceiveTimeStamp[1]);
+	*((unsigned long*)(&buffer[40])) = htonl(data-&gt;TransmitTimeStamp[0]);
+	*((unsigned long*)(&buffer[44])) = htonl(data-&gt;TransmitTimeStamp[1]);
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<P>
+Here's ConstructNTPpayload again with that second method of accessing the bytes of the byte array.
+This method's advantage over the previous is that you don't need to have figured out ahead of time all the fields' offsets -- ie, the previous method made <I>you</I> do all the work; now it's the computer's turn.
+<P>
+Instead of indexing through an array, you assign a pointer to the beginning of the buffer and simply increment the pointer as you go.
+See?  I told you this was even more extremely C-ish than the first!
+<P>
+As you examine the code below you will note:
+<OL>
+<LI>We declare an unsigned char pointer called ucp.
+This is the pointer we will use to access the field locations in the buffer.
+Therefore, part of the declaration is to point it to the start of the buffer.
+<P>
+<LI>We dereference the pointer to make the assignments.  The notation for this is <CODE>*ucp</CODE>.
+<P>
+<LI>We perform <I>pointer arithmetic</I> to step the pointer through.  This takes two forms:
+<OL TYPE="a">
+<LI>Post-incrementing, with steps the pointer by one byte <I>after</I> the current line has executed.
+The notation for this is <CODE>ucp++</CODE>.  
+Incidentally, that post-increment operator is where C++ got its name from, since it was an incrementation of C.
+<LI>Straight pointer arithmetic, which moves the pointer that many bytes ahead in memory.
+For example, since a long is 4 bytes in length, when we have assigned a long, we need to add 4 to the pointer to move it to the next field; thus:  <CODE>ucp += 4;</CODE>
+There's that combining of an operation and an assignment that is so common in C and in most other languages whose syntaxes are derived from or inspired by C.
+<P>
+A variation of using pointer arithmetic would be for the compiler to figure out how many bytes you need to step; eg:  <CODE>ucp += sizeof(unsigned long);</CODE><BR>
+That way, you don't need to remember what size each data type is.
+</OL>
+Just keep this in mind:  if you step by only one byte, then use post-incrementing, but if you must step by more than one byte then use pointer arithmetic.
+<P>
+<LI>As in the first method with the address of the subscripted buffer element, we cast the pointer as needed for the assignment of other data types.
+As you can see, for those lines I just substituted <CODE>ucp</CODE> for <CODE>&buffer[x]</CODE>.
+The main difference being that the next line has to perform pointer arithmetic to move the pointer to the next field.
+</OL>
+<P>
+And again you see the bit-fiddling to build the Flags byte.  We don't need to go through all that again.
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+/* translates NTPpayload data struct into NTP formatted data */
+void ConstructNTPpayload(NTPpayload *data,unsigned char *buffer)
+{
+	int i;
+    unsigned char *ucp = buffer;
+
+	// just to keep packet format issues all in one place
+	data-&gt;Flags = (data-&gt;LeapIndicator &lt;&lt; 6) & 0xC0;
+	data-&gt;Flags |= (data-&gt;VersionNumber &lt;&lt; 3) & 0x38;
+	data-&gt;Flags |= data-&gt;Mode & 0x07;
+	
+	*ucp++ = data-&gt;Flags;
+	*ucp++ = data-&gt;PeerClockStratum;
+	*ucp++ = data-&gt;PeerPollingInterval;
+	*ucp++ = data-&gt;PeerClockPrecision;
+	*((long*)ucp) = htonl(data-&gt;RootDelay);
+    ucp += sizeof(long);
+	*((long*)ucp) = htonl(data-&gt;ClockDispersion);
+    ucp += sizeof(long);
+	for (i=0; i&lt;4; i++)
+	    *ucp++ = data-&gt;ReferenceClockID[i];
+	*((unsigned long*)ucp) = htonl(data-&gt;ReferenceClockUpdateTime[0]);
+        ucp += sizeof(unsigned long);
+	*((unsigned long*)ucp) = htonl(data-&gt;ReferenceClockUpdateTime[1]);
+        ucp += sizeof(unsigned long);
+	*((unsigned long*)ucp) = htonl(data-&gt;OriginateTimeStamp[0]);
+        ucp += sizeof(unsigned long);
+	*((unsigned long*)ucp) = htonl(data-&gt;OriginateTimeStamp[1]);
+        ucp += sizeof(unsigned long);
+	*((unsigned long*)ucp) = htonl(data-&gt;ReceiveTimeStamp[0]);
+        ucp += sizeof(unsigned long);
+	*((unsigned long*)ucp) = htonl(data-&gt;ReceiveTimeStamp[1]);
+        ucp += sizeof(unsigned long);
+	*((unsigned long*)ucp) = htonl(data-&gt;TransmitTimeStamp[0]);
+        ucp += sizeof(unsigned long);
+	*((unsigned long*)ucp) = htonl(data-&gt;TransmitTimeStamp[1]);
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<P>
+Nobody <I>ever</I> expects the <I>Spanish Inquisition</I>! (actually, that was long the nickname I gave my ex)
+Did I say "two methods"?  Here's a <i>third</I> one! (hence the Monty Python reference)
+<P>
+Instead of casting the pointer and worrying about data type sizes, we'll just work through the buffer byte-by-byte, using bit-wise operations to disassemble the longs into their component bytes.
+Don't worry!  It's easier than you think!
+<OL>
+<LI>Disassemble a multibyte value by shifting each byte, starting with its most significant byte, to the right down to the least significant byte position.
+AND 0xFF to it to mask out all other bits outside that byte.
+Then cast it as an unsigned char and assign it to the locate the buffer pointer is pointing to.
+<P>
+<LI>Do that for each byte, post-incrementing the pointer each time.
+</OL>
+See?  Even the explanation was easier!
+<P>
+Now mind you, this method is not as popular as the second method would be.
+However, I have used it in other types of projects where the hton* function family wasn't available to us so I had to go byte-by-byte.
+Also, I very frequently use the inverse operation, reading bytes off of an input stream and assembling them into multi-byte values.
+<P>
+Another alternative could be to use a union to overlay, for example, a long on top of a byte array.
+Actually:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+union Floats
+{ 
+    float           f;
+    double          d;    
+    short           ss;   
+    long            sl;
+    unsigned short  ui[4];       
+    unsigned long   ul[2];
+    BYTE            byte[8];
+};         
+
+union Floats floats;
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+However, with a union you need to remain ever-mindful of byte order, whereas this third method takes care of byte order for you.
+<P>
+Observe:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+/* translates NTPpayload data struct into NTP formatted data */
+void ConstructNTPpayload(NTPpayload *data,unsigned char *buffer)
+{
+	int i;
+    unsigned char *ucp = buffer;
+
+	// just to keep packet format issues all in one place
+	data-&gt;Flags = (data-&gt;LeapIndicator &lt;&lt; 6) & 0xC0;
+	data-&gt;Flags |= (data-&gt;VersionNumber &lt;&lt; 3) & 0x38;
+	data-&gt;Flags |= data-&gt;Mode & 0x07;
+	
+	*ucp++ = data-&gt;Flags;
+	*ucp++ = data-&gt;PeerClockStratum;
+	*ucp++ = data-&gt;PeerPollingInterval;
+	*ucp++ = data-&gt;PeerClockPrecision;
+
+	*ucp++ = (unsigned char)((data-&gt;RootDelay &gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;RootDelay &gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;RootDelay &gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;RootDelay & 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;ClockDispersion&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ClockDispersion&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ClockDispersion&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;ClockDispersion& 0xFF);
+
+	for (i=0; i&lt;4; i++)
+	    *ucp++ = data-&gt;ReferenceClockID[i];
+
+	*ucp++ = (unsigned char)((data-&gt;ReferenceClockUpdateTime[0]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReferenceClockUpdateTime[0]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReferenceClockUpdateTime[0]&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;ReferenceClockUpdateTime[0]& 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;ReferenceClockUpdateTime[1]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReferenceClockUpdateTime[1]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReferenceClockUpdateTime[1]&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;ReferenceClockUpdateTime[1]& 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;OriginateTimeStamp[0]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;OriginateTimeStamp[0]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;OriginateTimeStamp[0]&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;OriginateTimeStamp[0]& 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;OriginateTimeStamp[1]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;OriginateTimeStamp[1]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;OriginateTimeStamp[1]&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;OriginateTimeStamp[1]& 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;ReceiveTimeStamp[0]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReceiveTimeStamp[0]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReceiveTimeStamp[0]&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;ReceiveTimeStamp[0]& 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;ReceiveTimeStamp[1]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReceiveTimeStamp[1]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;ReceiveTimeStamp[1]&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;ReceiveTimeStamp[1]& 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;TransmitTimeStamp[0]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;TransmitTimeStamp[0]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;TransmitTimeStamp[0]&gt;&gt; 8) & 0xFF);
+	*ucp++ = (unsigned char)(data-&gt;TransmitTimeStamp[0]& 0xFF);
+
+	*ucp++ = (unsigned char)((data-&gt;TransmitTimeStamp[1]&gt;&gt; 24) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;TransmitTimeStamp[1]&gt;&gt; 16) & 0xFF);
+	*ucp++ = (unsigned char)((data-&gt;TransmitTimeStamp[1]&gt;&gt; 8) & 0xFF);
+	*ucp = (unsigned char)(data-&gt;TransmitTimeStamp[1]& 0xFF);
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=80%>
+<H4>Extracting Data</H4>
+<BLOCKQUOTE>
+<P>
+Now it's time to shift gears and look at extracting data.
+<P>
+When we receive the response message from the server, it's passed to this function, ParseNTPpayload, 
+which fills a NTPpayload struct with the data in the message.
+Again, we'll look at three methods for extracting that data, which are pretty much analogous to the three methods for inserting.
+<OL>
+<LI>In this method, the one I actually used, I treat the buffer as a byte array and use array indexing to access each byte.
+Just as before, I had to calculate by hand the index of each and every field in the message.
+<P>
+<LI>Again, where there's a byte-for-byte correspondance, a simple assignment statement is used.
+For example:<BR>
+<BLOCKQUOTE><CODE>data->PeerClockStratum = buffer[1];</CODE></BLOCKQUOTE>
+<P>
+<LI>The handling of multi-byte data appears neater, because all the casting and dereferencing of pointers is contained within the calls to the ntohl function.
+For example:<BR>
+<BLOCKQUOTE><CODE>data->RootDelay = ntohl(*((long*)(&buffer[4])));</CODE></BLOCKQUOTE>
+takes the address of buffer[4], casts it as a pointer to a long, then dereferences that pointer in order to pass the network-byte-order long to ntohl, which in turns returns a host-order long that is then assigned to data->RootDelay .
+And they're all done that way.
+<P>
+<LI>This time we see the LeapIndicator, VersionNumber, and Mode fields being extracted from the Flags byte.
+Each field is right-shifted to the least-significant position (except for Mode, of course, since it's already there) and it's AND'ed to mask out all other bits outside its field.
+<P>
+<LI>Note what we do for ReferenceClockID, which is a character string.
+The field is four ASCII characters long, but the string could four or fewer characters with the shorter strings zero-padded on the right.
+In C, strings are character arrays that are null-terminated, ie they have a zero-byte stuck on the end (a '\0', which is a character with an ASCII code of zero).
+When we extract ReferenceClockID, we need to ensure that the string is null-terminated.
+If its value was shorter than 4 characters (eg, "GPS", "WWV"), then we can just copy all four characters over and rest assured that the fourth character is a '\0' and hence the string is already null-terminated.
+But if it's four characters long (eg, "USNO", "GEOS"), as we blithely just copy all four charactersover, then we will most assuredly have an <I>un</I>-terminated string and will never know any rest until we fix it.
+<P>
+The fix is to allocate a fifth character in the string that we're extracting it to and assign a '\0' to it, thus guaranteeing that the string is terminated; ie:
+<BLOCKQUOTE><CODE>data->ReferenceClockID[4] = '\0';</CODE></BLOCKQUOTE>
+Of course, if we forget to allocate extra space for the null-terminator in that char array, then that's another kind of bug, one that can be more deadly.
+</OL>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+void ParseNTPpayload(NTPpayload *data,unsigned char *buffer)
+{
+	int i;
+
+	data-&gt;Flags = buffer[0];
+	data-&gt;LeapIndicator = (data-&gt;Flags &gt;&gt; 6) & 0x03;
+	data-&gt;VersionNumber = (data-&gt;Flags &gt;&gt; 3) & 0x07;
+	data-&gt;Mode = data-&gt;Flags & 0x07;
+	
+	data-&gt;PeerClockStratum = buffer[1];
+	data-&gt;PeerPollingInterval = buffer[2];
+	data-&gt;PeerClockPrecision = buffer[3];
+	data-&gt;RootDelay = ntohl(*((long*)(&buffer[4])));
+	data-&gt;ClockDispersion = ntohl(*((long*)(&buffer[8])));
+	for (i=0; i&lt;4; i++)
+		data-&gt;ReferenceClockID[i] = buffer[12+i];
+	data-&gt;ReferenceClockID[4] = '\0';	// null-terminate it
+	data-&gt;ReferenceClockUpdateTime[0] = ntohl(*((unsigned long*)(&buffer[16])));
+	data-&gt;ReferenceClockUpdateTime[1] = ntohl(*((unsigned long*)(&buffer[20])));
+	data-&gt;OriginateTimeStamp[0] = ntohl(*((unsigned long*)(&buffer[24])));
+	data-&gt;OriginateTimeStamp[1] = ntohl(*((unsigned long*)(&buffer[28])));
+	data-&gt;ReceiveTimeStamp[0] = ntohl(*((unsigned long*)(&buffer[32])));
+	data-&gt;ReceiveTimeStamp[1] = ntohl(*((unsigned long*)(&buffer[36])));
+	data-&gt;TransmitTimeStamp[0] = ntohl(*((unsigned long*)(&buffer[40])));
+	data-&gt;TransmitTimeStamp[1] = ntohl(*((unsigned long*)(&buffer[44])));
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<P>
+Now let's see what it looks like when we replace the array subscripting with a pointer to buffer.
+Most of the explanation is the same as for inserting, so you should be able to just read the code.
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+void ParseNTPpayload(NTPpayload *data,unsigned char *buffer)
+{
+	int i;
+    unsigned char *ucp = buffer;
+    
+	data-&gt;Flags = *ucp++;
+	data-&gt;LeapIndicator = (data-&gt;Flags &gt;&gt; 6) & 0x03;
+	data-&gt;VersionNumber = (data-&gt;Flags &gt;&gt; 3) & 0x07;
+	data-&gt;Mode = data-&gt;Flags & 0x07;
+	
+	data-&gt;PeerClockStratum = *ucp++;
+	data-&gt;PeerPollingInterval = *ucp++;
+	data-&gt;PeerClockPrecision = *ucp++;
+	data-&gt;RootDelay = ntohl(*((long*)ucp));
+        ucp += sizeof(long);
+	data-&gt;ClockDispersion = ntohl(*((long*)ucp));
+        ucp += sizeof(long);
+	for (i=0; i&lt;4; i++)
+		data-&gt;ReferenceClockID[i] = *ucp++;
+	data-&gt;ReferenceClockID[4] = '\0';	// null-terminate it
+	data-&gt;ReferenceClockUpdateTime[0] = ntohl(*((unsigned long*)ucp));
+    ucp += sizeof(unsigned long);
+	data-&gt;ReferenceClockUpdateTime[1] = ntohl(*((unsigned long*)ucp));
+    ucp += sizeof(unsigned long);
+	data-&gt;OriginateTimeStamp[0] = ntohl(*((unsigned long*)ucp));
+    ucp += sizeof(unsigned long);
+	data-&gt;OriginateTimeStamp[1] = ntohl(*((unsigned long*)ucp));
+    ucp += sizeof(unsigned long);
+	data-&gt;ReceiveTimeStamp[0] = ntohl(*((unsigned long*)ucp));
+    ucp += sizeof(unsigned long);
+	data-&gt;ReceiveTimeStamp[1] = ntohl(*((unsigned long*)ucp));
+    ucp += sizeof(unsigned long);
+	data-&gt;TransmitTimeStamp[0] = ntohl(*((unsigned long*)ucp));
+    ucp += sizeof(unsigned long);
+	data-&gt;TransmitTimeStamp[1] = ntohl(*((unsigned long*)ucp));
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<P>
+Now for the fun one.  The one where we simply go through the buffer byte-by-byte and build our multibyte values as we go.
+<P>
+As I mentioned before, this is a very common technique when you're processing an input stream, so it's a good one to learn.
+In C, at least.  Other languages, such as Java and .NET, base their I/O on streams and filters, so this technique will most likely be too low-level for use there.
+<P>
+Again, most of what's going on here is review for you, so just read the code.
+
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+void ParseNTPpayload(NTPpayload *data,unsigned char *buffer)
+{
+	int i;
+    unsigned char *ucp = buffer;
+    
+	data-&gt;Flags = *ucp++;
+	data-&gt;LeapIndicator = (data-&gt;Flags &gt;&gt; 6) & 0x03;
+	data-&gt;VersionNumber = (data-&gt;Flags &gt;&gt; 3) & 0x07;
+	data-&gt;Mode = data-&gt;Flags & 0x07;
+	
+	data-&gt;PeerClockStratum = *ucp++;
+	data-&gt;PeerPollingInterval = *ucp++;
+	data-&gt;PeerClockPrecision = *ucp++;
+
+	data-&gt;RootDelay = (long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;RootDelay |= (long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;RootDelay |= (long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;RootDelay |= (long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;ClockDispersion = (long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;ClockDispersion |= (long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;ClockDispersion |= (long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;ClockDispersion |= (long)(*ucp++ & 0x000000FFUL);
+
+	for (i=0; i&lt;4; i++)
+		data-&gt;ReferenceClockID[i] = *ucp++;
+	data-&gt;ReferenceClockID[4] = '\0';	// null-terminate it
+
+	data-&gt;ReferenceClockUpdateTime[0]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;ReferenceClockUpdateTime[0]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;ReferenceClockUpdateTime[0]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;ReferenceClockUpdateTime[0]|= (unsigned long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;ReferenceClockUpdateTime[1]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;ReferenceClockUpdateTime[1]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;ReferenceClockUpdateTime[1]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;ReferenceClockUpdateTime[1]|= (unsigned long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;OriginateTimeStamp[0]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;OriginateTimeStamp[0]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;OriginateTimeStamp[0]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;OriginateTimeStamp[0]|= (unsigned long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;OriginateTimeStamp[1]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;OriginateTimeStamp[1]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;OriginateTimeStamp[1]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;OriginateTimeStamp[1]|= (unsigned long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;ReceiveTimeStamp[0]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;ReceiveTimeStamp[0]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;ReceiveTimeStamp[0]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;ReceiveTimeStamp[0]|= (unsigned long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;ReceiveTimeStamp[1]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;ReceiveTimeStamp[1]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;ReceiveTimeStamp[1]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;ReceiveTimeStamp[1]|= (unsigned long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;TransmitTimeStamp[0]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;TransmitTimeStamp[0]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;TransmitTimeStamp[0]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;TransmitTimeStamp[0]|= (unsigned long)(*ucp++ & 0x000000FFUL);
+
+	data-&gt;TransmitTimeStamp[1]= (unsigned long)((*ucp++ &lt;&lt; 24) & 0xFF000000UL);
+	data-&gt;TransmitTimeStamp[1]|= (unsigned long)((*ucp++ &lt;&lt; 16) & 0x00FF0000UL);
+	data-&gt;TransmitTimeStamp[1]|= (unsigned long)((*ucp++ &lt;&lt; 8) & 0x0000FF00UL);
+	data-&gt;TransmitTimeStamp[1]|= (unsigned long)(*ucp & 0x000000FFUL);
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+</BLOCKQUOTE>
+<HR WIDTH=80%>
+<BLOCKQUOTE>
+<P>
+OBTW, ReferenceClockUpdateTime contains the time.
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<BLOCKQUOTE>
+<P>
+Here are the results of a couple of runs of my time client, 
+<A HREF="samples.html#UDPTIMEC">UDPtimec</A>, from which the code fragments above were taken:
+
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+C:>udptimec time.zyfer.com ntp
+Sending 48-byte query to time.zyfer.com:ntp [10.10.10.250:123]
+1B 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+00 00 00 00 00 00 00 00 CB 3A 7B 7B C4 9B A5 E2    .........:{{....
+ **********
+Received 48 bytes from time.zyfer.com [10.10.10.250:123]
+1C 01 00 ED 00 00 00 00 00 00 00 00 47 50 53 00    ............GPS.
+CB 3A 7B 7D 00 00 00 00 CB 3A 7B 7B C4 9B A5 E2    .:{}.....:{{....
+CB 3A 7B 7D D6 98 60 C9 CB 3A 7B 7D D6 A8 1B 51    .:{}..`..:{}...Q
+ **********
+Flags: 0x1C  LI: no warning (0)  Ver 3  Mode: server (4)
+Peer Clock Stratum: primary reference (1)
+Peer Polling Interval: 1 (0)
+Peer Clock Precision: 1.90735e-006 (-19)
+Root Delay: 0 (00000000)
+Clock Dispersion: 0 (00000000)
+Reference Clock ID: 'GPS'
+Reference Clock Update Time: 2008-01-18 01:12:29.0000 UTC (CB3A7B7D 00000000)
+Originate Time Stamp: 2008-01-18 01:12:27.7680 UTC (CB3A7B7B C49BA5E2)
+Receive Time Stamp: 2008-01-18 01:12:29.8383 UTC (CB3A7B7D D69860C9)
+Transmit Time Stamp: 2008-01-18 01:12:29.8385 UTC (CB3A7B7D D6A81B51)
+Round Trip Delay: 0.047240
+Local Clock Offset: 0.023380
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+C:>udptimec tick.usno.navy.mil ntp
+Sending 48-byte query to tick.usno.navy.mil:ntp [192.5.41.40:123]
+1B 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+00 00 00 00 00 00 00 00 CB 3A 7B CA 94 7A E1 47    .........:{..z.G
+ **********
+Received 48 bytes from ntp0.usno.navy.mil [192.5.41.40:123]
+1C 01 00 EC 00 00 00 00 00 00 00 1D 55 53 4E 4F    ............USNO
+CB 3A 7B BD C8 D3 F8 89 CB 3A 7B CA 94 7A E1 47    .:{......:{..z.G
+CB 3A 7B CC AF 2C EC C6 CB 3A 7B CC AF 52 8F 4E    .:{..,...:{..R.N
+ **********
+Flags: 0x1C  LI: no warning (0)  Ver 3  Mode: server (4)
+Peer Clock Stratum: primary reference (1)
+Peer Polling Interval: 1 (0)
+Peer Clock Precision: 9.53674e-007 (-20)
+Root Delay: 0 (00000000)
+Clock Dispersion: 0.000442505 (0000001D)
+Reference Clock ID: 'USNO'
+Reference Clock Update Time: 2008-01-18 01:13:33.7845 UTC (CB3A7BBD C8D3F889)
+Originate Time Stamp: 2008-01-18 01:13:46.5800 UTC (CB3A7BCA 947AE147)
+Receive Time Stamp: 2008-01-18 01:13:48.6843 UTC (CB3A7BCC AF2CECC6)
+Transmit Time Stamp: 2008-01-18 01:13:48.6849 UTC (CB3A7BCC AF528F4E)
+Round Trip Delay: 0.219574
+Local Clock Offset: 0.109213
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=40%>
+<BLOCKQUOTE>
+<P>
+The main lesson I want you to take with you from those runs is in the hex dumps.
+I wrote my code in C, but you may well be using a different language that has different techniques for inserting and extracting data.
+<P>
+For example, if you're needing to work with wire formats in Java, then you may find some useful code and information at the site for the book, 
+<A HREF="http://cs.baylor.edu/~donahoo/practical/JavaSockets/">TCP/IP Sockets in Java: Practical Guide for Programmers</A> by Kenneth Calvert and Michael Donahoo.
+<P>
+To bottom line is that, however you have to do it, you <I>must</I> be able to output and to process <I>that exact format</I>.
+Whatever it takes, however you have to do it, you <I>must</I> accomplish that goal of matching that exact format.
+<P>
+Anything less just simply will never work.
+And that's the real bottom line, isnt' it?
+That it must work?
+</BLOCKQUOTE>
+<P>
+<HR>
+
+</BLOCKQUOTE>
+<HR>
+<BLOCKQUOTE>
+<A HREF="#TopOfPage">Return to Top of Page</A><br>
+<A HREF="index.html">Return to DWise1's Sockets Programming Page</A><BR>
+<A HREF="../index.html">Return to DWise1's Programming Page</A><BR>
+<P>
+<A HREF="../index.html#CONTACTME">Contact me.</A>
+</BLOCKQUOTE>
+<HR>
+<P>
+<B><I>Share and enjoy!</I></B>
+<P>
+<i>First uploaded on 2008 January 18.<br>
+Updated 2011 July 18.</i>
+<P>
+</BODY>
+</HTML>
