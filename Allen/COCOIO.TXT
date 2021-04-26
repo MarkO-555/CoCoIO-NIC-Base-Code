@@ -388,90 +388,91 @@
                       (    COCOIODRV.asm):00026         
                       (    COCOIODRV.asm):00027                     org   $7E00
 7E00 7E7E15           (    COCOIODRV.asm):00028         RESET:      jmp   W5100_RST
-7E03 7E7E2B           (    COCOIODRV.asm):00029         CONFIG:     jmp   W5100_CFG
-7E06 7E7E3B           (    COCOIODRV.asm):00030         GATEWAY:    jmp   W5100_GATEWAY
-7E09 7E7E53           (    COCOIODRV.asm):00031         SUBNET:     jmp   W5100_SUBNET
-7E0C 7E7E6B           (    COCOIODRV.asm):00032         HARDWARE:   jmp   W5100_HARDWARE
-7E0F 7E7E83           (    COCOIODRV.asm):00033         IPADDR:     jmp   W5100_IPADDR
-7E12 7E7E9B           (    COCOIODRV.asm):00034         MPISLOT:    jmp   MPISLOT1
+7E03 7E7E35           (    COCOIODRV.asm):00029         CONFIG:     jmp   W5100_CFG
+7E06 7E7E42           (    COCOIODRV.asm):00030         GATEWAY:    jmp   W5100_GATEWAY
+7E09 7E7E58           (    COCOIODRV.asm):00031         SUBNET:     jmp   W5100_SUBNET
+7E0C 7E7E6E           (    COCOIODRV.asm):00032         HARDWARE:   jmp   W5100_HARDWARE
+7E0F 7E7E84           (    COCOIODRV.asm):00033         IPADDR:     jmp   W5100_IPADDR
+7E12 7E7E9A           (    COCOIODRV.asm):00034         MPISLOT:    jmp   MPISLOT1
                       (    COCOIODRV.asm):00035         
 7E15                  (    COCOIODRV.asm):00036         W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
-7E15 BD7E9B           (    COCOIODRV.asm):00037                     jsr   MPISLOT1
-7E18 B6FF68           (    COCOIODRV.asm):00038                     lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
-7E1B 8A80             (    COCOIODRV.asm):00039                     ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-7E1D B7FF68           (    COCOIODRV.asm):00040                     sta   CIO0CMND    ; Trigger the reset
-7E20 B6FF68           (    COCOIODRV.asm):00041         RSTDONE:    lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-7E23 2BFB             (    COCOIODRV.asm):00042                     bmi   RSTDONE     ; if bit 7, then A was negative, keep checking bit
-7E25 8A03             (    COCOIODRV.asm):00043                     ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
-7E27 B7FF68           (    COCOIODRV.asm):00044                     sta   CIO0CMND    ; configure the chip and done
-7E2A 39               (    COCOIODRV.asm):00045                     rts
-                      (    COCOIODRV.asm):00046         
-7E2B                  (    COCOIODRV.asm):00047         W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-7E2B BD7E9B           (    COCOIODRV.asm):00048                     jsr   MPISLOT1    ; Setup my MPI slot
-7E2E BD7E6B           (    COCOIODRV.asm):00049                     jsr   W5100_HARDWARE  ; Bring up layer 2 address first
-7E31 BD7E83           (    COCOIODRV.asm):00050                     jsr   W5100_IPADDR    ; Bring up layer 3 address
-7E34 BD7E53           (    COCOIODRV.asm):00051                     jsr   W5100_SUBNET    ; Bring up layer 3 network mask
-7E37 BD7E3B           (    COCOIODRV.asm):00052                     jsr   W5100_GATEWAY   ; Bring up layer 3 default route
-7E3A 39               (    COCOIODRV.asm):00053                     rts
-                      (    COCOIODRV.asm):00054         
-7E3B                  (    COCOIODRV.asm):00055         W5100_GATEWAY:                ; Configure the Gateway address
-7E3B CC0001           (    COCOIODRV.asm):00056                     ldd   #GAR0       ; W5100S Gateway Address Register 0
-7E3E B7FF69           (    COCOIODRV.asm):00057                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E41 F7FF6A           (    COCOIODRV.asm):00058                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E44 8E7EA4           (    COCOIODRV.asm):00059                     ldx   #MYGATEWAY  ; Get the location of the Gateway data 
-7E47 5F               (    COCOIODRV.asm):00060                     clrb              ; Clear B for loop counting
-7E48 A680             (    COCOIODRV.asm):00061         GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
-7E4A B7FF6B           (    COCOIODRV.asm):00062                     sta   CIO0DATA    ; Store it to W5100S
-7E4D 5C               (    COCOIODRV.asm):00063                     incb              ; Increment loop counter
-7E4E C104             (    COCOIODRV.asm):00064                     cmpb  #4          ; Are we past the end of the Gateway data?
-7E50 26F6             (    COCOIODRV.asm):00065                     bne   GWRLOOP     ; No, go back and do more
-7E52 39               (    COCOIODRV.asm):00066                     rts
-                      (    COCOIODRV.asm):00067         
-7E53                  (    COCOIODRV.asm):00068         W5100_SUBNET:                 ; Next the Subnet Mask
-7E53 CC0005           (    COCOIODRV.asm):00069                     ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-7E56 B7FF69           (    COCOIODRV.asm):00070                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E59 F7FF6A           (    COCOIODRV.asm):00071                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E5C 8E7EA8           (    COCOIODRV.asm):00072                     ldx   #MYSUBNET   ; Get the location of the Subnet data
-7E5F 5F               (    COCOIODRV.asm):00073                     clrb              ; Clear that loop counter
-7E60 A680             (    COCOIODRV.asm):00074         SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
-7E62 B7FF6B           (    COCOIODRV.asm):00075                     sta   CIO0DATA    ; Store it to W5100S
-7E65 5C               (    COCOIODRV.asm):00076                     incb              ; Increment loop counter
-7E66 C104             (    COCOIODRV.asm):00077                     cmpb  #4          ; Are we past the end of the Subnet data?
-7E68 26F6             (    COCOIODRV.asm):00078                     bne   SUBRLOOP    ; No, go back and do more
-7E6A 39               (    COCOIODRV.asm):00079                     rts
-                      (    COCOIODRV.asm):00080         
-7E6B                  (    COCOIODRV.asm):00081         W5100_HARDWARE:               ; Next the Source Hardware Address
-7E6B CC0009           (    COCOIODRV.asm):00082                     ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
-7E6E B7FF69           (    COCOIODRV.asm):00083                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E71 F7FF6A           (    COCOIODRV.asm):00084                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E74 8E7EAC           (    COCOIODRV.asm):00085                     ldx   #MYMAC      ; Get the location of the MAC data
-7E77 5F               (    COCOIODRV.asm):00086                     clrb              ; Clear that loop counter
-7E78 A680             (    COCOIODRV.asm):00087         SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
-7E7A B7FF6B           (    COCOIODRV.asm):00088                     sta   CIO0DATA    ; Store it to W5100S
-7E7D 5C               (    COCOIODRV.asm):00089                     incb              ; Increment loop counter
-7E7E C106             (    COCOIODRV.asm):00090                     cmpb  #6          ; Are we past the end of the MAC data?
-7E80 26F6             (    COCOIODRV.asm):00091                     bne   SHARLOOP    ; No, go back and do more
-7E82 39               (    COCOIODRV.asm):00092                     rts
-                      (    COCOIODRV.asm):00093         
-7E83                  (    COCOIODRV.asm):00094         W5100_IPADDR:                 ; Next the Source IP Address
-7E83 CC000F           (    COCOIODRV.asm):00095                     ldd   #SIPR0      ; W5100S Source IP Register 0
-7E86 B7FF69           (    COCOIODRV.asm):00096                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E89 F7FF6A           (    COCOIODRV.asm):00097                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E8C 8E7EB2           (    COCOIODRV.asm):00098                     ldx   #MYIP       ; Get the location of the IP data
-7E8F 5F               (    COCOIODRV.asm):00099                     clrb              ; Clear the loop counter
-7E90 A680             (    COCOIODRV.asm):00100         SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
-7E92 B7FF6B           (    COCOIODRV.asm):00101                     sta   CIO0DATA    ; Store it to W5100S
-7E95 5C               (    COCOIODRV.asm):00102                     incb              ; Increment loop counter
-7E96 C104             (    COCOIODRV.asm):00103                     cmpb  #4          ; Are we past the end of the IP data?
-7E98 26F6             (    COCOIODRV.asm):00104                     bne   SIPRLOOP    ; No, go back and do more
-7E9A 39               (    COCOIODRV.asm):00105                     rts
-                      (    COCOIODRV.asm):00106         
-7E9B B6FF7F           (    COCOIODRV.asm):00107         MPISLOT1:   lda   $FF7F       ; Read the MPI slot control
-7E9E 84F0             (    COCOIODRV.asm):00108                     anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
-7EA0 B7FF7F           (    COCOIODRV.asm):00109                     sta   $FF7F       ; Write the updated SCS
-7EA3 39               (    COCOIODRV.asm):00110                     rts
-                      (    COCOIODRV.asm):00111         
-                      (    COCOIODRV.asm):00112                     include "COCOIOCFG.asm"
+7E15 BD7E9A           (    COCOIODRV.asm):00037                     jsr   MPISLOT1
+7E18 BD7EA3           (    COCOIODRV.asm):00038                     jsr   DELAY
+7E1B B6FF68           (    COCOIODRV.asm):00039                     lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
+7E1E 8A80             (    COCOIODRV.asm):00040                     ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+7E20 B7FF68           (    COCOIODRV.asm):00041                     sta   CIO0CMND    ; Trigger the reset
+7E23 B6FF68           (    COCOIODRV.asm):00042         RSTDONE:    lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
+7E26 2BFB             (    COCOIODRV.asm):00043                     bmi   RSTDONE     ; if bit 7, then A was negative, keep checking bit
+7E28 8A03             (    COCOIODRV.asm):00044         SETMODE:    ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
+7E2A B7FF68           (    COCOIODRV.asm):00045                     sta   CIO0CMND    ; configure the chip and done
+7E2D B6FF68           (    COCOIODRV.asm):00046                     lda   CIO0CMND    ; readback mode
+7E30 8103             (    COCOIODRV.asm):00047                     cmpa  #3          ; is it what we want?
+7E32 26F4             (    COCOIODRV.asm):00048                     bne   SETMODE     ; no, try again
+7E34 39               (    COCOIODRV.asm):00049                     rts
+                      (    COCOIODRV.asm):00050         
+7E35                  (    COCOIODRV.asm):00051         W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
+7E35 BD7E42           (    COCOIODRV.asm):00052                     jsr   W5100_GATEWAY   ; Bring up layer 3 default route
+7E38 BD7E58           (    COCOIODRV.asm):00053                     jsr   W5100_SUBNET    ; Bring up layer 3 network mask
+7E3B BD7E6E           (    COCOIODRV.asm):00054                     jsr   W5100_HARDWARE  ; Bring up layer 2 address
+7E3E BD7E84           (    COCOIODRV.asm):00055                     jsr   W5100_IPADDR    ; Bring up layer 3 address
+7E41 39               (    COCOIODRV.asm):00056                     rts
+                      (    COCOIODRV.asm):00057         
+7E42                  (    COCOIODRV.asm):00058         W5100_GATEWAY:                ; Configure the Gateway address
+7E42 8E7EAB           (    COCOIODRV.asm):00059                     ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E45 C604             (    COCOIODRV.asm):00060                     ldb   #4          ; Setup B for loop counting
+7E47 108E0001         (    COCOIODRV.asm):00061                     ldy   #GAR0       ; W5100S Gateway Address Register 0
+7E4B 10BFFF69         (    COCOIODRV.asm):00062                     sty   CIO0ADDR    ; CoCoIO Address Register MSB
+7E4F A680             (    COCOIODRV.asm):00063         GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
+7E51 B7FF6B           (    COCOIODRV.asm):00064                     sta   CIO0DATA    ; Store it to W5100S
+7E54 5A               (    COCOIODRV.asm):00065                     decb              ; Decrement loop counter
+7E55 26F8             (    COCOIODRV.asm):00066                     bne   GWRLOOP     ; No, go back and do more
+7E57 39               (    COCOIODRV.asm):00067                     rts
+                      (    COCOIODRV.asm):00068         
+7E58                  (    COCOIODRV.asm):00069         W5100_SUBNET:                 ; Next the Subnet Mask
+7E58 8E7EAF           (    COCOIODRV.asm):00070                     ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E5B C604             (    COCOIODRV.asm):00071                     ldb   #4          ; Setup B for loop counting
+7E5D 108E0005         (    COCOIODRV.asm):00072                     ldy   #SUBR0      ; W5100S Subnet Mask Address Register 0
+7E61 10BFFF69         (    COCOIODRV.asm):00073                     sty   CIO0ADDR    ; CoCoIO Address Register MSB
+7E65 A680             (    COCOIODRV.asm):00074         SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
+7E67 B7FF6B           (    COCOIODRV.asm):00075                     sta   CIO0DATA    ; Store it to W5100S
+7E6A 5A               (    COCOIODRV.asm):00076                     decb              ; Decrement loop counter
+7E6B 26F8             (    COCOIODRV.asm):00077                     bne   SUBRLOOP    ; No, go back and do more
+7E6D 39               (    COCOIODRV.asm):00078                     rts
+                      (    COCOIODRV.asm):00079         
+7E6E                  (    COCOIODRV.asm):00080         W5100_HARDWARE:               ; Next the Source Hardware Address
+7E6E 8E7EB3           (    COCOIODRV.asm):00081                     ldx   #MYMAC      ; Get the location of the MAC data
+7E71 C606             (    COCOIODRV.asm):00082                     ldb   #6          ; Setup B for loop counting
+7E73 108E0009         (    COCOIODRV.asm):00083                     ldy   #SHAR0      ; W5100S Source Hardware Address Register 0
+7E77 10BFFF69         (    COCOIODRV.asm):00084                     sty   CIO0ADDR    ; CoCoIO Address Register MSB
+7E7B A680             (    COCOIODRV.asm):00085         SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
+7E7D B7FF6B           (    COCOIODRV.asm):00086                     sta   CIO0DATA    ; Store it to W5100S
+7E80 5A               (    COCOIODRV.asm):00087                     decb              ; Decrement loop counter
+7E81 26F8             (    COCOIODRV.asm):00088                     bne   SHARLOOP    ; No, go back and do more
+7E83 39               (    COCOIODRV.asm):00089                     rts
+                      (    COCOIODRV.asm):00090         
+7E84                  (    COCOIODRV.asm):00091         W5100_IPADDR:                 ; Next the Source IP Address
+7E84 8E7EB9           (    COCOIODRV.asm):00092                     ldx   #MYIP       ; Get the location of the IP data
+7E87 C604             (    COCOIODRV.asm):00093                     ldb   #4          ; Setup B for loop counting
+7E89 108E000F         (    COCOIODRV.asm):00094                     ldy   #SIPR0      ; W5100S Source IP Register 0
+7E8D 10BFFF69         (    COCOIODRV.asm):00095                     sty   CIO0ADDR    ; CoCoIO Address Register MSB
+7E91 A680             (    COCOIODRV.asm):00096         SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
+7E93 B7FF6B           (    COCOIODRV.asm):00097                     sta   CIO0DATA    ; Store it to W5100S
+7E96 5A               (    COCOIODRV.asm):00098                     decb              ; Decrement loop counter
+7E97 26F8             (    COCOIODRV.asm):00099                     bne   SIPRLOOP    ; No, go back and do more
+7E99 39               (    COCOIODRV.asm):00100                     rts
+                      (    COCOIODRV.asm):00101         
+7E9A                  (    COCOIODRV.asm):00102         MPISLOT1:                     ; Configure Multipack SCS to slot 1
+7E9A B6FF7F           (    COCOIODRV.asm):00103                     lda   $FF7F       ; Read the MPI slot control
+7E9D 84F0             (    COCOIODRV.asm):00104                     anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+7E9F B7FF7F           (    COCOIODRV.asm):00105                     sta   $FF7F       ; Write the updated SCS
+7EA2 39               (    COCOIODRV.asm):00106                     rts
+                      (    COCOIODRV.asm):00107         
+7EA3 8E1000           (    COCOIODRV.asm):00108         DELAY:      ldx   #$1000      ; A delay loop
+7EA6 301F             (    COCOIODRV.asm):00109         DELAY1:     leax  -1,X        ; Decrement X
+7EA8 26FC             (    COCOIODRV.asm):00110                     bne   DELAY1      ; if X>0 not done yet
+7EAA 39               (    COCOIODRV.asm):00111                     rts
+                      (    COCOIODRV.asm):00112         
+                      (    COCOIODRV.asm):00113                     include "COCOIOCFG.asm"
                       (    COCOIOCFG.asm):00001         ;*********************************************************************
                       (    COCOIOCFG.asm):00002         ;* Title: COCOIOCFG.asm
                       (    COCOIOCFG.asm):00003         ;*********************************************************************
@@ -493,20 +494,20 @@
                       (    COCOIOCFG.asm):00019         ;* 00     2021         RAM     Initial data to config for testing
                       (    COCOIOCFG.asm):00020         ;*********************************************************************
                       (    COCOIOCFG.asm):00021         
-7EA4                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
-7EA4 0A278001         (    COCOIOCFG.asm):00023                     fcb   10,39,128,1
+7EAB                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
+7EAB 0A278001         (    COCOIOCFG.asm):00023                     fcb   10,39,128,1
                       (    COCOIOCFG.asm):00024         
-7EA8                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
-7EA8 FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
+7EAF                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
+7EAF FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
                       (    COCOIOCFG.asm):00027         
-7EAC                  (    COCOIOCFG.asm):00028         MYMAC:                        ; My Source Hardware Address
-7EAC 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
+7EB3                  (    COCOIOCFG.asm):00028         MYMAC:                        ; My Source Hardware Address
+7EB3 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
                       (    COCOIOCFG.asm):00030         
-7EB2                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
-7EB2 0A278044         (    COCOIOCFG.asm):00032                     fcb   10,39,128,68
+7EB9                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
+7EB9 0A278044         (    COCOIOCFG.asm):00032                     fcb   10,39,128,68
                       (    COCOIOCFG.asm):00033                                       ; End of My CoCoIO configuration
-                      (    COCOIODRV.asm):00113         
-                      (    COCOIODRV.asm):00114                     end   RESET       ; End of driver
+                      (    COCOIODRV.asm):00114         
+                      (    COCOIODRV.asm):00115                     end   RESET       ; End of driver
 
 Symbol Table:
 [ G] CIO0ADDR                         FF69
@@ -517,12 +518,14 @@ Symbol Table:
 [ G] CIO1DATA                         FF7B
 [ G] CLKLCKR                          0070
 [ G] CONFIG                           7E03
+[ G] DELAY                            7EA3
+[ G] DELAY1                           7EA6
 [ G] GAR0                             0001
 [ G] GAR1                             0002
 [ G] GAR2                             0003
 [ G] GAR3                             0004
 [ G] GATEWAY                          7E06
-[ G] GWRLOOP                          7E48
+[ G] GWRLOOP                          7E4F
 [ G] HARDWARE                         7E0C
 [ G] IMR                              0016
 [ G] IMR2                             0021
@@ -532,13 +535,13 @@ Symbol Table:
 [ G] IR                               0015
 [ G] IR2                              0020
 [ G] MPISLOT                          7E12
-[ G] MPISLOT1                         7E9B
+[ G] MPISLOT1                         7E9A
 [ G] MR                               0000
 [ G] MR2                              0030
-[ G] MYGATEWAY                        7EA4
-[ G] MYIP                             7EB2
-[ G] MYMAC                            7EAC
-[ G] MYSUBNET                         7EA8
+[ G] MYGATEWAY                        7EAB
+[ G] MYIP                             7EB9
+[ G] MYMAC                            7EB3
+[ G] MYSUBNET                         7EAF
 [ G] NETLCKR                          0071
 [ G] PHAR0                            0032
 [ G] PHAR1                            0033
@@ -572,7 +575,7 @@ Symbol Table:
 [ G] RCR                              0019
 [ G] RESET                            7E00
 [ G] RMSR                             001A
-[ G] RSTDONE                          7E20
+[ G] RSTDONE                          7E23
 [ G] RTR0                             0017
 [ G] RTR1                             0018
 [ G] S0_CR                            0401
@@ -755,18 +758,19 @@ Symbol Table:
 [ G] S3_TX_WR0                        0724
 [ G] S3_TX_WR1                        0725
 [ G] S3_TXBUF_SIZE                    071F
+[ G] SETMODE                          7E28
 [ G] SHAR0                            0009
 [ G] SHAR1                            000A
 [ G] SHAR2                            000B
 [ G] SHAR3                            000C
 [ G] SHAR4                            000D
 [ G] SHAR5                            000E
-[ G] SHARLOOP                         7E78
+[ G] SHARLOOP                         7E7B
 [ G] SIPR0                            000F
 [ G] SIPR1                            0010
 [ G] SIPR2                            0011
 [ G] SIPR3                            0012
-[ G] SIPRLOOP                         7E90
+[ G] SIPRLOOP                         7E91
 [ G] SLCR                             004C
 [ G] SLIMR                            005E
 [ G] SLIR                             005F
@@ -788,7 +792,7 @@ Symbol Table:
 [ G] SUBR1                            0006
 [ G] SUBR2                            0007
 [ G] SUBR3                            0008
-[ G] SUBRLOOP                         7E60
+[ G] SUBRLOOP                         7E65
 [ G] TCNTCLR                          0088
 [ G] TCNTR0                           0082
 [ G] TCNTR1                           0083
@@ -800,9 +804,9 @@ Symbol Table:
 [ G] UPORTR0                          002E
 [ G] UPORTR1                          002F
 [ G] VERR                             0080
-[ G] W5100_CFG                        7E2B
-[ G] W5100_GATEWAY                    7E3B
-[ G] W5100_HARDWARE                   7E6B
-[ G] W5100_IPADDR                     7E83
+[ G] W5100_CFG                        7E35
+[ G] W5100_GATEWAY                    7E42
+[ G] W5100_HARDWARE                   7E6E
+[ G] W5100_IPADDR                     7E84
 [ G] W5100_RST                        7E15
-[ G] W5100_SUBNET                     7E53
+[ G] W5100_SUBNET                     7E58
