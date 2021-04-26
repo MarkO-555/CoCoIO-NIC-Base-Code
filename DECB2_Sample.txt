@@ -1,1 +1,6 @@
 decb2 put -a -0 -l cocoio.dsk BASIC/COCOIO12.BAS COCOIO12.BAS
+
+decb2 put -b -2 cocoio.dsk Pending/2021-04-25_01_Allen/a.out ALLENT01.BIN
+
+
+
