@@ -19,15 +19,15 @@
 ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
 ;*********************************************************************
 
-MYGATEWAY:                    ; My Gateway IP Address
-            fcb   192,168,253,254
+GWR:                         ; Gateway IP Address
+            fcb   10,39,128,1
 
-MYSUBNET:                     ; My Subnet Mask
+SUBR:                        ; Subnet Mask
             fcb   255,255,255,0 
 
-MYMAC:                        ; My Source Hardware Address
+SHAR:                        ; Source Hardware Address
             fcb   $00,$08,$DC,$00,$00,$01
 
-MYIP:                         ; My Source IP Address
-            fcb   192,168,253,10
-                              ; End of My CoCoIO configuration
+SIPR:                        ; Source IP Address
+            fcb   10,39,128,68
+                              ; End of CoCoIO configuration

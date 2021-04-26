@@ -45,7 +45,7 @@ W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
 
             ldx   #GAR0       ; W5100S Gateway Address Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
-            ldx   MYGATEWAY
+            ldx   GWR
             clrb
 GWRLOOP:    lda   ,X+
             sta   CIO0DATA
@@ -53,13 +53,10 @@ GWRLOOP:    lda   ,X+
             incb
             cmpb  #4
             bne   GWRLOOP
-;
-            rts
-;            
                               ; Now the Subnet Mask
             ldx   #SUBR0      ; W5100S Subnet Mask Address Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
-            ldx   MYSUBNET
+            ldx   SUBR
             clrb
 SUBRLOOP:   lda   ,X+
             sta   CIO0DATA
@@ -67,13 +64,10 @@ SUBRLOOP:   lda   ,X+
             incb
             cmpb  #4
             bne   SUBRLOOP
-;
-            rts
-;            
                               ; Now the Source Hardware Address
             ldx   #SHAR0      ; W5100S Source Hardware Address Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
-            ldx   MYMAC
+            ldx   SHAR
             clrb
 SHARLOOP:   lda   ,X+
             sta   CIO0DATA
@@ -81,13 +75,11 @@ SHARLOOP:   lda   ,X+
             incb
             cmpb  #6
             bne   SHARLOOP
-;
-            rts
-;            
+
                               ; Now the Source IP Address
             ldx   #SIPR0      ; W5100S Source IP Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
-            ldx   MYIP
+            ldx   SIPR
             clrb
 SIPRLOOP:   lda   ,X+
             sta   CIO0DATA

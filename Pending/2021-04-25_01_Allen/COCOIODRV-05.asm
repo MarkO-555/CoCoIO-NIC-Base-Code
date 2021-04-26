@@ -22,9 +22,14 @@
             include "W5100SEQU.asm"
             include "COCOIOEQU.asm"
 
-            org   $4000
+            org   $47E00
 RESET:      jmp   W5100_RST
 CONFIG:     jmp   W5100_CFG
+GATEWY:     jmp   W5100_GW
+SUBNM:      jmp   W5100_SNM
+MACADRS:    jmp   W5100_MAC
+LOCIP:      jmp   W5100_LIP
+
 
 W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
             bsr   MPISLOT
@@ -43,7 +48,7 @@ W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
             lda   #%00000011  ; No Reset, Ping Block disabled, No PPPoE, AutoIncrement, Indirect Bus I/F
             sta   CIO0DATA     ; Setup the mode listed above
 
-            ldx   #GAR0       ; W5100S Gateway Address Register 0
+W5100_GW:   ldx   #GAR0       ; W5100S Gateway Address Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
             ldx   MYGATEWAY
             clrb
@@ -57,7 +62,7 @@ GWRLOOP:    lda   ,X+
             rts
 ;            
                               ; Now the Subnet Mask
-            ldx   #SUBR0      ; W5100S Subnet Mask Address Register 0
+W5100_SNM:  ldx   #SUBR0      ; W5100S Subnet Mask Address Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
             ldx   MYSUBNET
             clrb
@@ -71,7 +76,7 @@ SUBRLOOP:   lda   ,X+
             rts
 ;            
                               ; Now the Source Hardware Address
-            ldx   #SHAR0      ; W5100S Source Hardware Address Register 0
+W5100_MAC:  ldx   #SHAR0      ; W5100S Source Hardware Address Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
             ldx   MYMAC
             clrb
@@ -85,7 +90,7 @@ SHARLOOP:   lda   ,X+
             rts
 ;            
                               ; Now the Source IP Address
-            ldx   #SIPR0      ; W5100S Source IP Register 0
+W5100_LIP:  ldx   #SIPR0      ; W5100S Source IP Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
             ldx   MYIP
             clrb
