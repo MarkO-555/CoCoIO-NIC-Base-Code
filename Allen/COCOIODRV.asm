@@ -45,11 +45,11 @@ RSTDONE:    lda   CIO0CMND    ; Now read command register to check bit 7 clears 
             rts
 
 W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-            jsr   MPISLOT1
-            jsr   W5100_GATEWAY
-            jsr   W5100_SUBNET
-            jsr   W5100_HARDWARE
-            jsr   W5100_IPADDR
+            jsr   MPISLOT1    ; Setup my MPI slot
+            jsr   W5100_HARDWARE  ; Bring up layer 2 address first
+            jsr   W5100_IPADDR    ; Bring up layer 3 address
+            jsr   W5100_SUBNET    ; Bring up layer 3 network mask
+            jsr   W5100_GATEWAY   ; Bring up layer 3 default route
             rts
 
 W5100_GATEWAY:                ; Configure the Gateway address

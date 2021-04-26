@@ -407,11 +407,11 @@
 7E2A 39               (    COCOIODRV.asm):00045                     rts
                       (    COCOIODRV.asm):00046         
 7E2B                  (    COCOIODRV.asm):00047         W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-7E2B BD7E9B           (    COCOIODRV.asm):00048                     jsr   MPISLOT1
-7E2E BD7E3B           (    COCOIODRV.asm):00049                     jsr   W5100_GATEWAY
-7E31 BD7E53           (    COCOIODRV.asm):00050                     jsr   W5100_SUBNET
-7E34 BD7E6B           (    COCOIODRV.asm):00051                     jsr   W5100_HARDWARE
-7E37 BD7E83           (    COCOIODRV.asm):00052                     jsr   W5100_IPADDR
+7E2B BD7E9B           (    COCOIODRV.asm):00048                     jsr   MPISLOT1    ; Setup my MPI slot
+7E2E BD7E6B           (    COCOIODRV.asm):00049                     jsr   W5100_HARDWARE  ; Bring up layer 2 address first
+7E31 BD7E83           (    COCOIODRV.asm):00050                     jsr   W5100_IPADDR    ; Bring up layer 3 address
+7E34 BD7E53           (    COCOIODRV.asm):00051                     jsr   W5100_SUBNET    ; Bring up layer 3 network mask
+7E37 BD7E3B           (    COCOIODRV.asm):00052                     jsr   W5100_GATEWAY   ; Bring up layer 3 default route
 7E3A 39               (    COCOIODRV.asm):00053                     rts
                       (    COCOIODRV.asm):00054         
 7E3B                  (    COCOIODRV.asm):00055         W5100_GATEWAY:                ; Configure the Gateway address
