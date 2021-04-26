@@ -387,85 +387,89 @@
                                               ; End of CoCoIO equates
                 
                             org   $7E00
-7E00 7E7E06     RESET:      jmp   W5100_RST
-7E03 7E7E28     CONFIG:     jmp   W5100_CFG
+7E00 7E7E15     RESET:      jmp   W5100_RST
+7E03 7E7E2B     CONFIG:     jmp   W5100_CFG
+7E06 7E7E3B     GATEWAY:    jmp   W5100_GATEWAY
+7E09 7E7E53     SUBNET:     jmp   W5100_SUBNET
+7E0C 7E7E6B     HARDWARE:   jmp   W5100_HARDWARE
+7E0F 7E7E83     IPADDR:     jmp   W5100_IPADDR
+7E12 7E7E9B     MPISLOT:    jmp   MPISLOT1
                 
-7E06            W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
-7E06 BD7E96                 jsr   MPISLOT
-7E09 CC0000                 ldd   #MR         ; W5100S Mode Register 0x0000
-7E0C B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E0F F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E12 B6FF6B                 lda   CIO0DATA    ; Read the current value of MR
-7E15 8A83                   ora   #%10000011  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-7E17 3402                   pshs  A           ; Stash A for a few cycles
-7E19 CC0000                 ldd   #MR         ; Load D with W5100S MR Register
-7E1C B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E1F F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E22 3502                   puls  A           ; Now get A back
-7E24 B7FF6B                 sta   CIO0DATA    ; Stuff the modified register back to trigger reset
-7E27 39                     rts
+7E15            W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
+7E15 BD7E9B                 jsr   MPISLOT1
+7E18 B6FF68                 lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
+7E1B 8A80                   ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+7E1D B7FF68                 sta   CIO0CMND    ; Trigger the reset
+7E20 B6FF68     RSTDONE:    lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
+7E23 2BFB                   bmi   RSTDONE     ; if bit 7, then A was negative, keep checking bit
+7E25 8A03                   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
+7E27 B7FF68                 sta   CIO0CMND    ; configure the chip and done
+7E2A 39                     rts
                 
-7E28            W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-7E28 BD7E96                 jsr   MPISLOT
-7E2B CC0000                 ldd   #MR         ; W5100S Mode Register 0x0000
-7E2E B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E31 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E34 8603                   lda   #%00000011  ; No Reset, Ping Block disabled, No PPPoE, AutoIncrement, Indirect Bus I/F
-7E36 B7FF6B                 sta   CIO0DATA    ; Setup the mode listed above
+7E2B            W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
+7E2B BD7E9B                 jsr   MPISLOT1
+7E2E BD7E3B                 jsr   W5100_GATEWAY
+7E31 BD7E53                 jsr   W5100_SUBNET
+7E34 BD7E6B                 jsr   W5100_HARDWARE
+7E37 BD7E83                 jsr   W5100_IPADDR
+7E3A 39                     rts
                 
-                                              ; Mext configure the Gateway address
-7E39 CC0001                 ldd   #GAR0       ; W5100S Gateway Address Register 0
-7E3C B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E3F F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E42 8E7E9F                 ldx   #MYGATEWAY  ; Get the location of the Gateway data 
-7E45 5F                     clrb              ; Clear B for loop counting
-7E46 A680       GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
-7E48 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
-7E4B 5C                     incb              ; Increment loop counter
-7E4C C104                   cmpb  #4          ; Are we past the end of the Gateway data?
-7E4E 26F6                   bne   GWRLOOP     ; No, go back and do more
+7E3B            W5100_GATEWAY:                ; Configure the Gateway address
+7E3B CC0001                 ldd   #GAR0       ; W5100S Gateway Address Register 0
+7E3E B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E41 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7E44 8E7EA4                 ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E47 5F                     clrb              ; Clear B for loop counting
+7E48 A680       GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
+7E4A B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7E4D 5C                     incb              ; Increment loop counter
+7E4E C104                   cmpb  #4          ; Are we past the end of the Gateway data?
+7E50 26F6                   bne   GWRLOOP     ; No, go back and do more
+7E52 39                     rts
                 
-                                              ; Next the Subnet Mask
-7E50 CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-7E53 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E56 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E59 8E7EA3                 ldx   #MYSUBNET   ; Get the location of the Subnet data
-7E5C 5F                     clrb              ; Clear that loop counter
-7E5D A680       SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
-7E5F B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
-7E62 5C                     incb              ; Increment loop counter
-7E63 C104                   cmpb  #4          ; Are we past the end of the Subnet data?
-7E65 26F6                   bne   SUBRLOOP    ; No, go back and do more
+7E53            W5100_SUBNET:                 ; Next the Subnet Mask
+7E53 CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+7E56 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E59 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7E5C 8E7EA8                 ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E5F 5F                     clrb              ; Clear that loop counter
+7E60 A680       SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
+7E62 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7E65 5C                     incb              ; Increment loop counter
+7E66 C104                   cmpb  #4          ; Are we past the end of the Subnet data?
+7E68 26F6                   bne   SUBRLOOP    ; No, go back and do more
+7E6A 39                     rts
                 
-                                              ; Next the Source Hardware Address
-7E67 CC0009                 ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
-7E6A B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E6D F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E70 8E7EA7                 ldx   #MYMAC      ; Get the location of the MAC data
-7E73 5F                     clrb              ; Clear that loop counter
-7E74 A680       SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
-7E76 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
-7E79 5C                     incb              ; Increment loop counter
-7E7A C106                   cmpb  #6          ; Are we past the end of the MAC data?
-7E7C 26F6                   bne   SHARLOOP    ; No, go back and do more
+7E6B            W5100_HARDWARE:               ; Next the Source Hardware Address
+7E6B CC0009                 ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
+7E6E B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E71 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7E74 8E7EAC                 ldx   #MYMAC      ; Get the location of the MAC data
+7E77 5F                     clrb              ; Clear that loop counter
+7E78 A680       SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
+7E7A B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7E7D 5C                     incb              ; Increment loop counter
+7E7E C106                   cmpb  #6          ; Are we past the end of the MAC data?
+7E80 26F6                   bne   SHARLOOP    ; No, go back and do more
+7E82 39                     rts
                 
-                                              ; Next the Source IP Address
-7E7E CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
-7E81 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7E84 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-7E87 8E7EAD                 ldx   #MYIP       ; Get the location of the IP data
-7E8A 5F                     clrb              ; Clear the loop counter
-7E8B A680       SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
-7E8D B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
-7E90 5C                     incb              ; Increment loop counter
-7E91 C104                   cmpb  #4          ; Are we past the end of the IP data?
-7E93 26F6                   bne   SIPRLOOP    ; No, go back and do more
-7E95 39                     rts
+7E83            W5100_IPADDR:                 ; Next the Source IP Address
+7E83 CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
+7E86 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E89 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7E8C 8E7EB2                 ldx   #MYIP       ; Get the location of the IP data
+7E8F 5F                     clrb              ; Clear the loop counter
+7E90 A680       SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
+7E92 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7E95 5C                     incb              ; Increment loop counter
+7E96 C104                   cmpb  #4          ; Are we past the end of the IP data?
+7E98 26F6                   bne   SIPRLOOP    ; No, go back and do more
+7E9A 39                     rts
                 
-7E96 B6FF7F     MPISLOT:    lda   $FF7F       ; Read the MPI slot control
-7E99 84F0                   anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
-7E9B B7FF7F                 sta   $FF7F       ; Write the updated SCS
-7E9E 39                     rts
+7E9B B6FF7F     MPISLOT1:   lda   $FF7F       ; Read the MPI slot control
+7E9E 84F0                   anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+7EA0 B7FF7F                 sta   $FF7F       ; Write the updated SCS
+7EA3 39                     rts
                 
                             include "COCOIOCFG.asm"
                 ;*********************************************************************
@@ -489,17 +493,17 @@
                 ;* 00     2021         RAM     Initial data to config for testing
                 ;*********************************************************************
                 
-7E9F            MYGATEWAY:                    ; My Gateway IP Address
-7E9F 0A278001               fcb   10,39,128,1
+7EA4            MYGATEWAY:                    ; My Gateway IP Address
+7EA4 0A278001               fcb   10,39,128,1
                 
-7EA3            MYSUBNET:                     ; My Subnet Mask
-7EA3 FFFFFF00               fcb   255,255,255,0 
+7EA8            MYSUBNET:                     ; My Subnet Mask
+7EA8 FFFFFF00               fcb   255,255,255,0 
                 
-7EA7            MYMAC:                        ; My Source Hardware Address
-7EA7 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
+7EAC            MYMAC:                        ; My Source Hardware Address
+7EAC 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
                 
-7EAD            MYIP:                         ; My Source IP Address
-7EAD 0A278044               fcb   10,39,128,68
+7EB2            MYIP:                         ; My Source IP Address
+7EB2 0A278044               fcb   10,39,128,68
                                               ; End of My CoCoIO configuration
                 
                             end   RESET       ; End of driver
@@ -517,14 +521,18 @@ Symbol Table:
 [ G] GAR1      
 [ G] GAR2      
 [ G] GAR3      
+[ G] GATEWAY   
 [ G] GWRLOOP   
+[ G] HARDWARE  
 [ G] IMR       
 [ G] IMR2      
 [ G] INTPTMR0  
 [ G] INTPTMR1  
+[ G] IPADDR    
 [ G] IR        
 [ G] IR2       
 [ G] MPISLOT   
+[ G] MPISLOT1  
 [ G] MR        
 [ G] MR2       
 [ G] MYGATEWAY 
@@ -564,6 +572,7 @@ Symbol Table:
 [ G] RCR       
 [ G] RESET     
 [ G] RMSR      
+[ G] RSTDONE   
 [ G] RTR0      
 [ G] RTR1      
 [ G] S0_CR     
@@ -774,6 +783,7 @@ Symbol Table:
 [ G] SLRCR     
 [ G] SLRTR0    
 [ G] SLRTR1    
+[ G] SUBNET    
 [ G] SUBR0     
 [ G] SUBR1     
 [ G] SUBR2     
@@ -791,4 +801,8 @@ Symbol Table:
 [ G] UPORTR1   
 [ G] VERR      
 [ G] W5100_CFG 
+[ G] W5100_GATE
+[ G] W5100_HARD
+[ G] W5100_IPAD
 [ G] W5100_RST 
+[ G] W5100_SUBN
