@@ -1,7 +1,7 @@
 ;*********************************************************************
-;* Title: W5100SDRV.asm
+;* Title: W5100SDRV05.asm
 ;*********************************************************************
-;* Author: R. Allen Murphey
+;* Author: R. Allen Murphey, MarkO
 ;*
 ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
 ;*
@@ -22,31 +22,28 @@
             include "W5100SEQU.asm"
             include "COCOIOEQU.asm"
 
-            org   $47E00
-RESET:      jmp   W5100_RST
-CONFIG:     jmp   W5100_CFG
-GATEWY:     jmp   W5100_GW
-SUBNM:      jmp   W5100_SNM
-MACADRS:    jmp   W5100_MAC
-LOCIP:      jmp   W5100_LIP
+            org   $7E00
+RESET:      jmp   W5100_RST   ; 0x7E00
+CONFIG:     jmp   W5100_CFG   ; 0x7E03
+GATEWY:     jmp   W5100_GW    ; 0x7E06
+SUBNM:      jmp   W5100_SNM   ; 0x7E09
+MACADRS:    jmp   W5100_MAC   ; 0x7E0C
+LOCIP:      jmp   W5100_LIP   ; 0x7E0F
 
 
 W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
             bsr   MPISLOT
-            ldx   #MR         ; W5100S Mode Register 0x0000
-            stx   CIO0ADDR    ; CoCoIO Address Register MSB
-            lda   CIO0DATA    ; Read the current value of MR
-            ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-            stx   CIO0ADDR    ; CoCoIO Address Register MSB
-            sta   CIO0DATA    ; Stuff the modified register back to trigger reset
+            lda   #%10000000  ; WizNet5100 RESET 0x80
+            sta   CIO0CMND    ; W5100S Mode Register 0xFF68
+
             rts
 
 W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
             bsr   MPISLOT
-            ldx   #MR         ; W5100S Mode Register 0x0000
-            stx   CIO0ADDR    ; CoCoIO Address Register MSB
             lda   #%00000011  ; No Reset, Ping Block disabled, No PPPoE, AutoIncrement, Indirect Bus I/F
-            sta   CIO0DATA     ; Setup the mode listed above
+            sta   CIO0CMND    ; W5100S Mode Register 0xFF68
+
+            rts
 
 W5100_GW:   ldx   #GAR0       ; W5100S Gateway Address Register 0
             stx   CIO0ADDR    ; CoCoIO Address Register MSB
@@ -54,7 +51,6 @@ W5100_GW:   ldx   #GAR0       ; W5100S Gateway Address Register 0
             clrb
 GWRLOOP:    lda   ,X+
             sta   CIO0DATA
-            stx   CIO0ADDR
             incb
             cmpb  #4
             bne   GWRLOOP
@@ -68,7 +64,6 @@ W5100_SNM:  ldx   #SUBR0      ; W5100S Subnet Mask Address Register 0
             clrb
 SUBRLOOP:   lda   ,X+
             sta   CIO0DATA
-            stx   CIO0ADDR
             incb
             cmpb  #4
             bne   SUBRLOOP
@@ -82,7 +77,6 @@ W5100_MAC:  ldx   #SHAR0      ; W5100S Source Hardware Address Register 0
             clrb
 SHARLOOP:   lda   ,X+
             sta   CIO0DATA
-            stx   CIO0ADDR
             incb
             cmpb  #6
             bne   SHARLOOP
@@ -96,7 +90,6 @@ W5100_LIP:  ldx   #SIPR0      ; W5100S Source IP Register 0
             clrb
 SIPRLOOP:   lda   ,X+
             sta   CIO0DATA
-            stx   CIO0ADDR
             incb
             cmpb  #4
             bne   SIPRLOOP
