@@ -1,0 +1,845 @@
+                ;*********************************************************************
+                ;* Title: COCOIODRV.asm
+                ;*********************************************************************
+                ;* Author: R. Allen Murphey
+                ;*
+                ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                ;*
+                ;* Description: CoCoIO with WIZnet W5100S driver code
+                ;*
+                ;* Documentation: https://www.wiznet.io/product-item/w5100s/
+                ;*
+                ;* Include Files: W5100SEQU.asm - W5100S Equates
+                ;*                COCOIOEQU.asm - CoCoIO Equates
+                ;*                COCOIOCFG.asm - CoCoIO Config Data
+                ;*
+                ;* Assembler: lwasm 1.4.2
+                ;*
+                ;* Revision History:
+                ;* Rev #     Date      Who     Comments
+                ;* -----  -----------  ------  ---------------------------------------
+                ;* 00     2021         RAM     Initial Reset and Config functions
+                ;*********************************************************************
+                
+                            include "W5100SEQU.asm"
+                ;*********************************************************************
+                ;* Title: W5100SEQU.asm
+                ;*********************************************************************
+                ;* Author: R. Allen Murphey
+                ;*
+                ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                ;*
+                ;* Description: WIZnet W5100S driver equates
+                ;*
+                ;* Documentation: https://www.wiznet.io/product-item/w5100s/
+                ;*
+                ;* Include Files: none
+                ;*
+                ;* Assembler: lwasm 1.4.2
+                ;*
+                ;* Revision History:
+                ;* Rev #     Date      Who     Comments
+                ;* -----  -----------  ------  ---------------------------------------
+                ;* 00     2021         RAM     Initial equates from W5100S Data Sheet
+                ;*********************************************************************
+                
+                                              ; W5100S REGISTER / MEMORY MAP
+                                              ; 0x0000 - 0x002F Common Registers W5100 compatible
+                                              ; 0x0030 - 0x0088 Common Registers New W5100S
+                                              ; 0x0089 - 0x03FF -- Reserved --
+                                              ; 0x0400 - 0x04FF Socket 0 Registers
+                                              ; 0x0500 - 0x05FF Socket 1 Registers
+                                              ; 0x0600 - 0x06FF Socket 2 Registers
+                                              ; 0x0700 - 0x07FF Socket 3 Registers
+                                              ; 0x0800 - 0x3FFF -- Reserved --
+                                              ; 0x4000 - 0x5FFF TX Memory - default 2KB per socket
+                                              ; 0x6000 - 0x7FFF RX Memory - default 2KB per socket
+                
+                                              ; COMMON REGISTERS 0x0000-0x0088
+     0000       MR:         equ   $0000       ; Mode Register
+     0001       GAR0:       equ   $0001       ; Gateway Address Register 0
+     0002       GAR1:       equ   $0002       ; Gateway Address Register 1
+     0003       GAR2:       equ   $0003       ; Gateway Address Register 2
+     0004       GAR3:       equ   $0004       ; Gateway Address Register 3
+     0005       SUBR0:      equ   $0005       ; Subnet Mask Address Register 0
+     0006       SUBR1:      equ   $0006       ; Subnet Mask Address Register 1
+     0007       SUBR2:      equ   $0007       ; Subnet Mask Address Register 2
+     0008       SUBR3:      equ   $0008       ; Subnet Mask Address Register 3
+     0009       SHAR0:      equ   $0009       ; Source Hardware Address Register 0
+     000A       SHAR1:      equ   $000A       ; Source Hardware Address Register 1
+     000B       SHAR2:      equ   $000B       ; Source Hardware Address Register 2
+     000C       SHAR3:      equ   $000C       ; Source Hardware Address Register 3
+     000D       SHAR4:      equ   $000D       ; Source Hardware Address Register 4
+     000E       SHAR5:      equ   $000E       ; Source Hardware Address Register 5
+     000F       SIPR0:      equ   $000F       ; Source IP Address Register 0
+     0010       SIPR1:      equ   $0010       ; Source IP Address Register 1
+     0011       SIPR2:      equ   $0011       ; Source IP Address Register 2
+     0012       SIPR3:      equ   $0012       ; Source IP Address Register 3
+     0013       INTPTMR0:   equ   $0013       ; Interrupt Pending Time Register 0
+     0014       INTPTMR1:   equ   $0014       ; Interrupt Pending Time Register 1
+     0015       IR:         equ   $0015       ; Interrupt Register
+     0016       IMR:        equ   $0016       ; Interrupt Mask Register
+     0017       RTR0:       equ   $0017       ; Retransmission Time Register 0
+     0018       RTR1:       equ   $0018       ; Retransmission Time Register 1
+     0019       RCR:        equ   $0019       ; Retransmission Count Register
+     001A       RMSR:       equ   $001A       ; RX Memory Size Register
+     001B       TMSR:       equ   $001B       ; TX Memory Size Register
+                                              ; 0x001C-0x001F -- Reserved --
+     0020       IR2:        equ   $0020       ; Interrupt2 Register
+     0021       IMR2:       equ   $0021       ; Interrupt2 Mask Register
+                                              ; 0x0022-0x0027 -- Reserved --
+     0028       PTIMER:     equ   $0028       ; PPP LCP Request Timer
+     0029       PMAGIC:     equ   $0029       ; PPP LCP Magic Number
+     002A       UIPR0:      equ   $002A       ; Unreachable IP Address Register 0
+     002B       UIPR1:      equ   $002B       ; Unreachable IP Address Register 1
+     002C       UIPR2:      equ   $002C       ; Unreachable IP Address Register 2
+     002D       UIPR3:      equ   $002D       ; Unreachable IP Address Register 0
+     002E       UPORTR0:    equ   $002E       ; Unreachable Port Register 0
+     002F       UPORTR1:    equ   $002F       ; Unreachable Port Register 1
+     0030       MR2:        equ   $0030       ; Mode2 Register
+                                              ; 0x0031 --  Reserved --
+     0032       PHAR0:      equ   $0032       ; Destination Hardware Address on PPPoE Register 0
+     0033       PHAR1:      equ   $0033       ; Destination Hardware Address on PPPoE Register 1
+     0034       PHAR2:      equ   $0034       ; Destination Hardware Address on PPPoE Register 2
+     0035       PHAR3:      equ   $0035       ; Destination Hardware Address on PPPoE Register 3
+     0036       PHAR4:      equ   $0036       ; Destination Hardware Address on PPPoE Register 4
+     0037       PHAR5:      equ   $0037       ; Destination Hardware Address on PPPoE Register 5
+     0038       PSIDR0:     equ   $0038       ; Session ID on PPPoE Register 0
+     0039       PSIDR1:     equ   $0039       ; Session ID on PPPoE Register 1
+     003A       PMRUR0:     equ   $003A       ; Maximum Receive Unit on PPPoE Register 0
+     003B       PMRUR1:     equ   $003B       ; Maximum Receive Unit on PPPoE Register 1
+     003C       PHYSR0:     equ   $003C       ; PHY Status Register 0
+     003D       PHYSR1:     equ   $003D       ; PHY Status Register 1
+     003E       PHYAR:      equ   $003E       ; PHY Address Value
+     003F       PHYRAR:     equ   $003F       ; PHY Register Address
+     0040       PHYDIR0:    equ   $0040       ; PHY Data Input Register 0
+     0041       PHYDIR1:    equ   $0041       ; PHY Data Input Register 1
+     0042       PHYDOR0:    equ   $0042       ; PHY Data Output Register 0
+     0043       PHYDOR1:    equ   $0043       ; PHY Data Output Register 1
+     0044       PHYACR:     equ   $0044       ; PHY Access Register
+     0045       PHYDIVR     equ   $0045       ; PHY Division Register
+     0046       PHYCR0:     equ   $0046       ; PHY Control Register 0
+     0047       PHYCR1:     equ   $0047       ; PHY Control Register 1
+                                              ; 0x0048-0x004B -- Reserved --
+     004C       SLCR:       equ   $004C       ; SOCKET-less Command Register
+     004D       SLRTR0:     equ   $004D       ; SOCKET-less Retransmission Time Register 0
+     004E       SLRTR1:     equ   $004E       ; SOCKET-less Retransmission Time Register 1
+     004F       SLRCR:      equ   $004F       ; SOCKET-less Retransmission Count Register
+     0050       SLPIPR0:    equ   $0050       ; SOCKET-less Peer IP Address Register 0
+     0051       SLPIPR1:    equ   $0051       ; SOCKET-less Peer IP Address Register 1
+     0052       SLPIPR2:    equ   $0052       ; SOCKET-less Peer IP Address Register 2
+     0053       SLPIPR3:    equ   $0053       ; SOCKET-less Peer IP Address Register 3
+     0054       SLPHAR0:    equ   $0054       ; SOCKET-less Peer Hardware Address Register 0
+     0055       SLPHAR1:    equ   $0055       ; SOCKET-less Peer Hardware Address Register 1
+     0056       SLPHAR2:    equ   $0056       ; SOCKET-less Peer Hardware Address Register 2
+     0057       SLPHAR3:    equ   $0057       ; SOCKET-less Peer Hardware Address Register 3
+     0058       SLPHAR4:    equ   $0058       ; SOCKET-less Peer Hardware Address Register 4
+     0059       SLPHAR5:    equ   $0059       ; SOCKET-less Peer Hardware Address Register 5
+     005A       PINGSEQR0:  equ   $005A       ; PING Sequence Number Register 0
+     005B       PINGSEQR1:  equ   $005B       ; PING Sequence Number Register 1
+     005C       PINGIDR0:   equ   $005C       ; PING ID Register 0
+     005D       PINGIDR1:   equ   $005D       ; PING ID Register 1
+     005E       SLIMR:      equ   $005E       ; SOCKET-less Interrupt Mask Register
+     005F       SLIR:       equ   $005F       ; SOCKET-less Interrupt Register
+                                              ; 0x0060-0x006A -- Reserved --
+     0070       CLKLCKR:    equ   $0070       ; Clock Lock Register
+     0071       NETLCKR:    equ   $0071       ; Network Lock Register
+     0072       PHYLCKR:    equ   $0072       ; PHY Lock Register
+                                              ; 0x0073-0x007F -- Reserved --
+     0080       VERR:       equ   $0080       ; Chip Version
+                                              ; 0x0081 -- Reserved --
+     0082       TCNTR0:     equ   $0082       ; 100us Ticker Counter Register 0
+     0083       TCNTR1:     equ   $0083       ; 100us Ticker Counter Register 1
+                                              ; 0x0084-0x0087 -- Reserved --
+     0088       TCNTCLR:    equ   $0088       ; 100us Ticker Counter Clear Register
+                
+                                              ; SOCKET 0 REGISTERS 0x0400-0x04FF 45 bytes per socket
+     0400       S0_MR:      equ   $0400       ; Socket 0 Mode Register
+     0401       S0_CR:      equ   $0401       ; Socket 0 Command Register
+     0402       S0_IR:      equ   $0402       ; Socket 0 Interrupt Register
+     0403       S0_SR:      equ   $0403       ; Socket 0 Status Register
+     0404       S0_PORTR0:  equ   $0404       ; Socket 0 Source Port Register 0
+     0405       S0_PORTR1:  equ   $0405       ; Socket 0 Source Port Register 1
+     0406       S0_DHAR0:   equ   $0406       ; Socket 0 Destination Hardware Address Register 0
+     0407       S0_DHAR1:   equ   $0407       ; Socket 0 Destination Hardware Address Register 1
+     0408       S0_DHAR2:   equ   $0408       ; Socket 0 Destination Hardware Address Register 2
+     0409       S0_DHAR3:   equ   $0409       ; Socket 0 Destination Hardware Address Register 3
+     040A       S0_DHAR4:   equ   $040A       ; Socket 0 Destination Hardware Address Register 4
+     040B       S0_DHAR5:   equ   $040B       ; Socket 0 Destination Hardware Address Register 5
+     040C       S0_DIPR0:   equ   $040C       ; Socket 0 Destination IP Address Register 0
+     040D       S0_DIPR1:   equ   $040D       ; Socket 0 Destination IP Address Register 1
+     040E       S0_DIPR2:   equ   $040E       ; Socket 0 Destination IP Address Register 2
+     040F       S0_DIPR3:   equ   $040F       ; Socket 0 Destination IP Address Register 3
+     0410       S0_DPORTR0: equ   $0410       ; Socket 0 Destination Port Register 0
+     0411       S0_DPORTR1: equ   $0411       ; Socket 0 Destination Port Register 1
+     0412       S0_MSS0:    equ   $0412       ; Socket 0 Maximum Segment Size Register 0
+     0413       S0_MSS1:    equ   $0413       ; Socket 0 Maximum Segment Size Register 1
+     0414       S0_PROTOR:  equ   $0414       ; Socket 0 IP Protocol Register
+     0415       S0_TOS:     equ   $0415       ; Socket 0 IP Type Of Service
+     0416       S0_TTL:     equ   $0416       ; Socket 0 IP Time To Live
+                                              ; 0x0417-0x041D -- Reserved --
+     041E       S0_RXBUF_SIZE:  equ  $041E    ; Socket 0 RX Buffer Size
+     041F       S0_TXBUF_SIZE:  equ  $041F    ; Socket 0 TX Buffer Size
+     0420       S0_TX_FSR0: equ   $0420       ; Socket 0 TX Free Size Register 0
+     0421       S0_TX_FSR1: equ   $0421       ; Socket 0 TX Free Size Register 1
+     0422       S0_TX_RD0:  equ   $0422       ; Socket 0 TX Read Pointer 0
+     0423       S0_TX_RD1:  equ   $0423       ; Socket 0 TX Read Pointer 1
+     0424       S0_TX_WR0:  equ   $0424       ; Socket 0 TX Write Pointer 0
+     0425       S0_TX_WR1:  equ   $0425       ; Socket 0 TX Write Pointer 1
+     0426       S0_RX_RSR0: equ   $0426       ; Socket 0 RX Received Size Register 0
+     0427       S0_RX_RSR1: equ   $0427       ; Socket 0 RX Received Size Register 1
+     0428       S0_RX_RD0:  equ   $0428       ; Socket 0 RX Read Pointer 0
+     0429       S0_RX_RD1:  equ   $0429       ; Socket 0 RX Read Pointer 1
+     042A       S0_RX_WR0:  equ   $042A       ; Socket 0 RX Write Pointer 0
+     042B       S0_RX_WR1:  equ   $042B       ; Socket 0 RX Write Pointer 1
+     042C       S0_IMR:     equ   $042C       ; Socket 0 Interrupt Mask Register
+     042D       S0_FRAGR0:  equ   $042D       ; Socket 0 Fragment Offset in IP Header Register 0
+     042E       S0_FRAGR1:  equ   $042E       ; Socket 0 Fragment Offset in IP Header Register 1
+     042F       S0_MR2:     equ   $042F       ; Socket 0 Mode 2 Register
+     0430       S0_KPALVTR: equ   $0430       ; Socket 0 Keep-alive Timer Register
+                                              ; 0x0431 -- Reserved --
+     0432       S0_RTR0:    equ   $0432       ; Socket 0 Retransmission Time Register 0
+     0433       S0_RTR1:    equ   $0433       ; Socket 0 Retransmission Time Register 1
+     0434       S0_RCR:     equ   $0434       ; Socket 0 Retransmission Count Register
+                
+                                              ; SOCKET 1 REGISTERS 0x0500-0x05FF 45 bytes per socket
+     0500       S1_MR:      equ   $0500       ; Socket 1 Mode Register
+     0501       S1_CR:      equ   $0501       ; Socket 1 Command Register
+     0502       S1_IR:      equ   $0502       ; Socket 1 Interrupt Register
+     0503       S1_SR:      equ   $0503       ; Socket 1 Status Register
+     0504       S1_PORTR0:  equ   $0504       ; Socket 1 Source Port Register 0
+     0505       S1_PORTR1:  equ   $0505       ; Socket 1 Source Port Register 1
+     0506       S1_DHAR0:   equ   $0506       ; Socket 1 Destination Hardware Address Register 0
+     0507       S1_DHAR1:   equ   $0507       ; Socket 1 Destination Hardware Address Register 1
+     0508       S1_DHAR2:   equ   $0508       ; Socket 1 Destination Hardware Address Register 2
+     0509       S1_DHAR3:   equ   $0509       ; Socket 1 Destination Hardware Address Register 3
+     050A       S1_DHAR4:   equ   $050A       ; Socket 1 Destination Hardware Address Register 4
+     050B       S1_DHAR5:   equ   $050B       ; Socket 1 Destination Hardware Address Register 5
+     050C       S1_DIPR0:   equ   $050C       ; Socket 1 Destination IP Address Register 0
+     050D       S1_DIPR1:   equ   $050D       ; Socket 1 Destination IP Address Register 1
+     050E       S1_DIPR2:   equ   $050E       ; Socket 1 Destination IP Address Register 2
+     050F       S1_DIPR3:   equ   $050F       ; Socket 1 Destination IP Address Register 3
+     0510       S1_DPORTR0: equ   $0510       ; Socket 1 Destination Port Register 0
+     0511       S1_DPORTR1: equ   $0511       ; Socket 1 Destination Port Register 1
+     0512       S1_MSS0:    equ   $0512       ; Socket 1 Maximum Segment Size Register 0
+     0513       S1_MSS1:    equ   $0513       ; Socket 1 Maximum Segment Size Register 1
+     0514       S1_PROTOR:  equ   $0514       ; Socket 1 IP Protocol Register
+     0515       S1_TOS:     equ   $0515       ; Socket 1 IP Type Of Service
+     0516       S1_TTL:     equ   $0516       ; Socket 1 IP Time To Live
+                                              ; 0x0517-0x051D -- Reserved --
+     051E       S1_RXBUF_SIZE:  equ  $051E    ; Socket 1 RX Buffer Size
+     051F       S1_TXBUF_SIZE:  equ  $051F    ; Socket 1 TX Buffer Size
+     0520       S1_TX_FSR0: equ   $0520       ; Socket 1 TX Free Size Register 0
+     0521       S1_TX_FSR1: equ   $0521       ; Socket 1 TX Free Size Register 1
+     0522       S1_TX_RD0:  equ   $0522       ; Socket 1 TX Read Pointer 0
+     0523       S1_TX_RD1:  equ   $0523       ; Socket 1 TX Read Pointer 1
+     0524       S1_TX_WR0:  equ   $0524       ; Socket 1 TX Write Pointer 0
+     0525       S1_TX_WR1:  equ   $0525       ; Socket 1 TX Write Pointer 1
+     0526       S1_RX_RSR0: equ   $0526       ; Socket 1 RX Received Size Register 0
+     0527       S1_RX_RSR1: equ   $0527       ; Socket 1 RX Received Size Register 1
+     0528       S1_RX_RD0:  equ   $0528       ; Socket 1 RX Read Pointer 0
+     0529       S1_RX_RD1:  equ   $0529       ; Socket 1 RX Read Pointer 1
+     052A       S1_RX_WR0:  equ   $052A       ; Socket 1 RX Write Pointer 0
+     052B       S1_RX_WR1:  equ   $052B       ; Socket 1 RX Write Pointer 1
+     052C       S1_IMR:     equ   $052C       ; Socket 1 Interrupt Mask Register
+     052D       S1_FRAGR0:  equ   $052D       ; Socket 1 Fragment Offset in IP Header Register 0
+     052E       S1_FRAGR1:  equ   $052E       ; Socket 1 Fragment Offset in IP Header Register 1
+     052F       S1_MR2:     equ   $052F       ; Socket 1 Mode 2 Register
+     0530       S1_KPALVTR: equ   $0530       ; Socket 1 Keep-alive Timer Register
+                                              ; 0x0531 -- Reserved --
+     0532       S1_RTR0:    equ   $0532       ; Socket 1 Retransmission Time Register 0
+     0533       S1_RTR1:    equ   $0533       ; Socket 1 Retransmission Time Register 1
+     0534       S1_RCR:     equ   $0534       ; Socket 1 Retransmission Count Register
+                
+                                              ; SOCKET 2 REGISTERS 0x0600-0x06FF 45 bytes per socket
+     0600       S2_MR:      equ   $0600       ; Socket 2 Mode Register
+     0601       S2_CR:      equ   $0601       ; Socket 2 Command Register
+     0602       S2_IR:      equ   $0602       ; Socket 2 Interrupt Register
+     0603       S2_SR:      equ   $0603       ; Socket 2 Status Register
+     0604       S2_PORTR0:  equ   $0604       ; Socket 2 Source Port Register 0
+     0605       S2_PORTR1:  equ   $0605       ; Socket 2 Source Port Register 1
+     0606       S2_DHAR0:   equ   $0606       ; Socket 2 Destination Hardware Address Register 0
+     0607       S2_DHAR1:   equ   $0607       ; Socket 2 Destination Hardware Address Register 1
+     0608       S2_DHAR2:   equ   $0608       ; Socket 2 Destination Hardware Address Register 2
+     0609       S2_DHAR3:   equ   $0609       ; Socket 2 Destination Hardware Address Register 3
+     060A       S2_DHAR4:   equ   $060A       ; Socket 2 Destination Hardware Address Register 4
+     060B       S2_DHAR5:   equ   $060B       ; Socket 2 Destination Hardware Address Register 5
+     060C       S2_DIPR0:   equ   $060C       ; Socket 2 Destination IP Address Register 0
+     060D       S2_DIPR1:   equ   $060D       ; Socket 2 Destination IP Address Register 1
+     060E       S2_DIPR2:   equ   $060E       ; Socket 2 Destination IP Address Register 2
+     060F       S2_DIPR3:   equ   $060F       ; Socket 2 Destination IP Address Register 3
+     0610       S2_DPORTR0: equ   $0610       ; Socket 2 Destination Port Register 0
+     0611       S2_DPORTR1: equ   $0611       ; Socket 2 Destination Port Register 1
+     0612       S2_MSS0:    equ   $0612       ; Socket 2 Maximum Segment Size Register 0
+     0613       S2_MSS1:    equ   $0613       ; Socket 2 Maximum Segment Size Register 1
+     0614       S2_PROTOR:  equ   $0614       ; Socket 2 IP Protocol Register
+     0615       S2_TOS:     equ   $0615       ; Socket 2 IP Type Of Service
+     0616       S2_TTL:     equ   $0616       ; Socket 2 IP Time To Live
+                                              ; 0x0617-0x061D -- Reserved --
+     061E       S2_RXBUF_SIZE:  equ  $061E    ; Socket 2 RX Buffer Size
+     061F       S2_TXBUF_SIZE:  equ  $061F    ; Socket 2 TX Buffer Size
+     0620       S2_TX_FSR0: equ   $0620       ; Socket 2 TX Free Size Register 0
+     0621       S2_TX_FSR1: equ   $0621       ; Socket 2 TX Free Size Register 1
+     0622       S2_TX_RD0:  equ   $0622       ; Socket 2 TX Read Pointer 0
+     0623       S2_TX_RD1:  equ   $0623       ; Socket 2 TX Read Pointer 1
+     0624       S2_TX_WR0:  equ   $0624       ; Socket 2 TX Write Pointer 0
+     0625       S2_TX_WR1:  equ   $0625       ; Socket 2 TX Write Pointer 1
+     0626       S2_RX_RSR0: equ   $0626       ; Socket 2 RX Received Size Register 0
+     0627       S2_RX_RSR1: equ   $0627       ; Socket 2 RX Received Size Register 1
+     0628       S2_RX_RD0:  equ   $0628       ; Socket 2 RX Read Pointer 0
+     0629       S2_RX_RD1:  equ   $0629       ; Socket 2 RX Read Pointer 1
+     062A       S2_RX_WR0:  equ   $062A       ; Socket 2 RX Write Pointer 0
+     062B       S2_RX_WR1:  equ   $062B       ; Socket 2 RX Write Pointer 1
+     062C       S2_IMR:     equ   $062C       ; Socket 2 Interrupt Mask Register
+     062D       S2_FRAGR0:  equ   $062D       ; Socket 2 Fragment Offset in IP Header Register 0
+     062E       S2_FRAGR1:  equ   $062E       ; Socket 2 Fragment Offset in IP Header Register 1
+     062F       S2_MR2:     equ   $062F       ; Socket 2 Mode 2 Register
+     0630       S2_KPALVTR: equ   $0630       ; Socket 2 Keep-alive Timer Register
+                                              ; 0x0631 -- Reserved --
+     0632       S2_RTR0:    equ   $0632       ; Socket 2 Retransmission Time Register 0
+     0633       S2_RTR1:    equ   $0633       ; Socket 2 Retransmission Time Register 1
+     0634       S2_RCR:     equ   $0634       ; Socket 2 Retransmission Count Register
+                
+                                              ; SOCKET 3 REGISTERS 0x0700-0x07FF 45 bytes per socket
+     0700       S3_MR:      equ   $0700       ; Socket 3 Mode Register
+     0701       S3_CR:      equ   $0701       ; Socket 3 Command Register
+     0702       S3_IR:      equ   $0702       ; Socket 3 Interrupt Register
+     0703       S3_SR:      equ   $0703       ; Socket 3 Status Register
+     0704       S3_PORTR0:  equ   $0704       ; Socket 3 Source Port Register 0
+     0705       S3_PORTR1:  equ   $0705       ; Socket 3 Source Port Register 1
+     0706       S3_DHAR0:   equ   $0706       ; Socket 3 Destination Hardware Address Register 0
+     0707       S3_DHAR1:   equ   $0707       ; Socket 3 Destination Hardware Address Register 1
+     0708       S3_DHAR2:   equ   $0708       ; Socket 3 Destination Hardware Address Register 2
+     0709       S3_DHAR3:   equ   $0709       ; Socket 3 Destination Hardware Address Register 3
+     070A       S3_DHAR4:   equ   $070A       ; Socket 3 Destination Hardware Address Register 4
+     070B       S3_DHAR5:   equ   $070B       ; Socket 3 Destination Hardware Address Register 5
+     070C       S3_DIPR0:   equ   $070C       ; Socket 3 Destination IP Address Register 0
+     070D       S3_DIPR1:   equ   $070D       ; Socket 3 Destination IP Address Register 1
+     070E       S3_DIPR2:   equ   $070E       ; Socket 3 Destination IP Address Register 2
+     070F       S3_DIPR3:   equ   $070F       ; Socket 3 Destination IP Address Register 3
+     0710       S3_DPORTR0: equ   $0710       ; Socket 3 Destination Port Register 0
+     0711       S3_DPORTR1: equ   $0711       ; Socket 3 Destination Port Register 1
+     0712       S3_MSS0:    equ   $0712       ; Socket 3 Maximum Segment Size Register 0
+     0713       S3_MSS1:    equ   $0713       ; Socket 3 Maximum Segment Size Register 1
+     0714       S3_PROTOR:  equ   $0714       ; Socket 3 IP Protocol Register
+     0715       S3_TOS:     equ   $0715       ; Socket 3 IP Type Of Service
+     0716       S3_TTL:     equ   $0716       ; Socket 3 IP Time To Live
+                                              ; 0x0717-0x071D -- Reserved --
+     071E       S3_RXBUF_SIZE:  equ  $071E    ; Socket 3 RX Buffer Size
+     071F       S3_TXBUF_SIZE:  equ  $071F    ; Socket 3 TX Buffer Size
+     0720       S3_TX_FSR0: equ   $0720       ; Socket 3 TX Free Size Register 0
+     0721       S3_TX_FSR1: equ   $0721       ; Socket 3 TX Free Size Register 1
+     0722       S3_TX_RD0:  equ   $0722       ; Socket 3 TX Read Pointer 0
+     0723       S3_TX_RD1:  equ   $0723       ; Socket 3 TX Read Pointer 1
+     0724       S3_TX_WR0:  equ   $0724       ; Socket 3 TX Write Pointer 0
+     0725       S3_TX_WR1:  equ   $0725       ; Socket 3 TX Write Pointer 1
+     0726       S3_RX_RSR0: equ   $0726       ; Socket 3 RX Received Size Register 0
+     0727       S3_RX_RSR1: equ   $0727       ; Socket 3 RX Received Size Register 1
+     0728       S3_RX_RD0:  equ   $0728       ; Socket 3 RX Read Pointer 0
+     0729       S3_RX_RD1:  equ   $0729       ; Socket 3 RX Read Pointer 1
+     072A       S3_RX_WR0:  equ   $072A       ; Socket 3 RX Write Pointer 0
+     072B       S3_RX_WR1:  equ   $072B       ; Socket 3 RX Write Pointer 1
+     072C       S3_IMR:     equ   $072C       ; Socket 3 Interrupt Mask Register
+     072D       S3_FRAGR0:  equ   $072D       ; Socket 3 Fragment Offset in IP Header Register 0
+     072E       S3_FRAGR1:  equ   $072E       ; Socket 3 Fragment Offset in IP Header Register 1
+     072F       S3_MR2:     equ   $072F       ; Socket 3 Mode 2 Register
+     0730       S3_KPALVTR: equ   $0730       ; Socket 3 Keep-alive Timer Register
+                                              ; 0x0731 -- Reserved --
+     0732       S3_RTR0:    equ   $0732       ; Socket 3 Retransmission Time Register 0
+     0733       S3_RTR1:    equ   $0733       ; Socket 3 Retransmission Time Register 1
+     0734       S3_RCR:     equ   $0734       ; Socket 3 Retransmission Count Register
+                
+                                              ; End of Equates
+                            include "COCOIOEQU.asm"
+                ;*********************************************************************
+                ;* Title: COCOIOEQU.asm
+                ;*********************************************************************
+                ;* Author: R. Allen Murphey
+                ;*
+                ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                ;*
+                ;* Description: CoCoIO for Color Computer Equates
+                ;*
+                ;* Documentation: https://www.wiznet.io/product-item/w5100s/
+                ;*
+                ;* Include Files: none
+                ;*
+                ;* Assembler: lwasm 1.4.2
+                ;*
+                ;* Revision History:
+                ;* Rev #     Date      Who     Comments
+                ;* -----  -----------  ------  ---------------------------------------
+                ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
+                ;*********************************************************************
+                
+                                              ; CoCoIO with Jumper set to 0xFF6x Range
+     FF68       CIO0CMND:   equ   $FF68       ; CoCoIO Command Register 
+     FF69       CIO0ADDR:   equ   $FF69       ; CoCoIO Address Register MSB
+                                 ;$FF6A       ; CoCoIO Address Register LSB
+     FF6B       CIO0DATA:   equ   $FF6B       ; CoCoIO Read/Write Data Register
+                
+                                              ; CoCoIO with Jumper set to 0xFF7x Range
+     FF78       CIO1CMND:   equ   $FF78       ; CoCoIO Command Register 
+     FF79       CIO1ADDR:   equ   $FF79       ; CoCoIO Address Register MSB
+                                 ;$FF7A       ; CoCoIO Address Register LSB
+     FF7B       CIO1DATA:   equ   $FF7B       ; CoCoIO Read/Write Data Register
+                
+                                              ; End of CoCoIO equates
+                
+     FF02       PIA0BD:     equ   $FF02       ; PIA 0 PORT B DATA
+     FF03       PIA0BC:     equ   $FF03       ; PIA 0 PORT B CONTROL
+                
+                            org   $7E00
+7E00 7E7E15     RESET:      jmp   W5100_RST
+7E03 7E7E35     CONFIG:     jmp   W5100_CFG
+7E06 7E7E48     GATEWAY:    jmp   W5100_GATEWAY
+7E09 7E7E68     SUBNET:     jmp   W5100_SUBNET
+7E0C 7E7E88     HARDWARE:   jmp   W5100_HARDWARE
+7E0F 7E7EA8     IPADDR:     jmp   W5100_IPADDR
+7E12 7E7EC8     MPISLOT:    jmp   MPISLOT1
+                
+7E15            W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
+7E15 BD7EC8                 jsr   MPISLOT1
+7E18 BD7EDD                 jsr   DALLY
+7E1B B6FF68                 lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
+7E1E 8A80                   ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+7E20 B7FF68                 sta   CIO0CMND    ; Trigger the reset
+7E23 B6FF68     RSTDONE:    lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
+7E26 2BFB                   bmi   RSTDONE     ; if bit 7, then A was negative, keep checking bit
+7E28 8A03       SETMODE:    ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
+7E2A B7FF68                 sta   CIO0CMND    ; configure the chip and done
+7E2D B6FF68                 lda   CIO0CMND    ; readback mode
+7E30 8103                   cmpa  #3          ; is it what we want?
+7E32 26F4                   bne   SETMODE     ; no, try again
+7E34 39                     rts
+                
+7E35            W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
+7E35 BD7EC8                 jsr   MPISLOT1
+7E38 BD7EDD                 jsr   DALLY
+7E3B BD7E48                 jsr   W5100_GATEWAY   ; Bring up layer 3 default route
+7E3E BD7E68                 jsr   W5100_SUBNET    ; Bring up layer 3 network mask
+7E41 BD7E88                 jsr   W5100_HARDWARE  ; Bring up layer 2 address
+7E44 BD7EA8                 jsr   W5100_IPADDR    ; Bring up layer 3 address
+7E47 39                     rts
+                
+7E48            W5100_GATEWAY:                ; Configure the Gateway address
+7E48 CC0001                 ldd   #GAR0       ; W5100S Gateway Address Register 0
+7E4B B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E4E F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7E51 BD7EDD                 jsr   DALLY
+7E54 C604                   ldb   #4          ; Setup B for loop counting
+7E56 8E7EE9                 ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E59 A680       GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
+7E5B B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7E5E BD7EDD                 jsr   DALLY
+7E61 5A                     decb              ; Decrement loop counter
+7E62 26F5                   bne   GWRLOOP     ; No, go back and do more
+7E64 BD7EDD                 jsr   DALLY
+7E67 39                     rts
+                
+7E68            W5100_SUBNET:                 ; Next the Subnet Mask
+7E68 CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+7E6B B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E6E F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7E71 BD7EDD                 jsr   DALLY
+7E74 C604                   ldb   #4          ; Setup B for loop counting
+7E76 8E7EED                 ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E79 A680       SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
+7E7B B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7E7E BD7EDD                 jsr   DALLY
+7E81 5A                     decb              ; Decrement loop counter
+7E82 26F5                   bne   SUBRLOOP    ; No, go back and do more
+7E84 BD7EDD                 jsr   DALLY
+7E87 39                     rts
+                
+7E88            W5100_HARDWARE:               ; Next the Source Hardware Address
+7E88 CC0009                 ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
+7E8B B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E8E F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7E91 BD7EDD                 jsr   DALLY
+7E94 C606                   ldb   #6          ; Setup B for loop counting
+7E96 8E7EF1                 ldx   #MYMAC      ; Get the location of the MAC data
+7E99 A680       SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
+7E9B B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7E9E BD7EDD                 jsr   DALLY
+7EA1 5A                     decb              ; Decrement loop counter
+7EA2 26F5                   bne   SHARLOOP    ; No, go back and do more
+7EA4 BD7EDD                 jsr   DALLY
+7EA7 39                     rts
+                
+7EA8            W5100_IPADDR:                 ; Next the Source IP Address
+7EA8 CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
+7EAB B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7EAE F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7EB1 BD7EDD                 jsr   DALLY
+7EB4 C604                   ldb   #4          ; Setup B for loop counting
+7EB6 8E7EF7                 ldx   #MYIP       ; Get the location of the IP data
+7EB9 A680       SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
+7EBB B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7EBE BD7EDD                 jsr   DALLY
+7EC1 5A                     decb              ; Decrement loop counter
+7EC2 26F5                   bne   SIPRLOOP    ; No, go back and do more
+7EC4 BD7EDD                 jsr   DALLY
+7EC7 39                     rts
+                
+7EC8            MPISLOT1:                     ; Configure Multipack SCS to slot 1
+7EC8 B6FF7F                 lda   $FF7F       ; Read the MPI slot control
+7ECB 84F0                   anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+7ECD B7FF7F                 sta   $FF7F       ; Write the updated SCS
+7ED0 39                     rts
+                
+7ED1 B6FF02     DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
+7ED4 B6FF03     DILLY1:     lda   PIA0BC      ; load up the current flags
+7ED7 2AFB                   bpl   DILLY1      ; if bit 7 not set, keep checking flags
+7ED9 B6FF02                 lda   PIA0BD      ; clear the interrupt that just happened
+7EDC 39                     rts
+                
+7EDD 3410       DALLY:      pshs  X
+7EDF 8E1000                 ldx   #$1000      ; A maximum delay loop 
+7EE2 301F       DALLY1:     leax  -1,X        ; Decrement X
+7EE4 26FC                   bne   DALLY1      ; if X>0 not done yet
+7EE6 3510                   puls  X
+7EE8 39                     rts
+                
+                            include "COCOIOCFG.asm"
+                ;*********************************************************************
+                ;* Title: COCOIOCFG.asm
+                ;*********************************************************************
+                ;* Author: R. Allen Murphey
+                ;*
+                ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                ;*
+                ;* Description: CoCoIO for Color Computer Configuration
+                ;*
+                ;* Documentation: none
+                ;*
+                ;* Include Files: none
+                ;*
+                ;* Assembler: lwasm 1.4.2
+                ;*
+                ;* Revision History:
+                ;* Rev #     Date      Who     Comments
+                ;* -----  -----------  ------  ---------------------------------------
+                ;* 00     2021         RAM     Initial data to config for testing
+                ;*********************************************************************
+                
+7EE9            MYGATEWAY:                    ; My Gateway IP Address
+7EE9 0A278001               fcb   10,39,128,1
+                
+7EED            MYSUBNET:                     ; My Subnet Mask
+7EED FFFFFF00               fcb   255,255,255,0 
+                
+7EF1            MYMAC:                        ; My Source Hardware Address
+7EF1 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
+                
+7EF7            MYIP:                         ; My Source IP Address
+7EF7 0A278044               fcb   10,39,128,68
+                                              ; End of My CoCoIO configuration
+                
+                            end   RESET       ; End of driver
+
+Symbol Table:
+[ G] CIO0ADDR  
+[ G] CIO0CMND  
+[ G] CIO0DATA  
+[ G] CIO1ADDR  
+[ G] CIO1CMND  
+[ G] CIO1DATA  
+[ G] CLKLCKR   
+[ G] CONFIG    
+[ G] DALLY     
+[ G] DALLY1    
+[ G] DILLY     
+[ G] DILLY1    
+[ G] GAR0      
+[ G] GAR1      
+[ G] GAR2      
+[ G] GAR3      
+[ G] GATEWAY   
+[ G] GWRLOOP   
+[ G] HARDWARE  
+[ G] IMR       
+[ G] IMR2      
+[ G] INTPTMR0  
+[ G] INTPTMR1  
+[ G] IPADDR    
+[ G] IR        
+[ G] IR2       
+[ G] MPISLOT   
+[ G] MPISLOT1  
+[ G] MR        
+[ G] MR2       
+[ G] MYGATEWAY 
+[ G] MYIP      
+[ G] MYMAC     
+[ G] MYSUBNET  
+[ G] NETLCKR   
+[ G] PHAR0     
+[ G] PHAR1     
+[ G] PHAR2     
+[ G] PHAR3     
+[ G] PHAR4     
+[ G] PHAR5     
+[ G] PHYACR    
+[ G] PHYAR     
+[ G] PHYCR0    
+[ G] PHYCR1    
+[ G] PHYDIR0   
+[ G] PHYDIR1   
+[ G] PHYDIVR   
+[ G] PHYDOR0   
+[ G] PHYDOR1   
+[ G] PHYLCKR   
+[ G] PHYRAR    
+[ G] PHYSR0    
+[ G] PHYSR1    
+[ G] PIA0BC    
+[ G] PIA0BD    
+[ G] PINGIDR0  
+[ G] PINGIDR1  
+[ G] PINGSEQR0 
+[ G] PINGSEQR1 
+[ G] PMAGIC    
+[ G] PMRUR0    
+[ G] PMRUR1    
+[ G] PSIDR0    
+[ G] PSIDR1    
+[ G] PTIMER    
+[ G] RCR       
+[ G] RESET     
+[ G] RMSR      
+[ G] RSTDONE   
+[ G] RTR0      
+[ G] RTR1      
+[ G] S0_CR     
+[ G] S0_DHAR0  
+[ G] S0_DHAR1  
+[ G] S0_DHAR2  
+[ G] S0_DHAR3  
+[ G] S0_DHAR4  
+[ G] S0_DHAR5  
+[ G] S0_DIPR0  
+[ G] S0_DIPR1  
+[ G] S0_DIPR2  
+[ G] S0_DIPR3  
+[ G] S0_DPORTR0
+[ G] S0_DPORTR1
+[ G] S0_FRAGR0 
+[ G] S0_FRAGR1 
+[ G] S0_IMR    
+[ G] S0_IR     
+[ G] S0_KPALVTR
+[ G] S0_MR     
+[ G] S0_MR2    
+[ G] S0_MSS0   
+[ G] S0_MSS1   
+[ G] S0_PORTR0 
+[ G] S0_PORTR1 
+[ G] S0_PROTOR 
+[ G] S0_RCR    
+[ G] S0_RTR0   
+[ G] S0_RTR1   
+[ G] S0_RX_RD0 
+[ G] S0_RX_RD1 
+[ G] S0_RX_RSR0
+[ G] S0_RX_RSR1
+[ G] S0_RX_WR0 
+[ G] S0_RX_WR1 
+[ G] S0_RXBUF_S
+[ G] S0_SR     
+[ G] S0_TOS    
+[ G] S0_TTL    
+[ G] S0_TX_FSR0
+[ G] S0_TX_FSR1
+[ G] S0_TX_RD0 
+[ G] S0_TX_RD1 
+[ G] S0_TX_WR0 
+[ G] S0_TX_WR1 
+[ G] S0_TXBUF_S
+[ G] S1_CR     
+[ G] S1_DHAR0  
+[ G] S1_DHAR1  
+[ G] S1_DHAR2  
+[ G] S1_DHAR3  
+[ G] S1_DHAR4  
+[ G] S1_DHAR5  
+[ G] S1_DIPR0  
+[ G] S1_DIPR1  
+[ G] S1_DIPR2  
+[ G] S1_DIPR3  
+[ G] S1_DPORTR0
+[ G] S1_DPORTR1
+[ G] S1_FRAGR0 
+[ G] S1_FRAGR1 
+[ G] S1_IMR    
+[ G] S1_IR     
+[ G] S1_KPALVTR
+[ G] S1_MR     
+[ G] S1_MR2    
+[ G] S1_MSS0   
+[ G] S1_MSS1   
+[ G] S1_PORTR0 
+[ G] S1_PORTR1 
+[ G] S1_PROTOR 
+[ G] S1_RCR    
+[ G] S1_RTR0   
+[ G] S1_RTR1   
+[ G] S1_RX_RD0 
+[ G] S1_RX_RD1 
+[ G] S1_RX_RSR0
+[ G] S1_RX_RSR1
+[ G] S1_RX_WR0 
+[ G] S1_RX_WR1 
+[ G] S1_RXBUF_S
+[ G] S1_SR     
+[ G] S1_TOS    
+[ G] S1_TTL    
+[ G] S1_TX_FSR0
+[ G] S1_TX_FSR1
+[ G] S1_TX_RD0 
+[ G] S1_TX_RD1 
+[ G] S1_TX_WR0 
+[ G] S1_TX_WR1 
+[ G] S1_TXBUF_S
+[ G] S2_CR     
+[ G] S2_DHAR0  
+[ G] S2_DHAR1  
+[ G] S2_DHAR2  
+[ G] S2_DHAR3  
+[ G] S2_DHAR4  
+[ G] S2_DHAR5  
+[ G] S2_DIPR0  
+[ G] S2_DIPR1  
+[ G] S2_DIPR2  
+[ G] S2_DIPR3  
+[ G] S2_DPORTR0
+[ G] S2_DPORTR1
+[ G] S2_FRAGR0 
+[ G] S2_FRAGR1 
+[ G] S2_IMR    
+[ G] S2_IR     
+[ G] S2_KPALVTR
+[ G] S2_MR     
+[ G] S2_MR2    
+[ G] S2_MSS0   
+[ G] S2_MSS1   
+[ G] S2_PORTR0 
+[ G] S2_PORTR1 
+[ G] S2_PROTOR 
+[ G] S2_RCR    
+[ G] S2_RTR0   
+[ G] S2_RTR1   
+[ G] S2_RX_RD0 
+[ G] S2_RX_RD1 
+[ G] S2_RX_RSR0
+[ G] S2_RX_RSR1
+[ G] S2_RX_WR0 
+[ G] S2_RX_WR1 
+[ G] S2_RXBUF_S
+[ G] S2_SR     
+[ G] S2_TOS    
+[ G] S2_TTL    
+[ G] S2_TX_FSR0
+[ G] S2_TX_FSR1
+[ G] S2_TX_RD0 
+[ G] S2_TX_RD1 
+[ G] S2_TX_WR0 
+[ G] S2_TX_WR1 
+[ G] S2_TXBUF_S
+[ G] S3_CR     
+[ G] S3_DHAR0  
+[ G] S3_DHAR1  
+[ G] S3_DHAR2  
+[ G] S3_DHAR3  
+[ G] S3_DHAR4  
+[ G] S3_DHAR5  
+[ G] S3_DIPR0  
+[ G] S3_DIPR1  
+[ G] S3_DIPR2  
+[ G] S3_DIPR3  
+[ G] S3_DPORTR0
+[ G] S3_DPORTR1
+[ G] S3_FRAGR0 
+[ G] S3_FRAGR1 
+[ G] S3_IMR    
+[ G] S3_IR     
+[ G] S3_KPALVTR
+[ G] S3_MR     
+[ G] S3_MR2    
+[ G] S3_MSS0   
+[ G] S3_MSS1   
+[ G] S3_PORTR0 
+[ G] S3_PORTR1 
+[ G] S3_PROTOR 
+[ G] S3_RCR    
+[ G] S3_RTR0   
+[ G] S3_RTR1   
+[ G] S3_RX_RD0 
+[ G] S3_RX_RD1 
+[ G] S3_RX_RSR0
+[ G] S3_RX_RSR1
+[ G] S3_RX_WR0 
+[ G] S3_RX_WR1 
+[ G] S3_RXBUF_S
+[ G] S3_SR     
+[ G] S3_TOS    
+[ G] S3_TTL    
+[ G] S3_TX_FSR0
+[ G] S3_TX_FSR1
+[ G] S3_TX_RD0 
+[ G] S3_TX_RD1 
+[ G] S3_TX_WR0 
+[ G] S3_TX_WR1 
+[ G] S3_TXBUF_S
+[ G] SETMODE   
+[ G] SHAR0     
+[ G] SHAR1     
+[ G] SHAR2     
+[ G] SHAR3     
+[ G] SHAR4     
+[ G] SHAR5     
+[ G] SHARLOOP  
+[ G] SIPR0     
+[ G] SIPR1     
+[ G] SIPR2     
+[ G] SIPR3     
+[ G] SIPRLOOP  
+[ G] SLCR      
+[ G] SLIMR     
+[ G] SLIR      
+[ G] SLPHAR0   
+[ G] SLPHAR1   
+[ G] SLPHAR2   
+[ G] SLPHAR3   
+[ G] SLPHAR4   
+[ G] SLPHAR5   
+[ G] SLPIPR0   
+[ G] SLPIPR1   
+[ G] SLPIPR2   
+[ G] SLPIPR3   
+[ G] SLRCR     
+[ G] SLRTR0    
+[ G] SLRTR1    
+[ G] SUBNET    
+[ G] SUBR0     
+[ G] SUBR1     
+[ G] SUBR2     
+[ G] SUBR3     
+[ G] SUBRLOOP  
+[ G] TCNTCLR   
+[ G] TCNTR0    
+[ G] TCNTR1    
+[ G] TMSR      
+[ G] UIPR0     
+[ G] UIPR1     
+[ G] UIPR2     
+[ G] UIPR3     
+[ G] UPORTR0   
+[ G] UPORTR1   
+[ G] VERR      
+[ G] W5100_CFG 
+[ G] W5100_GATE
+[ G] W5100_HARD
+[ G] W5100_IPAD
+[ G] W5100_RST 
+[ G] W5100_SUBN
