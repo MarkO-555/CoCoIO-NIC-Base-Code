@@ -433,16 +433,78 @@ S_MR_CLSD:  equ   %00000000   ; Socket CLOSED
 
 
                         ; Socket Command Register ( S0 - S3 )
+S_CR_OPEN:  equ   %00000001   ; Open Command
+S_CR_LSTEN: equ   %00000010   ; Listen Command
+S_CR_CNNCT: equ   %00000100   ; Connect Command
+S_CR_DSCON: equ   %00001000   ; Disconnect Command
+S_CR_CLOSE: equ   %00010000   ; Close Command
+S_CR_SEND:  equ   %00100000   ; Send Command
+S_CR_SMAC:  equ   %00100001   ; Send MAC Command
+S_CR_SKEEP: equ   %00100010   ; Send Keep Command
+S_CR_RECV:  equ   %01000000   ; RECV Command
 
 
+                        ; SOCKET Interrupt Register ( S0 - S3 )
+SIR_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
+SIR_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
+SIR_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
+SIR_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
+SIR_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
 
 
+                        ; Socket Status Register ( S0 - S3 )
+S_SR_CLSD: equ    %00000000   ; Socket Closed
+S_SR_INIT: equ    %00010011   ; Socket Opened as TCP Mode
+S_SR_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
+S_SR_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
+S_SR_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
+S_SR_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
+S_SR_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
+S_SR_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
+                        ; Socket Status Register, Temp Status ( S0 - S3 )
+S_SR_SSNT: equ    %00010101   ; Socket Sent the Connect Request
+S_SR_SRCV: equ    %00010110   ; Socket Received the Connect Request
+S_SR_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
+S_SR_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
+S_SR_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
+
+                        ; Socket Status Register, ALT ( S0 - S3 )
+SOCK_CLOS: equ    %00000000   ; Socket Closed
+SOCK_INIT: equ    %00010011   ; Socket Opened as TCP Mode
+SOCK_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
+SOCK_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
+SOCK_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
+SOCK_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
+SOCK_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
+SOCK_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
+                        ; Socket Status Register, ALT, Temp Status ( S0 - S3 )
+SOCK_SSNT: equ    %00010101   ; Socket Sent the Connect Request
+SOCK_SRCV: equ    %00010110   ; Socket Received the Connect Request
+SOCK_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
+SOCK_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
+SOCK_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
 
 
+                        ; Socket Buffer Size, per Socket ( S0 - S3 )
+                        ; This is a Duplicate of the RMSR/TMSR Registers
+S_BUFSZ0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
+S_BUFSZ1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
+S_BUFSZ2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
+S_BUFSZ4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
+S_BUFSZ8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
+
+                        ; Socket Buffer Size, per Socket, ALT ( S0 - S3 )
+                        ; This is a Duplicate of the RMSR/TMSR Registers
+BUFSIZE0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
+BUFSIZE1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
+BUFSIZE2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
+BUFSIZE4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
+BUFSIZE8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
 
 
+                        ; Interrupt Register
 
-
+                        ; Socket Mode Register 2 ( S0 - S3 )
 
 
                               ; End of Equates
