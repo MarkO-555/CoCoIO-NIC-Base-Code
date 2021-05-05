@@ -1,0 +1,1129 @@
+                      ( COCOIODRV-2A.asm):00001         ;*********************************************************************
+                      ( COCOIODRV-2A.asm):00002         ;* Title: COCOIODRV-2A.asm
+                      ( COCOIODRV-2A.asm):00003         ;*********************************************************************
+                      ( COCOIODRV-2A.asm):00004         ;* Author: R. Allen Murphey, & MarkO
+                      ( COCOIODRV-2A.asm):00005         ;*
+                      ( COCOIODRV-2A.asm):00006         ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                      ( COCOIODRV-2A.asm):00007         ;*
+                      ( COCOIODRV-2A.asm):00008         ;* Description: CoCoIO with WIZnet W5100S driver code
+                      ( COCOIODRV-2A.asm):00009         ;*
+                      ( COCOIODRV-2A.asm):00010         ;* Documentation: https://www.wiznet.io/product-item/w5100s/
+                      ( COCOIODRV-2A.asm):00011         ;*
+                      ( COCOIODRV-2A.asm):00012         ;* Include Files: W5100SEQU.asm - W5100S Equates
+                      ( COCOIODRV-2A.asm):00013         ;*                COCOIOEQU.asm - CoCoIO Equates
+                      ( COCOIODRV-2A.asm):00014         ;*                COCOIOCFG.asm - CoCoIO Config Data
+                      ( COCOIODRV-2A.asm):00015         ;*
+                      ( COCOIODRV-2A.asm):00016         ;* Assembler: lwasm 1.4.2
+                      ( COCOIODRV-2A.asm):00017         ;*
+                      ( COCOIODRV-2A.asm):00018         ;* Revision History:
+                      ( COCOIODRV-2A.asm):00019         ;* Rev #     Date      Who     Comments
+                      ( COCOIODRV-2A.asm):00020         ;* -----  -----------  ------  ---------------------------------------
+                      ( COCOIODRV-2A.asm):00021         ;* 00     2021         RAM     Initial Reset and Config functions
+                      ( COCOIODRV-2A.asm):00022         ;*********************************************************************
+                      ( COCOIODRV-2A.asm):00023         
+                      ( COCOIODRV-2A.asm):00024                     include "W5100SEQU.asm"
+                      (    W5100SEQU.asm):00001         ;*********************************************************************
+                      (    W5100SEQU.asm):00002         ;* Title: W5100SEQU.asm
+                      (    W5100SEQU.asm):00003         ;*********************************************************************
+                      (    W5100SEQU.asm):00004         ;* Author: R. Allen Murphey
+                      (    W5100SEQU.asm):00005         ;*
+                      (    W5100SEQU.asm):00006         ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                      (    W5100SEQU.asm):00007         ;*
+                      (    W5100SEQU.asm):00008         ;* Description: WIZnet W5100S driver equates
+                      (    W5100SEQU.asm):00009         ;*
+                      (    W5100SEQU.asm):00010         ;* Documentation: https://www.wiznet.io/product-item/w5100s/
+                      (    W5100SEQU.asm):00011         ;*
+                      (    W5100SEQU.asm):00012         ;* Include Files: none
+                      (    W5100SEQU.asm):00013         ;*
+                      (    W5100SEQU.asm):00014         ;* Assembler: lwasm 1.4.2
+                      (    W5100SEQU.asm):00015         ;*
+                      (    W5100SEQU.asm):00016         ;* Revision History:
+                      (    W5100SEQU.asm):00017         ;* Rev #     Date      Who     Comments
+                      (    W5100SEQU.asm):00018         ;* -----  -----------  ------  ---------------------------------------
+                      (    W5100SEQU.asm):00019         ;* 00     2021         RAM     Initial equates from W5100S Data Sheet
+                      (    W5100SEQU.asm):00020         ;*********************************************************************
+                      (    W5100SEQU.asm):00021         
+                      (    W5100SEQU.asm):00022                                       ; W5100S REGISTER / MEMORY MAP
+                      (    W5100SEQU.asm):00023                                       ; 0x0000 - 0x002F Common Registers W5100 compatible
+                      (    W5100SEQU.asm):00024                                       ; 0x0030 - 0x0088 Common Registers New W5100S
+                      (    W5100SEQU.asm):00025                                       ; 0x0089 - 0x03FF -- Reserved --
+                      (    W5100SEQU.asm):00026                                       ; 0x0400 - 0x04FF Socket 0 Registers
+                      (    W5100SEQU.asm):00027                                       ; 0x0500 - 0x05FF Socket 1 Registers
+                      (    W5100SEQU.asm):00028                                       ; 0x0600 - 0x06FF Socket 2 Registers
+                      (    W5100SEQU.asm):00029                                       ; 0x0700 - 0x07FF Socket 3 Registers
+                      (    W5100SEQU.asm):00030                                       ; 0x0800 - 0x3FFF -- Reserved --
+                      (    W5100SEQU.asm):00031                                       ; 0x4000 - 0x5FFF TX Memory - default 2KB per socket
+                      (    W5100SEQU.asm):00032                                       ; 0x6000 - 0x7FFF RX Memory - default 2KB per socket
+                      (    W5100SEQU.asm):00033         
+                      (    W5100SEQU.asm):00034                                       ; COMMON REGISTERS 0x0000-0x0088
+     0000             (    W5100SEQU.asm):00035         MR:         equ   $0000       ; Mode Register
+     0001             (    W5100SEQU.asm):00036         GAR0:       equ   $0001       ; Gateway Address Register 0
+     0002             (    W5100SEQU.asm):00037         GAR1:       equ   $0002       ; Gateway Address Register 1
+     0003             (    W5100SEQU.asm):00038         GAR2:       equ   $0003       ; Gateway Address Register 2
+     0004             (    W5100SEQU.asm):00039         GAR3:       equ   $0004       ; Gateway Address Register 3
+     0005             (    W5100SEQU.asm):00040         SUBR0:      equ   $0005       ; Subnet Mask Address Register 0
+     0006             (    W5100SEQU.asm):00041         SUBR1:      equ   $0006       ; Subnet Mask Address Register 1
+     0007             (    W5100SEQU.asm):00042         SUBR2:      equ   $0007       ; Subnet Mask Address Register 2
+     0008             (    W5100SEQU.asm):00043         SUBR3:      equ   $0008       ; Subnet Mask Address Register 3
+     0009             (    W5100SEQU.asm):00044         SHAR0:      equ   $0009       ; Source Hardware Address Register 0
+     000A             (    W5100SEQU.asm):00045         SHAR1:      equ   $000A       ; Source Hardware Address Register 1
+     000B             (    W5100SEQU.asm):00046         SHAR2:      equ   $000B       ; Source Hardware Address Register 2
+     000C             (    W5100SEQU.asm):00047         SHAR3:      equ   $000C       ; Source Hardware Address Register 3
+     000D             (    W5100SEQU.asm):00048         SHAR4:      equ   $000D       ; Source Hardware Address Register 4
+     000E             (    W5100SEQU.asm):00049         SHAR5:      equ   $000E       ; Source Hardware Address Register 5
+     000F             (    W5100SEQU.asm):00050         SIPR0:      equ   $000F       ; Source IP Address Register 0
+     0010             (    W5100SEQU.asm):00051         SIPR1:      equ   $0010       ; Source IP Address Register 1
+     0011             (    W5100SEQU.asm):00052         SIPR2:      equ   $0011       ; Source IP Address Register 2
+     0012             (    W5100SEQU.asm):00053         SIPR3:      equ   $0012       ; Source IP Address Register 3
+     0013             (    W5100SEQU.asm):00054         INTPTMR0:   equ   $0013       ; Interrupt Pending Time Register 0
+     0014             (    W5100SEQU.asm):00055         INTPTMR1:   equ   $0014       ; Interrupt Pending Time Register 1
+     0015             (    W5100SEQU.asm):00056         IR:         equ   $0015       ; Interrupt Register
+     0016             (    W5100SEQU.asm):00057         IMR:        equ   $0016       ; Interrupt Mask Register
+     0017             (    W5100SEQU.asm):00058         RTR0:       equ   $0017       ; Retransmission Time Register 0
+     0018             (    W5100SEQU.asm):00059         RTR1:       equ   $0018       ; Retransmission Time Register 1
+     0019             (    W5100SEQU.asm):00060         RCR:        equ   $0019       ; Retransmission Count Register
+     001A             (    W5100SEQU.asm):00061         RMSR:       equ   $001A       ; RX Memory Size Register
+     001B             (    W5100SEQU.asm):00062         TMSR:       equ   $001B       ; TX Memory Size Register
+                      (    W5100SEQU.asm):00063                                       ; 0x001C-0x001F -- Reserved --
+     0020             (    W5100SEQU.asm):00064         IR2:        equ   $0020       ; Interrupt2 Register
+     0021             (    W5100SEQU.asm):00065         IMR2:       equ   $0021       ; Interrupt2 Mask Register
+                      (    W5100SEQU.asm):00066                                       ; 0x0022-0x0027 -- Reserved --
+     0028             (    W5100SEQU.asm):00067         PTIMER:     equ   $0028       ; PPP LCP Request Timer
+     0029             (    W5100SEQU.asm):00068         PMAGIC:     equ   $0029       ; PPP LCP Magic Number
+     002A             (    W5100SEQU.asm):00069         UIPR0:      equ   $002A       ; Unreachable IP Address Register 0
+     002B             (    W5100SEQU.asm):00070         UIPR1:      equ   $002B       ; Unreachable IP Address Register 1
+     002C             (    W5100SEQU.asm):00071         UIPR2:      equ   $002C       ; Unreachable IP Address Register 2
+     002D             (    W5100SEQU.asm):00072         UIPR3:      equ   $002D       ; Unreachable IP Address Register 0
+     002E             (    W5100SEQU.asm):00073         UPORTR0:    equ   $002E       ; Unreachable Port Register 0
+     002F             (    W5100SEQU.asm):00074         UPORTR1:    equ   $002F       ; Unreachable Port Register 1
+     0030             (    W5100SEQU.asm):00075         MR2:        equ   $0030       ; Mode2 Register
+                      (    W5100SEQU.asm):00076                                       ; 0x0031 --  Reserved --
+     0032             (    W5100SEQU.asm):00077         PHAR0:      equ   $0032       ; Destination Hardware Address on PPPoE Register 0
+     0033             (    W5100SEQU.asm):00078         PHAR1:      equ   $0033       ; Destination Hardware Address on PPPoE Register 1
+     0034             (    W5100SEQU.asm):00079         PHAR2:      equ   $0034       ; Destination Hardware Address on PPPoE Register 2
+     0035             (    W5100SEQU.asm):00080         PHAR3:      equ   $0035       ; Destination Hardware Address on PPPoE Register 3
+     0036             (    W5100SEQU.asm):00081         PHAR4:      equ   $0036       ; Destination Hardware Address on PPPoE Register 4
+     0037             (    W5100SEQU.asm):00082         PHAR5:      equ   $0037       ; Destination Hardware Address on PPPoE Register 5
+     0038             (    W5100SEQU.asm):00083         PSIDR0:     equ   $0038       ; Session ID on PPPoE Register 0
+     0039             (    W5100SEQU.asm):00084         PSIDR1:     equ   $0039       ; Session ID on PPPoE Register 1
+     003A             (    W5100SEQU.asm):00085         PMRUR0:     equ   $003A       ; Maximum Receive Unit on PPPoE Register 0
+     003B             (    W5100SEQU.asm):00086         PMRUR1:     equ   $003B       ; Maximum Receive Unit on PPPoE Register 1
+     003C             (    W5100SEQU.asm):00087         PHYSR0:     equ   $003C       ; PHY Status Register 0
+     003D             (    W5100SEQU.asm):00088         PHYSR1:     equ   $003D       ; PHY Status Register 1
+     003E             (    W5100SEQU.asm):00089         PHYAR:      equ   $003E       ; PHY Address Value
+     003F             (    W5100SEQU.asm):00090         PHYRAR:     equ   $003F       ; PHY Register Address
+     0040             (    W5100SEQU.asm):00091         PHYDIR0:    equ   $0040       ; PHY Data Input Register 0
+     0041             (    W5100SEQU.asm):00092         PHYDIR1:    equ   $0041       ; PHY Data Input Register 1
+     0042             (    W5100SEQU.asm):00093         PHYDOR0:    equ   $0042       ; PHY Data Output Register 0
+     0043             (    W5100SEQU.asm):00094         PHYDOR1:    equ   $0043       ; PHY Data Output Register 1
+     0044             (    W5100SEQU.asm):00095         PHYACR:     equ   $0044       ; PHY Access Register
+     0045             (    W5100SEQU.asm):00096         PHYDIVR     equ   $0045       ; PHY Division Register
+     0046             (    W5100SEQU.asm):00097         PHYCR0:     equ   $0046       ; PHY Control Register 0
+     0047             (    W5100SEQU.asm):00098         PHYCR1:     equ   $0047       ; PHY Control Register 1
+                      (    W5100SEQU.asm):00099                                       ; 0x0048-0x004B -- Reserved --
+     004C             (    W5100SEQU.asm):00100         SLCR:       equ   $004C       ; SOCKET-less Command Register
+     004D             (    W5100SEQU.asm):00101         SLRTR0:     equ   $004D       ; SOCKET-less Retransmission Time Register 0
+     004E             (    W5100SEQU.asm):00102         SLRTR1:     equ   $004E       ; SOCKET-less Retransmission Time Register 1
+     004F             (    W5100SEQU.asm):00103         SLRCR:      equ   $004F       ; SOCKET-less Retransmission Count Register
+     0050             (    W5100SEQU.asm):00104         SLPIPR0:    equ   $0050       ; SOCKET-less Peer IP Address Register 0
+     0051             (    W5100SEQU.asm):00105         SLPIPR1:    equ   $0051       ; SOCKET-less Peer IP Address Register 1
+     0052             (    W5100SEQU.asm):00106         SLPIPR2:    equ   $0052       ; SOCKET-less Peer IP Address Register 2
+     0053             (    W5100SEQU.asm):00107         SLPIPR3:    equ   $0053       ; SOCKET-less Peer IP Address Register 3
+     0054             (    W5100SEQU.asm):00108         SLPHAR0:    equ   $0054       ; SOCKET-less Peer Hardware Address Register 0
+     0055             (    W5100SEQU.asm):00109         SLPHAR1:    equ   $0055       ; SOCKET-less Peer Hardware Address Register 1
+     0056             (    W5100SEQU.asm):00110         SLPHAR2:    equ   $0056       ; SOCKET-less Peer Hardware Address Register 2
+     0057             (    W5100SEQU.asm):00111         SLPHAR3:    equ   $0057       ; SOCKET-less Peer Hardware Address Register 3
+     0058             (    W5100SEQU.asm):00112         SLPHAR4:    equ   $0058       ; SOCKET-less Peer Hardware Address Register 4
+     0059             (    W5100SEQU.asm):00113         SLPHAR5:    equ   $0059       ; SOCKET-less Peer Hardware Address Register 5
+     005A             (    W5100SEQU.asm):00114         PINGSEQR0:  equ   $005A       ; PING Sequence Number Register 0
+     005B             (    W5100SEQU.asm):00115         PINGSEQR1:  equ   $005B       ; PING Sequence Number Register 1
+     005C             (    W5100SEQU.asm):00116         PINGIDR0:   equ   $005C       ; PING ID Register 0
+     005D             (    W5100SEQU.asm):00117         PINGIDR1:   equ   $005D       ; PING ID Register 1
+     005E             (    W5100SEQU.asm):00118         SLIMR:      equ   $005E       ; SOCKET-less Interrupt Mask Register
+     005F             (    W5100SEQU.asm):00119         SLIR:       equ   $005F       ; SOCKET-less Interrupt Register
+                      (    W5100SEQU.asm):00120                                       ; 0x0060-0x006A -- Reserved --
+     0070             (    W5100SEQU.asm):00121         CLKLCKR:    equ   $0070       ; Clock Lock Register
+     0071             (    W5100SEQU.asm):00122         NETLCKR:    equ   $0071       ; Network Lock Register
+     0072             (    W5100SEQU.asm):00123         PHYLCKR:    equ   $0072       ; PHY Lock Register
+                      (    W5100SEQU.asm):00124                                       ; 0x0073-0x007F -- Reserved --
+     0080             (    W5100SEQU.asm):00125         VERR:       equ   $0080       ; Chip Version
+                      (    W5100SEQU.asm):00126                                       ; 0x0081 -- Reserved --
+     0082             (    W5100SEQU.asm):00127         TCNTR0:     equ   $0082       ; 100us Ticker Counter Register 0
+     0083             (    W5100SEQU.asm):00128         TCNTR1:     equ   $0083       ; 100us Ticker Counter Register 1
+                      (    W5100SEQU.asm):00129                                       ; 0x0084-0x0087 -- Reserved --
+     0088             (    W5100SEQU.asm):00130         TCNTCLR:    equ   $0088       ; 100us Ticker Counter Clear Register
+                      (    W5100SEQU.asm):00131         
+                      (    W5100SEQU.asm):00132                                       ; SOCKET 0 REGISTERS 0x0400-0x04FF 45 bytes per socket
+     0400             (    W5100SEQU.asm):00133         S0_MR:      equ   $0400       ; Socket 0 Mode Register
+     0401             (    W5100SEQU.asm):00134         S0_CR:      equ   $0401       ; Socket 0 Command Register
+     0402             (    W5100SEQU.asm):00135         S0_IR:      equ   $0402       ; Socket 0 Interrupt Register
+     0403             (    W5100SEQU.asm):00136         S0_SR:      equ   $0403       ; Socket 0 Status Register
+     0404             (    W5100SEQU.asm):00137         S0_PORTR0:  equ   $0404       ; Socket 0 Source Port Register 0
+     0405             (    W5100SEQU.asm):00138         S0_PORTR1:  equ   $0405       ; Socket 0 Source Port Register 1
+     0406             (    W5100SEQU.asm):00139         S0_DHAR0:   equ   $0406       ; Socket 0 Destination Hardware Address Register 0
+     0407             (    W5100SEQU.asm):00140         S0_DHAR1:   equ   $0407       ; Socket 0 Destination Hardware Address Register 1
+     0408             (    W5100SEQU.asm):00141         S0_DHAR2:   equ   $0408       ; Socket 0 Destination Hardware Address Register 2
+     0409             (    W5100SEQU.asm):00142         S0_DHAR3:   equ   $0409       ; Socket 0 Destination Hardware Address Register 3
+     040A             (    W5100SEQU.asm):00143         S0_DHAR4:   equ   $040A       ; Socket 0 Destination Hardware Address Register 4
+     040B             (    W5100SEQU.asm):00144         S0_DHAR5:   equ   $040B       ; Socket 0 Destination Hardware Address Register 5
+     040C             (    W5100SEQU.asm):00145         S0_DIPR0:   equ   $040C       ; Socket 0 Destination IP Address Register 0
+     040D             (    W5100SEQU.asm):00146         S0_DIPR1:   equ   $040D       ; Socket 0 Destination IP Address Register 1
+     040E             (    W5100SEQU.asm):00147         S0_DIPR2:   equ   $040E       ; Socket 0 Destination IP Address Register 2
+     040F             (    W5100SEQU.asm):00148         S0_DIPR3:   equ   $040F       ; Socket 0 Destination IP Address Register 3
+     0410             (    W5100SEQU.asm):00149         S0_DPORTR0: equ   $0410       ; Socket 0 Destination Port Register 0
+     0411             (    W5100SEQU.asm):00150         S0_DPORTR1: equ   $0411       ; Socket 0 Destination Port Register 1
+     0412             (    W5100SEQU.asm):00151         S0_MSS0:    equ   $0412       ; Socket 0 Maximum Segment Size Register 0
+     0413             (    W5100SEQU.asm):00152         S0_MSS1:    equ   $0413       ; Socket 0 Maximum Segment Size Register 1
+     0414             (    W5100SEQU.asm):00153         S0_PROTOR:  equ   $0414       ; Socket 0 IP Protocol Register
+     0415             (    W5100SEQU.asm):00154         S0_TOS:     equ   $0415       ; Socket 0 IP Type Of Service
+     0416             (    W5100SEQU.asm):00155         S0_TTL:     equ   $0416       ; Socket 0 IP Time To Live
+                      (    W5100SEQU.asm):00156                                       ; 0x0417-0x041D -- Reserved --
+     041E             (    W5100SEQU.asm):00157         S0_RXBUF_SIZE:  equ  $041E    ; Socket 0 RX Buffer Size
+     041F             (    W5100SEQU.asm):00158         S0_TXBUF_SIZE:  equ  $041F    ; Socket 0 TX Buffer Size
+     0420             (    W5100SEQU.asm):00159         S0_TX_FSR0: equ   $0420       ; Socket 0 TX Free Size Register 0
+     0421             (    W5100SEQU.asm):00160         S0_TX_FSR1: equ   $0421       ; Socket 0 TX Free Size Register 1
+     0422             (    W5100SEQU.asm):00161         S0_TX_RD0:  equ   $0422       ; Socket 0 TX Read Pointer 0
+     0423             (    W5100SEQU.asm):00162         S0_TX_RD1:  equ   $0423       ; Socket 0 TX Read Pointer 1
+     0424             (    W5100SEQU.asm):00163         S0_TX_WR0:  equ   $0424       ; Socket 0 TX Write Pointer 0
+     0425             (    W5100SEQU.asm):00164         S0_TX_WR1:  equ   $0425       ; Socket 0 TX Write Pointer 1
+     0426             (    W5100SEQU.asm):00165         S0_RX_RSR0: equ   $0426       ; Socket 0 RX Received Size Register 0
+     0427             (    W5100SEQU.asm):00166         S0_RX_RSR1: equ   $0427       ; Socket 0 RX Received Size Register 1
+     0428             (    W5100SEQU.asm):00167         S0_RX_RD0:  equ   $0428       ; Socket 0 RX Read Pointer 0
+     0429             (    W5100SEQU.asm):00168         S0_RX_RD1:  equ   $0429       ; Socket 0 RX Read Pointer 1
+     042A             (    W5100SEQU.asm):00169         S0_RX_WR0:  equ   $042A       ; Socket 0 RX Write Pointer 0
+     042B             (    W5100SEQU.asm):00170         S0_RX_WR1:  equ   $042B       ; Socket 0 RX Write Pointer 1
+     042C             (    W5100SEQU.asm):00171         S0_IMR:     equ   $042C       ; Socket 0 Interrupt Mask Register
+     042D             (    W5100SEQU.asm):00172         S0_FRAGR0:  equ   $042D       ; Socket 0 Fragment Offset in IP Header Register 0
+     042E             (    W5100SEQU.asm):00173         S0_FRAGR1:  equ   $042E       ; Socket 0 Fragment Offset in IP Header Register 1
+     042F             (    W5100SEQU.asm):00174         S0_MR2:     equ   $042F       ; Socket 0 Mode 2 Register
+     0430             (    W5100SEQU.asm):00175         S0_KPALVTR: equ   $0430       ; Socket 0 Keep-alive Timer Register
+                      (    W5100SEQU.asm):00176                                       ; 0x0431 -- Reserved --
+     0432             (    W5100SEQU.asm):00177         S0_RTR0:    equ   $0432       ; Socket 0 Retransmission Time Register 0
+     0433             (    W5100SEQU.asm):00178         S0_RTR1:    equ   $0433       ; Socket 0 Retransmission Time Register 1
+     0434             (    W5100SEQU.asm):00179         S0_RCR:     equ   $0434       ; Socket 0 Retransmission Count Register
+                      (    W5100SEQU.asm):00180         
+                      (    W5100SEQU.asm):00181                                       ; SOCKET 1 REGISTERS 0x0500-0x05FF 45 bytes per socket
+     0500             (    W5100SEQU.asm):00182         S1_MR:      equ   $0500       ; Socket 1 Mode Register
+     0501             (    W5100SEQU.asm):00183         S1_CR:      equ   $0501       ; Socket 1 Command Register
+     0502             (    W5100SEQU.asm):00184         S1_IR:      equ   $0502       ; Socket 1 Interrupt Register
+     0503             (    W5100SEQU.asm):00185         S1_SR:      equ   $0503       ; Socket 1 Status Register
+     0504             (    W5100SEQU.asm):00186         S1_PORTR0:  equ   $0504       ; Socket 1 Source Port Register 0
+     0505             (    W5100SEQU.asm):00187         S1_PORTR1:  equ   $0505       ; Socket 1 Source Port Register 1
+     0506             (    W5100SEQU.asm):00188         S1_DHAR0:   equ   $0506       ; Socket 1 Destination Hardware Address Register 0
+     0507             (    W5100SEQU.asm):00189         S1_DHAR1:   equ   $0507       ; Socket 1 Destination Hardware Address Register 1
+     0508             (    W5100SEQU.asm):00190         S1_DHAR2:   equ   $0508       ; Socket 1 Destination Hardware Address Register 2
+     0509             (    W5100SEQU.asm):00191         S1_DHAR3:   equ   $0509       ; Socket 1 Destination Hardware Address Register 3
+     050A             (    W5100SEQU.asm):00192         S1_DHAR4:   equ   $050A       ; Socket 1 Destination Hardware Address Register 4
+     050B             (    W5100SEQU.asm):00193         S1_DHAR5:   equ   $050B       ; Socket 1 Destination Hardware Address Register 5
+     050C             (    W5100SEQU.asm):00194         S1_DIPR0:   equ   $050C       ; Socket 1 Destination IP Address Register 0
+     050D             (    W5100SEQU.asm):00195         S1_DIPR1:   equ   $050D       ; Socket 1 Destination IP Address Register 1
+     050E             (    W5100SEQU.asm):00196         S1_DIPR2:   equ   $050E       ; Socket 1 Destination IP Address Register 2
+     050F             (    W5100SEQU.asm):00197         S1_DIPR3:   equ   $050F       ; Socket 1 Destination IP Address Register 3
+     0510             (    W5100SEQU.asm):00198         S1_DPORTR0: equ   $0510       ; Socket 1 Destination Port Register 0
+     0511             (    W5100SEQU.asm):00199         S1_DPORTR1: equ   $0511       ; Socket 1 Destination Port Register 1
+     0512             (    W5100SEQU.asm):00200         S1_MSS0:    equ   $0512       ; Socket 1 Maximum Segment Size Register 0
+     0513             (    W5100SEQU.asm):00201         S1_MSS1:    equ   $0513       ; Socket 1 Maximum Segment Size Register 1
+     0514             (    W5100SEQU.asm):00202         S1_PROTOR:  equ   $0514       ; Socket 1 IP Protocol Register
+     0515             (    W5100SEQU.asm):00203         S1_TOS:     equ   $0515       ; Socket 1 IP Type Of Service
+     0516             (    W5100SEQU.asm):00204         S1_TTL:     equ   $0516       ; Socket 1 IP Time To Live
+                      (    W5100SEQU.asm):00205                                       ; 0x0517-0x051D -- Reserved --
+     051E             (    W5100SEQU.asm):00206         S1_RXBUF_SIZE:  equ  $051E    ; Socket 1 RX Buffer Size
+     051F             (    W5100SEQU.asm):00207         S1_TXBUF_SIZE:  equ  $051F    ; Socket 1 TX Buffer Size
+     0520             (    W5100SEQU.asm):00208         S1_TX_FSR0: equ   $0520       ; Socket 1 TX Free Size Register 0
+     0521             (    W5100SEQU.asm):00209         S1_TX_FSR1: equ   $0521       ; Socket 1 TX Free Size Register 1
+     0522             (    W5100SEQU.asm):00210         S1_TX_RD0:  equ   $0522       ; Socket 1 TX Read Pointer 0
+     0523             (    W5100SEQU.asm):00211         S1_TX_RD1:  equ   $0523       ; Socket 1 TX Read Pointer 1
+     0524             (    W5100SEQU.asm):00212         S1_TX_WR0:  equ   $0524       ; Socket 1 TX Write Pointer 0
+     0525             (    W5100SEQU.asm):00213         S1_TX_WR1:  equ   $0525       ; Socket 1 TX Write Pointer 1
+     0526             (    W5100SEQU.asm):00214         S1_RX_RSR0: equ   $0526       ; Socket 1 RX Received Size Register 0
+     0527             (    W5100SEQU.asm):00215         S1_RX_RSR1: equ   $0527       ; Socket 1 RX Received Size Register 1
+     0528             (    W5100SEQU.asm):00216         S1_RX_RD0:  equ   $0528       ; Socket 1 RX Read Pointer 0
+     0529             (    W5100SEQU.asm):00217         S1_RX_RD1:  equ   $0529       ; Socket 1 RX Read Pointer 1
+     052A             (    W5100SEQU.asm):00218         S1_RX_WR0:  equ   $052A       ; Socket 1 RX Write Pointer 0
+     052B             (    W5100SEQU.asm):00219         S1_RX_WR1:  equ   $052B       ; Socket 1 RX Write Pointer 1
+     052C             (    W5100SEQU.asm):00220         S1_IMR:     equ   $052C       ; Socket 1 Interrupt Mask Register
+     052D             (    W5100SEQU.asm):00221         S1_FRAGR0:  equ   $052D       ; Socket 1 Fragment Offset in IP Header Register 0
+     052E             (    W5100SEQU.asm):00222         S1_FRAGR1:  equ   $052E       ; Socket 1 Fragment Offset in IP Header Register 1
+     052F             (    W5100SEQU.asm):00223         S1_MR2:     equ   $052F       ; Socket 1 Mode 2 Register
+     0530             (    W5100SEQU.asm):00224         S1_KPALVTR: equ   $0530       ; Socket 1 Keep-alive Timer Register
+                      (    W5100SEQU.asm):00225                                       ; 0x0531 -- Reserved --
+     0532             (    W5100SEQU.asm):00226         S1_RTR0:    equ   $0532       ; Socket 1 Retransmission Time Register 0
+     0533             (    W5100SEQU.asm):00227         S1_RTR1:    equ   $0533       ; Socket 1 Retransmission Time Register 1
+     0534             (    W5100SEQU.asm):00228         S1_RCR:     equ   $0534       ; Socket 1 Retransmission Count Register
+                      (    W5100SEQU.asm):00229         
+                      (    W5100SEQU.asm):00230                                       ; SOCKET 2 REGISTERS 0x0600-0x06FF 45 bytes per socket
+     0600             (    W5100SEQU.asm):00231         S2_MR:      equ   $0600       ; Socket 2 Mode Register
+     0601             (    W5100SEQU.asm):00232         S2_CR:      equ   $0601       ; Socket 2 Command Register
+     0602             (    W5100SEQU.asm):00233         S2_IR:      equ   $0602       ; Socket 2 Interrupt Register
+     0603             (    W5100SEQU.asm):00234         S2_SR:      equ   $0603       ; Socket 2 Status Register
+     0604             (    W5100SEQU.asm):00235         S2_PORTR0:  equ   $0604       ; Socket 2 Source Port Register 0
+     0605             (    W5100SEQU.asm):00236         S2_PORTR1:  equ   $0605       ; Socket 2 Source Port Register 1
+     0606             (    W5100SEQU.asm):00237         S2_DHAR0:   equ   $0606       ; Socket 2 Destination Hardware Address Register 0
+     0607             (    W5100SEQU.asm):00238         S2_DHAR1:   equ   $0607       ; Socket 2 Destination Hardware Address Register 1
+     0608             (    W5100SEQU.asm):00239         S2_DHAR2:   equ   $0608       ; Socket 2 Destination Hardware Address Register 2
+     0609             (    W5100SEQU.asm):00240         S2_DHAR3:   equ   $0609       ; Socket 2 Destination Hardware Address Register 3
+     060A             (    W5100SEQU.asm):00241         S2_DHAR4:   equ   $060A       ; Socket 2 Destination Hardware Address Register 4
+     060B             (    W5100SEQU.asm):00242         S2_DHAR5:   equ   $060B       ; Socket 2 Destination Hardware Address Register 5
+     060C             (    W5100SEQU.asm):00243         S2_DIPR0:   equ   $060C       ; Socket 2 Destination IP Address Register 0
+     060D             (    W5100SEQU.asm):00244         S2_DIPR1:   equ   $060D       ; Socket 2 Destination IP Address Register 1
+     060E             (    W5100SEQU.asm):00245         S2_DIPR2:   equ   $060E       ; Socket 2 Destination IP Address Register 2
+     060F             (    W5100SEQU.asm):00246         S2_DIPR3:   equ   $060F       ; Socket 2 Destination IP Address Register 3
+     0610             (    W5100SEQU.asm):00247         S2_DPORTR0: equ   $0610       ; Socket 2 Destination Port Register 0
+     0611             (    W5100SEQU.asm):00248         S2_DPORTR1: equ   $0611       ; Socket 2 Destination Port Register 1
+     0612             (    W5100SEQU.asm):00249         S2_MSS0:    equ   $0612       ; Socket 2 Maximum Segment Size Register 0
+     0613             (    W5100SEQU.asm):00250         S2_MSS1:    equ   $0613       ; Socket 2 Maximum Segment Size Register 1
+     0614             (    W5100SEQU.asm):00251         S2_PROTOR:  equ   $0614       ; Socket 2 IP Protocol Register
+     0615             (    W5100SEQU.asm):00252         S2_TOS:     equ   $0615       ; Socket 2 IP Type Of Service
+     0616             (    W5100SEQU.asm):00253         S2_TTL:     equ   $0616       ; Socket 2 IP Time To Live
+                      (    W5100SEQU.asm):00254                                       ; 0x0617-0x061D -- Reserved --
+     061E             (    W5100SEQU.asm):00255         S2_RXBUF_SIZE:  equ  $061E    ; Socket 2 RX Buffer Size
+     061F             (    W5100SEQU.asm):00256         S2_TXBUF_SIZE:  equ  $061F    ; Socket 2 TX Buffer Size
+     0620             (    W5100SEQU.asm):00257         S2_TX_FSR0: equ   $0620       ; Socket 2 TX Free Size Register 0
+     0621             (    W5100SEQU.asm):00258         S2_TX_FSR1: equ   $0621       ; Socket 2 TX Free Size Register 1
+     0622             (    W5100SEQU.asm):00259         S2_TX_RD0:  equ   $0622       ; Socket 2 TX Read Pointer 0
+     0623             (    W5100SEQU.asm):00260         S2_TX_RD1:  equ   $0623       ; Socket 2 TX Read Pointer 1
+     0624             (    W5100SEQU.asm):00261         S2_TX_WR0:  equ   $0624       ; Socket 2 TX Write Pointer 0
+     0625             (    W5100SEQU.asm):00262         S2_TX_WR1:  equ   $0625       ; Socket 2 TX Write Pointer 1
+     0626             (    W5100SEQU.asm):00263         S2_RX_RSR0: equ   $0626       ; Socket 2 RX Received Size Register 0
+     0627             (    W5100SEQU.asm):00264         S2_RX_RSR1: equ   $0627       ; Socket 2 RX Received Size Register 1
+     0628             (    W5100SEQU.asm):00265         S2_RX_RD0:  equ   $0628       ; Socket 2 RX Read Pointer 0
+     0629             (    W5100SEQU.asm):00266         S2_RX_RD1:  equ   $0629       ; Socket 2 RX Read Pointer 1
+     062A             (    W5100SEQU.asm):00267         S2_RX_WR0:  equ   $062A       ; Socket 2 RX Write Pointer 0
+     062B             (    W5100SEQU.asm):00268         S2_RX_WR1:  equ   $062B       ; Socket 2 RX Write Pointer 1
+     062C             (    W5100SEQU.asm):00269         S2_IMR:     equ   $062C       ; Socket 2 Interrupt Mask Register
+     062D             (    W5100SEQU.asm):00270         S2_FRAGR0:  equ   $062D       ; Socket 2 Fragment Offset in IP Header Register 0
+     062E             (    W5100SEQU.asm):00271         S2_FRAGR1:  equ   $062E       ; Socket 2 Fragment Offset in IP Header Register 1
+     062F             (    W5100SEQU.asm):00272         S2_MR2:     equ   $062F       ; Socket 2 Mode 2 Register
+     0630             (    W5100SEQU.asm):00273         S2_KPALVTR: equ   $0630       ; Socket 2 Keep-alive Timer Register
+                      (    W5100SEQU.asm):00274                                       ; 0x0631 -- Reserved --
+     0632             (    W5100SEQU.asm):00275         S2_RTR0:    equ   $0632       ; Socket 2 Retransmission Time Register 0
+     0633             (    W5100SEQU.asm):00276         S2_RTR1:    equ   $0633       ; Socket 2 Retransmission Time Register 1
+     0634             (    W5100SEQU.asm):00277         S2_RCR:     equ   $0634       ; Socket 2 Retransmission Count Register
+                      (    W5100SEQU.asm):00278         
+                      (    W5100SEQU.asm):00279                                       ; SOCKET 3 REGISTERS 0x0700-0x07FF 45 bytes per socket
+     0700             (    W5100SEQU.asm):00280         S3_MR:      equ   $0700       ; Socket 3 Mode Register
+     0701             (    W5100SEQU.asm):00281         S3_CR:      equ   $0701       ; Socket 3 Command Register
+     0702             (    W5100SEQU.asm):00282         S3_IR:      equ   $0702       ; Socket 3 Interrupt Register
+     0703             (    W5100SEQU.asm):00283         S3_SR:      equ   $0703       ; Socket 3 Status Register
+     0704             (    W5100SEQU.asm):00284         S3_PORTR0:  equ   $0704       ; Socket 3 Source Port Register 0
+     0705             (    W5100SEQU.asm):00285         S3_PORTR1:  equ   $0705       ; Socket 3 Source Port Register 1
+     0706             (    W5100SEQU.asm):00286         S3_DHAR0:   equ   $0706       ; Socket 3 Destination Hardware Address Register 0
+     0707             (    W5100SEQU.asm):00287         S3_DHAR1:   equ   $0707       ; Socket 3 Destination Hardware Address Register 1
+     0708             (    W5100SEQU.asm):00288         S3_DHAR2:   equ   $0708       ; Socket 3 Destination Hardware Address Register 2
+     0709             (    W5100SEQU.asm):00289         S3_DHAR3:   equ   $0709       ; Socket 3 Destination Hardware Address Register 3
+     070A             (    W5100SEQU.asm):00290         S3_DHAR4:   equ   $070A       ; Socket 3 Destination Hardware Address Register 4
+     070B             (    W5100SEQU.asm):00291         S3_DHAR5:   equ   $070B       ; Socket 3 Destination Hardware Address Register 5
+     070C             (    W5100SEQU.asm):00292         S3_DIPR0:   equ   $070C       ; Socket 3 Destination IP Address Register 0
+     070D             (    W5100SEQU.asm):00293         S3_DIPR1:   equ   $070D       ; Socket 3 Destination IP Address Register 1
+     070E             (    W5100SEQU.asm):00294         S3_DIPR2:   equ   $070E       ; Socket 3 Destination IP Address Register 2
+     070F             (    W5100SEQU.asm):00295         S3_DIPR3:   equ   $070F       ; Socket 3 Destination IP Address Register 3
+     0710             (    W5100SEQU.asm):00296         S3_DPORTR0: equ   $0710       ; Socket 3 Destination Port Register 0
+     0711             (    W5100SEQU.asm):00297         S3_DPORTR1: equ   $0711       ; Socket 3 Destination Port Register 1
+     0712             (    W5100SEQU.asm):00298         S3_MSS0:    equ   $0712       ; Socket 3 Maximum Segment Size Register 0
+     0713             (    W5100SEQU.asm):00299         S3_MSS1:    equ   $0713       ; Socket 3 Maximum Segment Size Register 1
+     0714             (    W5100SEQU.asm):00300         S3_PROTOR:  equ   $0714       ; Socket 3 IP Protocol Register
+     0715             (    W5100SEQU.asm):00301         S3_TOS:     equ   $0715       ; Socket 3 IP Type Of Service
+     0716             (    W5100SEQU.asm):00302         S3_TTL:     equ   $0716       ; Socket 3 IP Time To Live
+                      (    W5100SEQU.asm):00303                                       ; 0x0717-0x071D -- Reserved --
+     071E             (    W5100SEQU.asm):00304         S3_RXBUF_SIZE:  equ  $071E    ; Socket 3 RX Buffer Size
+     071F             (    W5100SEQU.asm):00305         S3_TXBUF_SIZE:  equ  $071F    ; Socket 3 TX Buffer Size
+     0720             (    W5100SEQU.asm):00306         S3_TX_FSR0: equ   $0720       ; Socket 3 TX Free Size Register 0
+     0721             (    W5100SEQU.asm):00307         S3_TX_FSR1: equ   $0721       ; Socket 3 TX Free Size Register 1
+     0722             (    W5100SEQU.asm):00308         S3_TX_RD0:  equ   $0722       ; Socket 3 TX Read Pointer 0
+     0723             (    W5100SEQU.asm):00309         S3_TX_RD1:  equ   $0723       ; Socket 3 TX Read Pointer 1
+     0724             (    W5100SEQU.asm):00310         S3_TX_WR0:  equ   $0724       ; Socket 3 TX Write Pointer 0
+     0725             (    W5100SEQU.asm):00311         S3_TX_WR1:  equ   $0725       ; Socket 3 TX Write Pointer 1
+     0726             (    W5100SEQU.asm):00312         S3_RX_RSR0: equ   $0726       ; Socket 3 RX Received Size Register 0
+     0727             (    W5100SEQU.asm):00313         S3_RX_RSR1: equ   $0727       ; Socket 3 RX Received Size Register 1
+     0728             (    W5100SEQU.asm):00314         S3_RX_RD0:  equ   $0728       ; Socket 3 RX Read Pointer 0
+     0729             (    W5100SEQU.asm):00315         S3_RX_RD1:  equ   $0729       ; Socket 3 RX Read Pointer 1
+     072A             (    W5100SEQU.asm):00316         S3_RX_WR0:  equ   $072A       ; Socket 3 RX Write Pointer 0
+     072B             (    W5100SEQU.asm):00317         S3_RX_WR1:  equ   $072B       ; Socket 3 RX Write Pointer 1
+     072C             (    W5100SEQU.asm):00318         S3_IMR:     equ   $072C       ; Socket 3 Interrupt Mask Register
+     072D             (    W5100SEQU.asm):00319         S3_FRAGR0:  equ   $072D       ; Socket 3 Fragment Offset in IP Header Register 0
+     072E             (    W5100SEQU.asm):00320         S3_FRAGR1:  equ   $072E       ; Socket 3 Fragment Offset in IP Header Register 1
+     072F             (    W5100SEQU.asm):00321         S3_MR2:     equ   $072F       ; Socket 3 Mode 2 Register
+     0730             (    W5100SEQU.asm):00322         S3_KPALVTR: equ   $0730       ; Socket 3 Keep-alive Timer Register
+                      (    W5100SEQU.asm):00323                                       ; 0x0731 -- Reserved --
+     0732             (    W5100SEQU.asm):00324         S3_RTR0:    equ   $0732       ; Socket 3 Retransmission Time Register 0
+     0733             (    W5100SEQU.asm):00325         S3_RTR1:    equ   $0733       ; Socket 3 Retransmission Time Register 1
+     0734             (    W5100SEQU.asm):00326         S3_RCR:     equ   $0734       ; Socket 3 Retransmission Count Register
+                      (    W5100SEQU.asm):00327         
+                      (    W5100SEQU.asm):00328         
+                      (    W5100SEQU.asm):00329         
+                      (    W5100SEQU.asm):00330                           ; STATUS Equates
+                      (    W5100SEQU.asm):00331         
+                      (    W5100SEQU.asm):00332                                 ; SETUP Values
+     0080             (    W5100SEQU.asm):00333         RESET:      equ   $80         ; Reset Command for W5100
+     0010             (    W5100SEQU.asm):00334         PINGBLOCK:  equ   $10         ; PING Response Block
+     0008             (    W5100SEQU.asm):00335         PPPOE_ENA:  equ   $08         ; PPPoE Enable
+                      (    W5100SEQU.asm):00336                                       ; The following are ALWAYS SET on W5100S
+     0002             (    W5100SEQU.asm):00337         AUTO_INCRE: equ   $02         ; Auto Increment
+     0001             (    W5100SEQU.asm):00338         INDIRECT:   equ   $01         ; Indirect Bus Mode
+                      (    W5100SEQU.asm):00339         
+                      (    W5100SEQU.asm):00340                           ; COMMON Values
+                      (    W5100SEQU.asm):00341                                 ; Interrupt Register
+     0080             (    W5100SEQU.asm):00342         IR_CONFLCT: equ   $80         ; IP Address Conflict
+     0040             (    W5100SEQU.asm):00343         IR_UNREACH: equ   $40         ; Destination Port Unreachable
+     0020             (    W5100SEQU.asm):00344         IR_PPPTERM: equ   $20         ; PPPoE Terminated
+     0008             (    W5100SEQU.asm):00345         IR_SOCK3:   equ   $08         ; Socket 3 Interrupt
+     0004             (    W5100SEQU.asm):00346         IR_SOCK2:   equ   $04         ; Socket 2 Interrupt
+     0002             (    W5100SEQU.asm):00347         IR_SOCK1:   equ   $02         ; Socket 1 Interrupt
+     0001             (    W5100SEQU.asm):00348         IR_SOCK0:   equ   $01         ; Socket 0 Interrupt
+                      (    W5100SEQU.asm):00349         
+                      (    W5100SEQU.asm):00350         ; IMR_?????   Interrupt Mask Register, Same as Above
+                      (    W5100SEQU.asm):00351         ; For Clarity, the above could have IMR_CONFLCT equ set
+                      (    W5100SEQU.asm):00352         
+                      (    W5100SEQU.asm):00353         ; Memory Size Register Mask is Identical for RX and TX
+     00C0             (    W5100SEQU.asm):00354         MSR_8KB_S3: equ   %11000000   ; Memory Size, 8KB, Socket 3
+     0080             (    W5100SEQU.asm):00355         MSR_4KB_S3: equ   %10000000   ; Memory Size, 4KB, Socket 3
+     0040             (    W5100SEQU.asm):00356         MSR_2KB_S3: equ   %01000000   ; Memory Size, 2KB, Socket 3
+     0000             (    W5100SEQU.asm):00357         MSR_1KB_S3: equ   %00000000   ; Memory Size, 1KB, Socket 3
+                      (    W5100SEQU.asm):00358         
+     0030             (    W5100SEQU.asm):00359         MSR_8KB_S2: equ   %00110000   ; Memory Size, 8KB, Socket 2
+     0020             (    W5100SEQU.asm):00360         MSR_4KB_S2: equ   %00100000   ; Memory Size, 4KB, Socket 2
+     0010             (    W5100SEQU.asm):00361         MSR_2KB_S2: equ   %00010000   ; Memory Size, 2KB, Socket 2
+     0000             (    W5100SEQU.asm):00362         MSR_1KB_S2: equ   %00000000   ; Memory Size, 1KB, Socket 2
+                      (    W5100SEQU.asm):00363         
+     000C             (    W5100SEQU.asm):00364         MSR_8KB_S1: equ   %00001100   ; Memory Size, 8KB, Socket 1
+     0008             (    W5100SEQU.asm):00365         MSR_4KB_S1: equ   %00001000   ; Memory Size, 4KB, Socket 1
+     0004             (    W5100SEQU.asm):00366         MSR_2KB_S1: equ   %00000100   ; Memory Size, 2KB, Socket 1
+     0000             (    W5100SEQU.asm):00367         MSR_1KB_S1: equ   %00000000   ; Memory Size, 1KB, Socket 1
+                      (    W5100SEQU.asm):00368         
+     0003             (    W5100SEQU.asm):00369         MSR_8KB_S0: equ   %00000011   ; Memory Size, 8KB, Socket 0
+     0002             (    W5100SEQU.asm):00370         MSR_4KB_S0: equ   %00000010   ; Memory Size, 4KB, Socket 0
+     0001             (    W5100SEQU.asm):00371         MSR_2KB_S0: equ   %00000001   ; Memory Size, 2KB, Socket 0
+     0000             (    W5100SEQU.asm):00372         MSR_1KB_S0: equ   %00000000   ; Memory Size, 1KB, Socket 0
+                      (    W5100SEQU.asm):00373         
+                      (    W5100SEQU.asm):00374         
+                      (    W5100SEQU.asm):00375                                 ; Interrupt Register 2
+     0001             (    W5100SEQU.asm):00376         IR2_WOL:    equ   %00000001   ; WOL MAGIC Packet Interrupt
+                      (    W5100SEQU.asm):00377         
+                      (    W5100SEQU.asm):00378         ; IMR2_?????   Interrupt 2 Mask Register, Same as Above
+                      (    W5100SEQU.asm):00379         ; For Clarity, the above could have IMR2_WOL equ set
+                      (    W5100SEQU.asm):00380         
+                      (    W5100SEQU.asm):00381                                 ; PPP Link Control Protocol, Magic Number
+     0001             (    W5100SEQU.asm):00382         PMAGICM:     equ   %00000001   ; LCP Magic Number: 0x01010101
+                      (    W5100SEQU.asm):00383         
+                      (    W5100SEQU.asm):00384                                 ; Mode Register 2
+     0080             (    W5100SEQU.asm):00385         MR2_CLKSEL: equ   %10000000   ; 25MHz, else PHCR1 Value
+     0040             (    W5100SEQU.asm):00386         MR2_IEN:    equ   %01000000   ; INTn Enable, else INTn Disable
+     0020             (    W5100SEQU.asm):00387         MR2_NOPRST: equ   %00100000   ; DO NOT respond to incoming Bad Port, TCP
+     0010             (    W5100SEQU.asm):00388         MR2_UDPURB: equ   %00010000   ; DO NOT respond to incoming Bad Port, UDP
+     0008             (    W5100SEQU.asm):00389         MR2_WOL:    equ   %00001000   ; Receive Wake On LAN ( WOL ) Packet
+     0002             (    W5100SEQU.asm):00390         MR2_FARP:   equ   %00000010   ; UDP Mode, Force ARP on every Packet
+                      (    W5100SEQU.asm):00391         
+                      (    W5100SEQU.asm):00392         
+                      (    W5100SEQU.asm):00393         
+                      (    W5100SEQU.asm):00394                                 ; PPPoE Mode Registers
+                      (    W5100SEQU.asm):00395         
+                      (    W5100SEQU.asm):00396         
+                      (    W5100SEQU.asm):00397                                 ; PHY Mode Registers
+                      (    W5100SEQU.asm):00398         ;PHYSR0
+                      (    W5100SEQU.asm):00399         ;PHYSR1
+                      (    W5100SEQU.asm):00400         ;PHYRAR
+                      (    W5100SEQU.asm):00401         ;PHYDIVR
+                      (    W5100SEQU.asm):00402         ;PHYCR0
+                      (    W5100SEQU.asm):00403         ;PHYCR1
+                      (    W5100SEQU.asm):00404         
+                      (    W5100SEQU.asm):00405         
+                      (    W5100SEQU.asm):00406                                 ; SOCKET-less Command Register
+     0002             (    W5100SEQU.asm):00407         SLCR_ARP:   equ   %00000010   ; Transmit ARP Packet
+     0001             (    W5100SEQU.asm):00408         SLCR_PING:  equ   %00000001   ; Transmit Ping Request
+                      (    W5100SEQU.asm):00409         
+                      (    W5100SEQU.asm):00410                                 ; SOCKET-less Interrupt (Mask) Register
+     0004             (    W5100SEQU.asm):00411         SLIMR_TOUT: equ   %00000100   ; Enable TIMEOUT Interrupt
+     0002             (    W5100SEQU.asm):00412         SLIMR_ARP:  equ   %00000010   ; Enable ARP Interrupt
+     0001             (    W5100SEQU.asm):00413         SLIMR_PING: equ   %00000001   ; Enable Ping Interrupt
+                      (    W5100SEQU.asm):00414         
+                      (    W5100SEQU.asm):00415                                 ; SOCKET-less Interrupt Register
+     0004             (    W5100SEQU.asm):00416         SLIR_TOUT:  equ   %00000100   ; Occured, TIMEOUT Interrupt
+     0002             (    W5100SEQU.asm):00417         SLIR_ARP:   equ   %00000010   ; Occured, ARP Interrupt
+     0001             (    W5100SEQU.asm):00418         SLIR_PING:  equ   %00000001   ; Occured, Ping Interrupt
+                      (    W5100SEQU.asm):00419         
+                      (    W5100SEQU.asm):00420         
+                      (    W5100SEQU.asm):00421                           ; SOCKET Values
+                      (    W5100SEQU.asm):00422         
+                      (    W5100SEQU.asm):00423                                 ; Socket Mode Register ( S0 - S3 )
+     0080             (    W5100SEQU.asm):00424         S_MR_MULTI: equ   %10000000   ; UDP Multicast
+     0040             (    W5100SEQU.asm):00425         S_MR_MF:    equ   %01000000   ; MAC Filter Enable
+     0020             (    W5100SEQU.asm):00426         S_MR_ND_MC: equ   %00100000   ; No Delayed ACK / Multicast IGMP Version (MC)
+                      (    W5100SEQU.asm):00427         
+     0004             (    W5100SEQU.asm):00428         S_MR_MRAW:  equ   %00000100   ; Set Protocol, MACRAW
+     0003             (    W5100SEQU.asm):00429         S_MR_IPRAW: equ   %00000011   ; Set Protocol, IPRAW
+     0002             (    W5100SEQU.asm):00430         S_MR_UDP:   equ   %00000010   ; Set Protocol, UDP
+     0001             (    W5100SEQU.asm):00431         S_MR_TCP:   equ   %00000001   ; Set Protocol, TCP
+     0000             (    W5100SEQU.asm):00432         S_MR_CLSD:  equ   %00000000   ; Socket CLOSED
+                      (    W5100SEQU.asm):00433         
+                      (    W5100SEQU.asm):00434         
+                      (    W5100SEQU.asm):00435                                 ; Socket Command Register ( S0 - S3 )
+     0001             (    W5100SEQU.asm):00436         S_CR_OPEN:  equ   %00000001   ; Open Command
+     0002             (    W5100SEQU.asm):00437         S_CR_LSTEN: equ   %00000010   ; Listen Command
+     0004             (    W5100SEQU.asm):00438         S_CR_CNNCT: equ   %00000100   ; Connect Command
+     0008             (    W5100SEQU.asm):00439         S_CR_DSCON: equ   %00001000   ; Disconnect Command
+     0010             (    W5100SEQU.asm):00440         S_CR_CLOSE: equ   %00010000   ; Close Command
+     0020             (    W5100SEQU.asm):00441         S_CR_SEND:  equ   %00100000   ; Send Command
+     0021             (    W5100SEQU.asm):00442         S_CR_SMAC:  equ   %00100001   ; Send MAC Command
+     0022             (    W5100SEQU.asm):00443         S_CR_SKEEP: equ   %00100010   ; Send Keep Command
+     0040             (    W5100SEQU.asm):00444         S_CR_RECV:  equ   %01000000   ; RECV Command
+                      (    W5100SEQU.asm):00445         
+                      (    W5100SEQU.asm):00446         
+                      (    W5100SEQU.asm):00447                                 ; SOCKET Interrupt Register ( S0 - S3 )
+     0010             (    W5100SEQU.asm):00448         SIR_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
+     0008             (    W5100SEQU.asm):00449         SIR_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
+     0004             (    W5100SEQU.asm):00450         SIR_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
+     0002             (    W5100SEQU.asm):00451         SIR_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
+     0001             (    W5100SEQU.asm):00452         SIR_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
+                      (    W5100SEQU.asm):00453         
+                      (    W5100SEQU.asm):00454         
+                      (    W5100SEQU.asm):00455                                 ; Socket Status Register ( S0 - S3 )
+     0000             (    W5100SEQU.asm):00456         S_SR_CLSD: equ    %00000000   ; Socket Closed
+     0013             (    W5100SEQU.asm):00457         S_SR_INIT: equ    %00010011   ; Socket Opened as TCP Mode
+     0014             (    W5100SEQU.asm):00458         S_SR_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
+     0017             (    W5100SEQU.asm):00459         S_SR_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
+     001C             (    W5100SEQU.asm):00460         S_SR_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
+     0022             (    W5100SEQU.asm):00461         S_SR_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
+     0032             (    W5100SEQU.asm):00462         S_SR_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
+     0042             (    W5100SEQU.asm):00463         S_SR_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
+                      (    W5100SEQU.asm):00464                                 ; Socket Status Register, Temp Status ( S0 - S3 )
+     0015             (    W5100SEQU.asm):00465         S_SR_SSNT: equ    %00010101   ; Socket Sent the Connect Request
+     0016             (    W5100SEQU.asm):00466         S_SR_SRCV: equ    %00010110   ; Socket Received the Connect Request
+     0018             (    W5100SEQU.asm):00467         S_SR_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
+     001B             (    W5100SEQU.asm):00468         S_SR_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
+     001D             (    W5100SEQU.asm):00469         S_SR_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
+                      (    W5100SEQU.asm):00470         
+                      (    W5100SEQU.asm):00471                                 ; Socket Status Register, ALT ( S0 - S3 )
+     0000             (    W5100SEQU.asm):00472         SOCK_CLOS: equ    %00000000   ; Socket Closed
+     0013             (    W5100SEQU.asm):00473         SOCK_INIT: equ    %00010011   ; Socket Opened as TCP Mode
+     0014             (    W5100SEQU.asm):00474         SOCK_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
+     0017             (    W5100SEQU.asm):00475         SOCK_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
+     001C             (    W5100SEQU.asm):00476         SOCK_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
+     0022             (    W5100SEQU.asm):00477         SOCK_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
+     0032             (    W5100SEQU.asm):00478         SOCK_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
+     0042             (    W5100SEQU.asm):00479         SOCK_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
+                      (    W5100SEQU.asm):00480                                 ; Socket Status Register, ALT, Temp Status ( S0 - S3 )
+     0015             (    W5100SEQU.asm):00481         SOCK_SSNT: equ    %00010101   ; Socket Sent the Connect Request
+     0016             (    W5100SEQU.asm):00482         SOCK_SRCV: equ    %00010110   ; Socket Received the Connect Request
+     0018             (    W5100SEQU.asm):00483         SOCK_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
+     001B             (    W5100SEQU.asm):00484         SOCK_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
+     001D             (    W5100SEQU.asm):00485         SOCK_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
+                      (    W5100SEQU.asm):00486         
+                      (    W5100SEQU.asm):00487         
+                      (    W5100SEQU.asm):00488                                 ; Socket Buffer Size, per Socket ( S0 - S3 )
+                      (    W5100SEQU.asm):00489                                 ; This is a Duplicate of the RMSR/TMSR Registers
+     0000             (    W5100SEQU.asm):00490         S_BUFSZ0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
+     0001             (    W5100SEQU.asm):00491         S_BUFSZ1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
+     0002             (    W5100SEQU.asm):00492         S_BUFSZ2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
+     0004             (    W5100SEQU.asm):00493         S_BUFSZ4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
+     0008             (    W5100SEQU.asm):00494         S_BUFSZ8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
+                      (    W5100SEQU.asm):00495         
+                      (    W5100SEQU.asm):00496                                 ; Socket Buffer Size, per Socket, ALT ( S0 - S3 )
+                      (    W5100SEQU.asm):00497                                 ; This is a Duplicate of the RMSR/TMSR Registers
+     0000             (    W5100SEQU.asm):00498         BUFSIZE0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
+     0001             (    W5100SEQU.asm):00499         BUFSIZE1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
+     0002             (    W5100SEQU.asm):00500         BUFSIZE2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
+     0004             (    W5100SEQU.asm):00501         BUFSIZE4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
+     0008             (    W5100SEQU.asm):00502         BUFSIZE8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
+                      (    W5100SEQU.asm):00503         
+                      (    W5100SEQU.asm):00504         
+                      (    W5100SEQU.asm):00505                                 ; Interrupt Register
+                      (    W5100SEQU.asm):00506         
+                      (    W5100SEQU.asm):00507                                 ; Socket Mode Register 2 ( S0 - S3 )
+                      (    W5100SEQU.asm):00508         
+                      (    W5100SEQU.asm):00509         
+                      (    W5100SEQU.asm):00510                                       ; End of Equates
+                      ( COCOIODRV-2A.asm):00025                     include "COCOIOEQU.asm"
+                      (    COCOIOEQU.asm):00001         ;*********************************************************************
+                      (    COCOIOEQU.asm):00002         ;* Title: COCOIOEQU.asm
+                      (    COCOIOEQU.asm):00003         ;*********************************************************************
+                      (    COCOIOEQU.asm):00004         ;* Author: R. Allen Murphey
+                      (    COCOIOEQU.asm):00005         ;*
+                      (    COCOIOEQU.asm):00006         ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                      (    COCOIOEQU.asm):00007         ;*
+                      (    COCOIOEQU.asm):00008         ;* Description: CoCoIO for Color Computer Equates
+                      (    COCOIOEQU.asm):00009         ;*
+                      (    COCOIOEQU.asm):00010         ;* Documentation: https://www.wiznet.io/product-item/w5100s/
+                      (    COCOIOEQU.asm):00011         ;*
+                      (    COCOIOEQU.asm):00012         ;* Include Files: none
+                      (    COCOIOEQU.asm):00013         ;*
+                      (    COCOIOEQU.asm):00014         ;* Assembler: lwasm 1.4.2
+                      (    COCOIOEQU.asm):00015         ;*
+                      (    COCOIOEQU.asm):00016         ;* Revision History:
+                      (    COCOIOEQU.asm):00017         ;* Rev #     Date      Who     Comments
+                      (    COCOIOEQU.asm):00018         ;* -----  -----------  ------  ---------------------------------------
+                      (    COCOIOEQU.asm):00019         ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
+                      (    COCOIOEQU.asm):00020         ;*********************************************************************
+                      (    COCOIOEQU.asm):00021         
+                      (    COCOIOEQU.asm):00022                                       ; CoCoIO with Jumper set to 0xFF6x Range
+     FF68             (    COCOIOEQU.asm):00023         CIO0CMND:   equ   $FF68       ; CoCoIO Command Register 
+     FF69             (    COCOIOEQU.asm):00024         CIO0ADDR:   equ   $FF69       ; CoCoIO Address Register MSB
+                      (    COCOIOEQU.asm):00025                          ;$FF6A       ; CoCoIO Address Register LSB
+     FF6B             (    COCOIOEQU.asm):00026         CIO0DATA:   equ   $FF6B       ; CoCoIO Read/Write Data Register
+                      (    COCOIOEQU.asm):00027         
+                      (    COCOIOEQU.asm):00028                                       ; CoCoIO with Jumper set to 0xFF7x Range
+     FF78             (    COCOIOEQU.asm):00029         CIO1CMND:   equ   $FF78       ; CoCoIO Command Register 
+     FF79             (    COCOIOEQU.asm):00030         CIO1ADDR:   equ   $FF79       ; CoCoIO Address Register MSB
+                      (    COCOIOEQU.asm):00031                          ;$FF7A       ; CoCoIO Address Register LSB
+     FF7B             (    COCOIOEQU.asm):00032         CIO1DATA:   equ   $FF7B       ; CoCoIO Read/Write Data Register
+                      (    COCOIOEQU.asm):00033         
+                      (    COCOIOEQU.asm):00034                                       ; End of CoCoIO equates
+                      ( COCOIODRV-2A.asm):00026         
+     FF02             ( COCOIODRV-2A.asm):00027         PIA0BD:     equ   $FF02       ; PIA 0 PORT B DATA
+     FF03             ( COCOIODRV-2A.asm):00028         PIA0BC:     equ   $FF03       ; PIA 0 PORT B CONTROL
+                      ( COCOIODRV-2A.asm):00029         
+                      ( COCOIODRV-2A.asm):00030                     org   $7E00
+7E00 7E7E15           ( COCOIODRV-2A.asm):00031         RESETP:     jmp   W5100_RST
+7E03 7E7E32           ( COCOIODRV-2A.asm):00032         CONFIG:     jmp   W5100_CFG
+7E06 7E7E42           ( COCOIODRV-2A.asm):00033         GATEWAY:    jmp   W5100_GATEWAY
+7E09 7E7E59           ( COCOIODRV-2A.asm):00034         SUBNET:     jmp   W5100_SUBNET
+7E0C 7E7E70           ( COCOIODRV-2A.asm):00035         HARDWARE:   jmp   W5100_HARDWARE
+7E0F 7E7E87           ( COCOIODRV-2A.asm):00036         IPADDR:     jmp   W5100_IPADDR
+7E12 7E7E9E           ( COCOIODRV-2A.asm):00037         MPISLOT:    jmp   MPISLOT1
+                      ( COCOIODRV-2A.asm):00038         
+7E15                  ( COCOIODRV-2A.asm):00039         W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
+7E15 BD7E9E           ( COCOIODRV-2A.asm):00040                     jsr   MPISLOT1
+                      ( COCOIODRV-2A.asm):00041         ;            jsr   DALLY
+7E18 B6FF68           ( COCOIODRV-2A.asm):00042                     lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
+7E1B 8A80             ( COCOIODRV-2A.asm):00043                     ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+7E1D B7FF68           ( COCOIODRV-2A.asm):00044                     sta   CIO0CMND    ; Trigger the reset
+7E20 B6FF68           ( COCOIODRV-2A.asm):00045         RSTDONE:    lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
+7E23 2BFB             ( COCOIODRV-2A.asm):00046                     bmi   RSTDONE     ; if bit 7, then A was negative, keep checking bit
+7E25 8A03             ( COCOIODRV-2A.asm):00047         SETMODE:    ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
+7E27 B7FF68           ( COCOIODRV-2A.asm):00048                     sta   CIO0CMND    ; configure the chip and done
+7E2A B6FF68           ( COCOIODRV-2A.asm):00049                     lda   CIO0CMND    ; readback mode
+7E2D 8103             ( COCOIODRV-2A.asm):00050                     cmpa  #3          ; is it what we want?
+7E2F 26F4             ( COCOIODRV-2A.asm):00051                     bne   SETMODE     ; no, try again
+7E31 39               ( COCOIODRV-2A.asm):00052                     rts
+                      ( COCOIODRV-2A.asm):00053         
+7E32                  ( COCOIODRV-2A.asm):00054         W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
+7E32 BD7E9E           ( COCOIODRV-2A.asm):00055                     jsr   MPISLOT1
+                      ( COCOIODRV-2A.asm):00056         ;            jsr   DALLY
+7E35 BD7E42           ( COCOIODRV-2A.asm):00057                     jsr   W5100_GATEWAY   ; Bring up layer 3 default route
+7E38 BD7E59           ( COCOIODRV-2A.asm):00058                     jsr   W5100_SUBNET    ; Bring up layer 3 network mask
+7E3B BD7E70           ( COCOIODRV-2A.asm):00059                     jsr   W5100_HARDWARE  ; Bring up layer 2 address
+7E3E BD7E87           ( COCOIODRV-2A.asm):00060                     jsr   W5100_IPADDR    ; Bring up layer 3 address
+7E41 39               ( COCOIODRV-2A.asm):00061                     rts
+                      ( COCOIODRV-2A.asm):00062         
+7E42                  ( COCOIODRV-2A.asm):00063         W5100_GATEWAY:                ; Configure the Gateway address
+7E42 CC0001           ( COCOIODRV-2A.asm):00064                     ldd   #GAR0       ; W5100S Gateway Address Register 0
+7E45 B7FF69           ( COCOIODRV-2A.asm):00065                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E48 F7FF6A           ( COCOIODRV-2A.asm):00066                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                      ( COCOIODRV-2A.asm):00067         ;            jsr   DALLY
+7E4B C604             ( COCOIODRV-2A.asm):00068                     ldb   #4          ; Setup B for loop counting
+7E4D 8E7EBF           ( COCOIODRV-2A.asm):00069                     ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E50 A680             ( COCOIODRV-2A.asm):00070         GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
+7E52 B7FF6B           ( COCOIODRV-2A.asm):00071                     sta   CIO0DATA    ; Store it to W5100S
+                      ( COCOIODRV-2A.asm):00072         ;            jsr   DALLY
+7E55 5A               ( COCOIODRV-2A.asm):00073                     decb              ; Decrement loop counter
+7E56 26F8             ( COCOIODRV-2A.asm):00074                     bne   GWRLOOP     ; No, go back and do more
+                      ( COCOIODRV-2A.asm):00075         ;            jsr   DALLY
+7E58 39               ( COCOIODRV-2A.asm):00076                     rts
+                      ( COCOIODRV-2A.asm):00077         
+7E59                  ( COCOIODRV-2A.asm):00078         W5100_SUBNET:                 ; Next the Subnet Mask
+7E59 CC0005           ( COCOIODRV-2A.asm):00079                     ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+7E5C B7FF69           ( COCOIODRV-2A.asm):00080                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E5F F7FF6A           ( COCOIODRV-2A.asm):00081                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                      ( COCOIODRV-2A.asm):00082         ;            jsr   DALLY
+7E62 C604             ( COCOIODRV-2A.asm):00083                     ldb   #4          ; Setup B for loop counting
+7E64 8E7EC3           ( COCOIODRV-2A.asm):00084                     ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E67 A680             ( COCOIODRV-2A.asm):00085         SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
+7E69 B7FF6B           ( COCOIODRV-2A.asm):00086                     sta   CIO0DATA    ; Store it to W5100S
+                      ( COCOIODRV-2A.asm):00087         ;            jsr   DALLY
+7E6C 5A               ( COCOIODRV-2A.asm):00088                     decb              ; Decrement loop counter
+7E6D 26F8             ( COCOIODRV-2A.asm):00089                     bne   SUBRLOOP    ; No, go back and do more
+                      ( COCOIODRV-2A.asm):00090         ;            jsr   DALLY
+7E6F 39               ( COCOIODRV-2A.asm):00091                     rts
+                      ( COCOIODRV-2A.asm):00092         
+7E70                  ( COCOIODRV-2A.asm):00093         W5100_HARDWARE:               ; Next the Source Hardware Address
+7E70 CC0009           ( COCOIODRV-2A.asm):00094                     ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
+7E73 B7FF69           ( COCOIODRV-2A.asm):00095                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E76 F7FF6A           ( COCOIODRV-2A.asm):00096                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                      ( COCOIODRV-2A.asm):00097         ;            jsr   DALLY
+7E79 C606             ( COCOIODRV-2A.asm):00098                     ldb   #6          ; Setup B for loop counting
+7E7B 8E7EC7           ( COCOIODRV-2A.asm):00099                     ldx   #MYMAC      ; Get the location of the MAC data
+7E7E A680             ( COCOIODRV-2A.asm):00100         SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
+7E80 B7FF6B           ( COCOIODRV-2A.asm):00101                     sta   CIO0DATA    ; Store it to W5100S
+                      ( COCOIODRV-2A.asm):00102         ;            jsr   DALLY
+7E83 5A               ( COCOIODRV-2A.asm):00103                     decb              ; Decrement loop counter
+7E84 26F8             ( COCOIODRV-2A.asm):00104                     bne   SHARLOOP    ; No, go back and do more
+                      ( COCOIODRV-2A.asm):00105         ;            jsr   DALLY
+7E86 39               ( COCOIODRV-2A.asm):00106                     rts
+                      ( COCOIODRV-2A.asm):00107         
+7E87                  ( COCOIODRV-2A.asm):00108         W5100_IPADDR:                 ; Next the Source IP Address
+7E87 CC000F           ( COCOIODRV-2A.asm):00109                     ldd   #SIPR0      ; W5100S Source IP Register 0
+7E8A B7FF69           ( COCOIODRV-2A.asm):00110                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7E8D F7FF6A           ( COCOIODRV-2A.asm):00111                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                      ( COCOIODRV-2A.asm):00112         ;            jsr   DALLY
+7E90 C604             ( COCOIODRV-2A.asm):00113                     ldb   #4          ; Setup B for loop counting
+7E92 8E7ECD           ( COCOIODRV-2A.asm):00114                     ldx   #MYIP       ; Get the location of the IP data
+7E95 A680             ( COCOIODRV-2A.asm):00115         SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
+7E97 B7FF6B           ( COCOIODRV-2A.asm):00116                     sta   CIO0DATA    ; Store it to W5100S
+                      ( COCOIODRV-2A.asm):00117         ;            jsr   DALLY
+7E9A 5A               ( COCOIODRV-2A.asm):00118                     decb              ; Decrement loop counter
+7E9B 26F8             ( COCOIODRV-2A.asm):00119                     bne   SIPRLOOP    ; No, go back and do more
+                      ( COCOIODRV-2A.asm):00120         ;            jsr   DALLY
+7E9D 39               ( COCOIODRV-2A.asm):00121                     rts
+                      ( COCOIODRV-2A.asm):00122         
+7E9E                  ( COCOIODRV-2A.asm):00123         MPISLOT1:                     ; Configure Multipack SCS to slot 1
+7E9E B6FF7F           ( COCOIODRV-2A.asm):00124                     lda   $FF7F       ; Read the MPI slot control
+7EA1 84F0             ( COCOIODRV-2A.asm):00125                     anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+7EA3 B7FF7F           ( COCOIODRV-2A.asm):00126                     sta   $FF7F       ; Write the updated SCS
+7EA6 39               ( COCOIODRV-2A.asm):00127                     rts
+                      ( COCOIODRV-2A.asm):00128         
+7EA7 B6FF02           ( COCOIODRV-2A.asm):00129         DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
+7EAA B6FF03           ( COCOIODRV-2A.asm):00130         DILLY1:     lda   PIA0BC      ; load up the current flags
+7EAD 2AFB             ( COCOIODRV-2A.asm):00131                     bpl   DILLY1      ; if bit 7 not set, keep checking flags
+7EAF B6FF02           ( COCOIODRV-2A.asm):00132                     lda   PIA0BD      ; clear the interrupt that just happened
+7EB2 39               ( COCOIODRV-2A.asm):00133                     rts
+                      ( COCOIODRV-2A.asm):00134         
+7EB3 3410             ( COCOIODRV-2A.asm):00135         DALLY:      pshs  X
+7EB5 8E1000           ( COCOIODRV-2A.asm):00136                     ldx   #$1000      ; A maximum delay loop 
+7EB8 301F             ( COCOIODRV-2A.asm):00137         DALLY1:     leax  -1,X        ; Decrement X
+7EBA 26FC             ( COCOIODRV-2A.asm):00138                     bne   DALLY1      ; if X>0 not done yet
+7EBC 3510             ( COCOIODRV-2A.asm):00139                     puls  X
+7EBE 39               ( COCOIODRV-2A.asm):00140                     rts
+                      ( COCOIODRV-2A.asm):00141         
+                      ( COCOIODRV-2A.asm):00142                     include "COCOIOCFG.asm"
+                      (    COCOIOCFG.asm):00001         ;*********************************************************************
+                      (    COCOIOCFG.asm):00002         ;* Title: COCOIOCFG.asm
+                      (    COCOIOCFG.asm):00003         ;*********************************************************************
+                      (    COCOIOCFG.asm):00004         ;* Author: R. Allen Murphey
+                      (    COCOIOCFG.asm):00005         ;*
+                      (    COCOIOCFG.asm):00006         ;* License: Contributed 2021 by R. Allen Murphey to CoCoIO Development
+                      (    COCOIOCFG.asm):00007         ;*
+                      (    COCOIOCFG.asm):00008         ;* Description: CoCoIO for Color Computer Configuration
+                      (    COCOIOCFG.asm):00009         ;*
+                      (    COCOIOCFG.asm):00010         ;* Documentation: https://www.wiznet.io/product-item/w5100s/
+                      (    COCOIOCFG.asm):00011         ;*
+                      (    COCOIOCFG.asm):00012         ;* Include Files: none
+                      (    COCOIOCFG.asm):00013         ;*
+                      (    COCOIOCFG.asm):00014         ;* Assembler: lwasm 1.4.2
+                      (    COCOIOCFG.asm):00015         ;*
+                      (    COCOIOCFG.asm):00016         ;* Revision History:
+                      (    COCOIOCFG.asm):00017         ;* Rev #     Date      Who     Comments
+                      (    COCOIOCFG.asm):00018         ;* -----  -----------  ------  ---------------------------------------
+                      (    COCOIOCFG.asm):00019         ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
+                      (    COCOIOCFG.asm):00020         ;*********************************************************************
+                      (    COCOIOCFG.asm):00021         
+7EBF                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
+7EBF C0A8FDFE         (    COCOIOCFG.asm):00023                     fcb   192,168,253,254
+                      (    COCOIOCFG.asm):00024         
+7EC3                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
+7EC3 FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
+                      (    COCOIOCFG.asm):00027         
+7EC7                  (    COCOIOCFG.asm):00028         MYMAC:                        ; My Source Hardware Address
+7EC7 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
+                      (    COCOIOCFG.asm):00030         
+7ECD                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
+7ECD C0A8FD0A         (    COCOIOCFG.asm):00032                     fcb   192,168,253,10
+                      (    COCOIOCFG.asm):00033                                       ; End of My CoCoIO configuration
+                      ( COCOIODRV-2A.asm):00143         
+                      ( COCOIODRV-2A.asm):00144                     end   RESET       ; End of driver
+
+Symbol Table:
+[ G] AUTO_INCRE                       0002
+[ G] BUFSIZE0K                        0000
+[ G] BUFSIZE1K                        0001
+[ G] BUFSIZE2K                        0002
+[ G] BUFSIZE4K                        0004
+[ G] BUFSIZE8K                        0008
+[ G] CIO0ADDR                         FF69
+[ G] CIO0CMND                         FF68
+[ G] CIO0DATA                         FF6B
+[ G] CIO1ADDR                         FF79
+[ G] CIO1CMND                         FF78
+[ G] CIO1DATA                         FF7B
+[ G] CLKLCKR                          0070
+[ G] CONFIG                           7E03
+[ G] DALLY                            7EB3
+[ G] DALLY1                           7EB8
+[ G] DILLY                            7EA7
+[ G] DILLY1                           7EAA
+[ G] GAR0                             0001
+[ G] GAR1                             0002
+[ G] GAR2                             0003
+[ G] GAR3                             0004
+[ G] GATEWAY                          7E06
+[ G] GWRLOOP                          7E50
+[ G] HARDWARE                         7E0C
+[ G] IMR                              0016
+[ G] IMR2                             0021
+[ G] INDIRECT                         0001
+[ G] INTPTMR0                         0013
+[ G] INTPTMR1                         0014
+[ G] IPADDR                           7E0F
+[ G] IR                               0015
+[ G] IR2                              0020
+[ G] IR2_WOL                          0001
+[ G] IR_CONFLCT                       0080
+[ G] IR_PPPTERM                       0020
+[ G] IR_SOCK0                         0001
+[ G] IR_SOCK1                         0002
+[ G] IR_SOCK2                         0004
+[ G] IR_SOCK3                         0008
+[ G] IR_UNREACH                       0040
+[ G] MPISLOT                          7E12
+[ G] MPISLOT1                         7E9E
+[ G] MR                               0000
+[ G] MR2                              0030
+[ G] MR2_CLKSEL                       0080
+[ G] MR2_FARP                         0002
+[ G] MR2_IEN                          0040
+[ G] MR2_NOPRST                       0020
+[ G] MR2_UDPURB                       0010
+[ G] MR2_WOL                          0008
+[ G] MSR_1KB_S0                       0000
+[ G] MSR_1KB_S1                       0000
+[ G] MSR_1KB_S2                       0000
+[ G] MSR_1KB_S3                       0000
+[ G] MSR_2KB_S0                       0001
+[ G] MSR_2KB_S1                       0004
+[ G] MSR_2KB_S2                       0010
+[ G] MSR_2KB_S3                       0040
+[ G] MSR_4KB_S0                       0002
+[ G] MSR_4KB_S1                       0008
+[ G] MSR_4KB_S2                       0020
+[ G] MSR_4KB_S3                       0080
+[ G] MSR_8KB_S0                       0003
+[ G] MSR_8KB_S1                       000C
+[ G] MSR_8KB_S2                       0030
+[ G] MSR_8KB_S3                       00C0
+[ G] MYGATEWAY                        7EBF
+[ G] MYIP                             7ECD
+[ G] MYMAC                            7EC7
+[ G] MYSUBNET                         7EC3
+[ G] NETLCKR                          0071
+[ G] PHAR0                            0032
+[ G] PHAR1                            0033
+[ G] PHAR2                            0034
+[ G] PHAR3                            0035
+[ G] PHAR4                            0036
+[ G] PHAR5                            0037
+[ G] PHYACR                           0044
+[ G] PHYAR                            003E
+[ G] PHYCR0                           0046
+[ G] PHYCR1                           0047
+[ G] PHYDIR0                          0040
+[ G] PHYDIR1                          0041
+[ G] PHYDIVR                          0045
+[ G] PHYDOR0                          0042
+[ G] PHYDOR1                          0043
+[ G] PHYLCKR                          0072
+[ G] PHYRAR                           003F
+[ G] PHYSR0                           003C
+[ G] PHYSR1                           003D
+[ G] PIA0BC                           FF03
+[ G] PIA0BD                           FF02
+[ G] PINGBLOCK                        0010
+[ G] PINGIDR0                         005C
+[ G] PINGIDR1                         005D
+[ G] PINGSEQR0                        005A
+[ G] PINGSEQR1                        005B
+[ G] PMAGIC                           0029
+[ G] PMAGICM                          0001
+[ G] PMRUR0                           003A
+[ G] PMRUR1                           003B
+[ G] PPPOE_ENA                        0008
+[ G] PSIDR0                           0038
+[ G] PSIDR1                           0039
+[ G] PTIMER                           0028
+[ G] RCR                              0019
+[ G] RESET                            0080
+[ G] RESETP                           7E00
+[ G] RMSR                             001A
+[ G] RSTDONE                          7E20
+[ G] RTR0                             0017
+[ G] RTR1                             0018
+[ G] S0_CR                            0401
+[ G] S0_DHAR0                         0406
+[ G] S0_DHAR1                         0407
+[ G] S0_DHAR2                         0408
+[ G] S0_DHAR3                         0409
+[ G] S0_DHAR4                         040A
+[ G] S0_DHAR5                         040B
+[ G] S0_DIPR0                         040C
+[ G] S0_DIPR1                         040D
+[ G] S0_DIPR2                         040E
+[ G] S0_DIPR3                         040F
+[ G] S0_DPORTR0                       0410
+[ G] S0_DPORTR1                       0411
+[ G] S0_FRAGR0                        042D
+[ G] S0_FRAGR1                        042E
+[ G] S0_IMR                           042C
+[ G] S0_IR                            0402
+[ G] S0_KPALVTR                       0430
+[ G] S0_MR                            0400
+[ G] S0_MR2                           042F
+[ G] S0_MSS0                          0412
+[ G] S0_MSS1                          0413
+[ G] S0_PORTR0                        0404
+[ G] S0_PORTR1                        0405
+[ G] S0_PROTOR                        0414
+[ G] S0_RCR                           0434
+[ G] S0_RTR0                          0432
+[ G] S0_RTR1                          0433
+[ G] S0_RX_RD0                        0428
+[ G] S0_RX_RD1                        0429
+[ G] S0_RX_RSR0                       0426
+[ G] S0_RX_RSR1                       0427
+[ G] S0_RX_WR0                        042A
+[ G] S0_RX_WR1                        042B
+[ G] S0_RXBUF_SIZE                    041E
+[ G] S0_SR                            0403
+[ G] S0_TOS                           0415
+[ G] S0_TTL                           0416
+[ G] S0_TX_FSR0                       0420
+[ G] S0_TX_FSR1                       0421
+[ G] S0_TX_RD0                        0422
+[ G] S0_TX_RD1                        0423
+[ G] S0_TX_WR0                        0424
+[ G] S0_TX_WR1                        0425
+[ G] S0_TXBUF_SIZE                    041F
+[ G] S1_CR                            0501
+[ G] S1_DHAR0                         0506
+[ G] S1_DHAR1                         0507
+[ G] S1_DHAR2                         0508
+[ G] S1_DHAR3                         0509
+[ G] S1_DHAR4                         050A
+[ G] S1_DHAR5                         050B
+[ G] S1_DIPR0                         050C
+[ G] S1_DIPR1                         050D
+[ G] S1_DIPR2                         050E
+[ G] S1_DIPR3                         050F
+[ G] S1_DPORTR0                       0510
+[ G] S1_DPORTR1                       0511
+[ G] S1_FRAGR0                        052D
+[ G] S1_FRAGR1                        052E
+[ G] S1_IMR                           052C
+[ G] S1_IR                            0502
+[ G] S1_KPALVTR                       0530
+[ G] S1_MR                            0500
+[ G] S1_MR2                           052F
+[ G] S1_MSS0                          0512
+[ G] S1_MSS1                          0513
+[ G] S1_PORTR0                        0504
+[ G] S1_PORTR1                        0505
+[ G] S1_PROTOR                        0514
+[ G] S1_RCR                           0534
+[ G] S1_RTR0                          0532
+[ G] S1_RTR1                          0533
+[ G] S1_RX_RD0                        0528
+[ G] S1_RX_RD1                        0529
+[ G] S1_RX_RSR0                       0526
+[ G] S1_RX_RSR1                       0527
+[ G] S1_RX_WR0                        052A
+[ G] S1_RX_WR1                        052B
+[ G] S1_RXBUF_SIZE                    051E
+[ G] S1_SR                            0503
+[ G] S1_TOS                           0515
+[ G] S1_TTL                           0516
+[ G] S1_TX_FSR0                       0520
+[ G] S1_TX_FSR1                       0521
+[ G] S1_TX_RD0                        0522
+[ G] S1_TX_RD1                        0523
+[ G] S1_TX_WR0                        0524
+[ G] S1_TX_WR1                        0525
+[ G] S1_TXBUF_SIZE                    051F
+[ G] S2_CR                            0601
+[ G] S2_DHAR0                         0606
+[ G] S2_DHAR1                         0607
+[ G] S2_DHAR2                         0608
+[ G] S2_DHAR3                         0609
+[ G] S2_DHAR4                         060A
+[ G] S2_DHAR5                         060B
+[ G] S2_DIPR0                         060C
+[ G] S2_DIPR1                         060D
+[ G] S2_DIPR2                         060E
+[ G] S2_DIPR3                         060F
+[ G] S2_DPORTR0                       0610
+[ G] S2_DPORTR1                       0611
+[ G] S2_FRAGR0                        062D
+[ G] S2_FRAGR1                        062E
+[ G] S2_IMR                           062C
+[ G] S2_IR                            0602
+[ G] S2_KPALVTR                       0630
+[ G] S2_MR                            0600
+[ G] S2_MR2                           062F
+[ G] S2_MSS0                          0612
+[ G] S2_MSS1                          0613
+[ G] S2_PORTR0                        0604
+[ G] S2_PORTR1                        0605
+[ G] S2_PROTOR                        0614
+[ G] S2_RCR                           0634
+[ G] S2_RTR0                          0632
+[ G] S2_RTR1                          0633
+[ G] S2_RX_RD0                        0628
+[ G] S2_RX_RD1                        0629
+[ G] S2_RX_RSR0                       0626
+[ G] S2_RX_RSR1                       0627
+[ G] S2_RX_WR0                        062A
+[ G] S2_RX_WR1                        062B
+[ G] S2_RXBUF_SIZE                    061E
+[ G] S2_SR                            0603
+[ G] S2_TOS                           0615
+[ G] S2_TTL                           0616
+[ G] S2_TX_FSR0                       0620
+[ G] S2_TX_FSR1                       0621
+[ G] S2_TX_RD0                        0622
+[ G] S2_TX_RD1                        0623
+[ G] S2_TX_WR0                        0624
+[ G] S2_TX_WR1                        0625
+[ G] S2_TXBUF_SIZE                    061F
+[ G] S3_CR                            0701
+[ G] S3_DHAR0                         0706
+[ G] S3_DHAR1                         0707
+[ G] S3_DHAR2                         0708
+[ G] S3_DHAR3                         0709
+[ G] S3_DHAR4                         070A
+[ G] S3_DHAR5                         070B
+[ G] S3_DIPR0                         070C
+[ G] S3_DIPR1                         070D
+[ G] S3_DIPR2                         070E
+[ G] S3_DIPR3                         070F
+[ G] S3_DPORTR0                       0710
+[ G] S3_DPORTR1                       0711
+[ G] S3_FRAGR0                        072D
+[ G] S3_FRAGR1                        072E
+[ G] S3_IMR                           072C
+[ G] S3_IR                            0702
+[ G] S3_KPALVTR                       0730
+[ G] S3_MR                            0700
+[ G] S3_MR2                           072F
+[ G] S3_MSS0                          0712
+[ G] S3_MSS1                          0713
+[ G] S3_PORTR0                        0704
+[ G] S3_PORTR1                        0705
+[ G] S3_PROTOR                        0714
+[ G] S3_RCR                           0734
+[ G] S3_RTR0                          0732
+[ G] S3_RTR1                          0733
+[ G] S3_RX_RD0                        0728
+[ G] S3_RX_RD1                        0729
+[ G] S3_RX_RSR0                       0726
+[ G] S3_RX_RSR1                       0727
+[ G] S3_RX_WR0                        072A
+[ G] S3_RX_WR1                        072B
+[ G] S3_RXBUF_SIZE                    071E
+[ G] S3_SR                            0703
+[ G] S3_TOS                           0715
+[ G] S3_TTL                           0716
+[ G] S3_TX_FSR0                       0720
+[ G] S3_TX_FSR1                       0721
+[ G] S3_TX_RD0                        0722
+[ G] S3_TX_RD1                        0723
+[ G] S3_TX_WR0                        0724
+[ G] S3_TX_WR1                        0725
+[ G] S3_TXBUF_SIZE                    071F
+[ G] S_BUFSZ0K                        0000
+[ G] S_BUFSZ1K                        0001
+[ G] S_BUFSZ2K                        0002
+[ G] S_BUFSZ4K                        0004
+[ G] S_BUFSZ8K                        0008
+[ G] S_CR_CLOSE                       0010
+[ G] S_CR_CNNCT                       0004
+[ G] S_CR_DSCON                       0008
+[ G] S_CR_LSTEN                       0002
+[ G] S_CR_OPEN                        0001
+[ G] S_CR_RECV                        0040
+[ G] S_CR_SEND                        0020
+[ G] S_CR_SKEEP                       0022
+[ G] S_CR_SMAC                        0021
+[ G] S_MR_CLSD                        0000
+[ G] S_MR_IPRAW                       0003
+[ G] S_MR_MF                          0040
+[ G] S_MR_MRAW                        0004
+[ G] S_MR_MULTI                       0080
+[ G] S_MR_ND_MC                       0020
+[ G] S_MR_TCP                         0001
+[ G] S_MR_UDP                         0002
+[ G] S_SR_CLSD                        0000
+[ G] S_SR_ESTB                        0017
+[ G] S_SR_FIWA                        0018
+[ G] S_SR_INIT                        0013
+[ G] S_SR_IRAW                        0032
+[ G] S_SR_LACK                        001D
+[ G] S_SR_LSTN                        0014
+[ G] S_SR_MRAW                        0042
+[ G] S_SR_SRCV                        0016
+[ G] S_SR_SSNT                        0015
+[ G] S_SR_TIWA                        001B
+[ G] S_SR_UDP                         0022
+[ G] S_SR_WAIT                        001C
+[ G] SETMODE                          7E25
+[ G] SHAR0                            0009
+[ G] SHAR1                            000A
+[ G] SHAR2                            000B
+[ G] SHAR3                            000C
+[ G] SHAR4                            000D
+[ G] SHAR5                            000E
+[ G] SHARLOOP                         7E7E
+[ G] SIPR0                            000F
+[ G] SIPR1                            0010
+[ G] SIPR2                            0011
+[ G] SIPR3                            0012
+[ G] SIPRLOOP                         7E95
+[ G] SIR_CNNCT                        0001
+[ G] SIR_DSCON                        0002
+[ G] SIR_RECV                         0004
+[ G] SIR_SNDOK                        0010
+[ G] SIR_TMOUT                        0008
+[ G] SLCR                             004C
+[ G] SLCR_ARP                         0002
+[ G] SLCR_PING                        0001
+[ G] SLIMR                            005E
+[ G] SLIMR_ARP                        0002
+[ G] SLIMR_PING                       0001
+[ G] SLIMR_TOUT                       0004
+[ G] SLIR                             005F
+[ G] SLIR_ARP                         0002
+[ G] SLIR_PING                        0001
+[ G] SLIR_TOUT                        0004
+[ G] SLPHAR0                          0054
+[ G] SLPHAR1                          0055
+[ G] SLPHAR2                          0056
+[ G] SLPHAR3                          0057
+[ G] SLPHAR4                          0058
+[ G] SLPHAR5                          0059
+[ G] SLPIPR0                          0050
+[ G] SLPIPR1                          0051
+[ G] SLPIPR2                          0052
+[ G] SLPIPR3                          0053
+[ G] SLRCR                            004F
+[ G] SLRTR0                           004D
+[ G] SLRTR1                           004E
+[ G] SOCK_CLOS                        0000
+[ G] SOCK_ESTB                        0017
+[ G] SOCK_FIWA                        0018
+[ G] SOCK_INIT                        0013
+[ G] SOCK_IRAW                        0032
+[ G] SOCK_LACK                        001D
+[ G] SOCK_LSTN                        0014
+[ G] SOCK_MRAW                        0042
+[ G] SOCK_SRCV                        0016
+[ G] SOCK_SSNT                        0015
+[ G] SOCK_TIWA                        001B
+[ G] SOCK_UDP                         0022
+[ G] SOCK_WAIT                        001C
+[ G] SUBNET                           7E09
+[ G] SUBR0                            0005
+[ G] SUBR1                            0006
+[ G] SUBR2                            0007
+[ G] SUBR3                            0008
+[ G] SUBRLOOP                         7E67
+[ G] TCNTCLR                          0088
+[ G] TCNTR0                           0082
+[ G] TCNTR1                           0083
+[ G] TMSR                             001B
+[ G] UIPR0                            002A
+[ G] UIPR1                            002B
+[ G] UIPR2                            002C
+[ G] UIPR3                            002D
+[ G] UPORTR0                          002E
+[ G] UPORTR1                          002F
+[ G] VERR                             0080
+[ G] W5100_CFG                        7E32
+[ G] W5100_GATEWAY                    7E42
+[ G] W5100_HARDWARE                   7E70
+[ G] W5100_IPADDR                     7E87
+[ G] W5100_RST                        7E15
+[ G] W5100_SUBNET                     7E59

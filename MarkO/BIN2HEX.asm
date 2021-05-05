@@ -1,0 +1,41 @@
+; BIN2HEX
+
+```
+start:  lda #220
+        cmp #200          
+        blt under2
+```
+
+BIN2HEX:	; Read $40 and Output HEX in ASCII to $41
+
+	LDA	$40 	; GET DATA
+	CMPA 	#9 	; IS DATA 9 OR LESS?
+	BLS 	ASCZ 
+	ADDA 	#'A-'9-1 ; NO, ADD OFFSET FOR LETTERS
+ASCZ:	ADDA 	#'O 	; CONVERT DATA TO ASCII
+	STA 	$41	; STORE ASCII DATA
+
+
+
+BIN2HEX:	; W5100 Read DATA and Output HEX in ASCII
+
+	LDA 	CIO0DATA 	; GET DATA from W5100
+	PSHS  	A		; SAVE for Lower Nyble
+	RORA			; Move Upper Nyble to Lower Nyble
+	RORA
+	RORA
+	RORA
+	ANDA	%00001111	; MASK top Nyble
+	CMPA #9 		; IS DATA 9 OR LESS?
+	BLS ASCZ1 
+	ADDA #'A-'9-1		; NO, ADD OFFSET FOR LETTERS
+ASCZ1:	ADDA #'O 		; CONVERT DATA TO ASCII
+	STA $41			; STORE ASCII DATA
+
+	PULS 	A 		; PULL saved Nyble
+	ANDA	%00001111	; MASK top Nyble
+	CMPA #9 		; IS DATA 9 OR LESS?
+	BLS ASCZ2 
+	ADDA #'A-'9-1		; NO, ADD OFFSET FOR LETTERS
+ASCZ2:	ADDA #'O 		; CONVERT DATA TO ASCII
+	STA $42			; STORE ASCII DATA

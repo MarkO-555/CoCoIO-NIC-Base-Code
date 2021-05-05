@@ -379,7 +379,7 @@ IR2_WOL:    equ   %00000001   ; WOL MAGIC Packet Interrupt
 ; For Clarity, the above could have IMR2_WOL equ set
 
                         ; PPP Link Control Protocol, Magic Number
-PMAGIC:     equ   %00000001   ; LCP Magic Number: 0x01010101
+PMAGICM:     equ   %00000001   ; LCP Magic Number: 0x01010101
 
                         ; Mode Register 2
 MR2_CLKSEL: equ   %10000000   ; 25MHz, else PHCR1 Value
