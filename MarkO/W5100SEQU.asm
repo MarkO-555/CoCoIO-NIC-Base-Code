@@ -326,6 +326,19 @@ S3_RTR1:    equ   $0733       ; Socket 3 Retransmission Time Register 1
 S3_RCR:     equ   $0734       ; Socket 3 Retransmission Count Register
 
 
+                  ;Transmit and Receive Buffers
+
+TXBASE:     equ   $4000
+RXBASE:     equ   $6000
+
+                  ; TX and RX MASKS ARE IDENTICAL
+MASK8K:     equ   $1FFF
+MASK4K:     equ   $0FFF
+MASK2K:     equ   $07FF
+MASK1K:     equ   $03FF
+
+
+
 
                   ; STATUS Equates
 
@@ -502,9 +515,22 @@ BUFSIZE4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
 BUFSIZE8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
 
 
-                        ; Interrupt Register
+                        ; SOCKET Interrupt MASK Register ( S0 - S3 )
+IRM_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
+IRM_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
+IRM_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
+IRM_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
+IRM_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
 
                         ; Socket Mode Register 2 ( S0 - S3 )
+S_MR2_MBBLK: equ   %01000000  ; Broadcast Blocking on MACRAW Mode
+S_MR2_MMBLK: equ   %00100000  ; Multicast Blocking on MACRAW Mode
+S_MR2_I6BLK: equ   %00010000  ; IPv6 Packet Blocking on MACRAW Mode
+
+S_MR2_BRDB:  equ   %00000010  ; Broadcast Blocking on UDP Mode
+                              ; or Force PSH on TCP Mode                                    
+S_MR2_UNIB:  equ   %00000001  ; Unicast Blocking on UDP Multicast Mode
+
 
 
                               ; End of Equates

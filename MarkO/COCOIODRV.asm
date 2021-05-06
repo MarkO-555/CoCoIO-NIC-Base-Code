@@ -139,6 +139,21 @@ DALLY1:     leax  -1,X        ; Decrement X
             puls  X
             rts
 
+DATATOHEX:  ;     Read W5100 Data Byte and Write Out the Printable Hex values
+            LDA $40           ;GET DATA
+            CMPA #9           ;IS DATA 9 OR LESS?
+            BLS ASCZ
+            ADDA #'A-'9-1     ;NO, ADD OFFSET FOR LETTERS
+ASCZ:       ADDA #'0          ;CONVERT DATA TO ASCII
+            STA $41           ;STORE ASCII DATA
+
+
+
+
+
+
+
+
             include "COCOIOCFG.asm"
 
             end   RESET       ; End of driver
