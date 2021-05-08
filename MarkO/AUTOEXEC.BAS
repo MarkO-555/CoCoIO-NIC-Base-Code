@@ -1,0 +1,4 @@
+10 CLS
+20 WIDTH 80
+30 DIR
+

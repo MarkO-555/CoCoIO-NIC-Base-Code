@@ -134,35 +134,125 @@ DISP_GATEWAY:
             ldd   #GAR0       ; W5100S Gateway Address Register 0
             sta   CIO0ADDR    ; CoCoIO Address Register MSB
             stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-            jsr   DALLY
+;            jsr   DALLY
             jsr   BIN2HEX
             jsr   DISPB2H
 ;            jsr   DALLY
-            LDA   '.
+            LDA   '+'
             JSR   [CHROUT]
-            jsr   DALLY
+;            jsr   DALLY
             jsr   BIN2HEX
             jsr   DISPB2H
 ;            jsr   DALLY
-            LDA   '.
+            LDA   '+'
             JSR   [CHROUT]
-            jsr   DALLY
+;            jsr   DALLY
             jsr   BIN2HEX
             jsr   DISPB2H
 ;            jsr   DALLY
-            LDA   '.
+            LDA   '+'
             JSR   [CHROUT]
-            jsr   DALLY
+;            jsr   DALLY
             jsr   BIN2HEX
             jsr   DISPB2H
 ;            jsr   DALLY
 
             rts
+
 DISP_SUBNET:
+            ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+
             rts
+
 DISP_HARDWARE:
+            ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+
+
             rts
+
 DISP_IPADDR:
+            ldd   #SIPR0      ; W5100S Source IP Register 0
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+;            jsr   DALLY
+            LDA   '+'
+            JSR   [CHROUT]
+;            jsr   DALLY
+            jsr   BIN2HEX
+            jsr   DISPB2H
+
             rts
 
 
@@ -193,27 +283,31 @@ DALLY1:     leax  -1,X        ; Decrement X
 BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
 
             LDA   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
-            PSHS  A           ; SAVE for Lower Nyble
-            RORA              ; Move Upper Nyble to Lower Nyble
-            RORA
-            RORA
-            RORA
-            ANDA  %00001111   ; MASK top Nyble
-            CMPA #9           ; IS DATA 9 OR LESS?
-            BLS ASCZ1 
-            ADDA #'A-'9-1     ; NO, ADD OFFSET FOR LETTERS
-ASCZ1:      ADDA #'0          ; CONVERT DATA TO ASCII
+            ;
+            ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
+            ;
+            TFR   A,B         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
+            LSRA
+            LSRA
+            LSRA
+            LSRA
+            CMPA  #9
+            BLS   AD30        ; BRANCH IF HIGH DIGIT IS DECIMAL
+            ADDA  #7          ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
+                              ; CHARACTER WILL BE IN 'A'..'F'
+AD30:       ADDA  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
             STA HEX1VAL       ; STORE ASCII DATA
-            jsr   DALLY
 
-            PULS  A           ; PULL saved Nyble
-            ANDA  %00001111   ; MASK top Nyble
-            CMPA #9           ; IS DATA 9 OR LESS?
-            BLS ASCZ2 
-            ADDA #'A-'9-1     ; NO, ADD OFFSET FOR LETTERS
-ASCZ2:      ADDA #'0          ; CONVERT DATA TO ASCII
-            STA HEX2VAL       ; STORE ASCII DATA
-            jsr   DALLY            
+            ;
+            ; CONVERT LESS SIGNIFICANT DIGIT TO ASCII
+            ; 
+            ANDB  #$0F        ; MASK OFF LOW DIGIT    
+            CMPB  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
+            BLS   AD30LD      ; ELSE ADD 7 SO AFTER ADDING '0' THE
+            ADDB  #7          ; CHARACTER WILL BE IN 'A'..'F'
+AD30LD:     ADDB  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+            STB HEX2VAL       ; STORE ASCII DATA
+
             RTS  
 
 BINVAL:     fcb   $00
@@ -225,6 +319,10 @@ DISPB2H:    LDA   HEX1VAL
             LDA   HEX2VAL
             JSR   [CHROUT]
             RTS
+
+DISPSTR0:   LDA   HEX1VAL
+
+
 
             include "COCOIOCFG.asm"
 
