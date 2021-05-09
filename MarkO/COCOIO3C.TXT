@@ -608,16 +608,16 @@
 7E09 7E7E65           ( COCOIODRV-3C.asm):00038         SUBNET:     jmp   W5100_SUBNET      ;$7E09
 7E0C 7E7E7C           ( COCOIODRV-3C.asm):00039         HARDWARE:   jmp   W5100_HARDWARE    ;$7E0C
 7E0F 7E7E93           ( COCOIODRV-3C.asm):00040         IPADDR:     jmp   W5100_IPADDR      ;$7E0F
-7E12 7E7F13           ( COCOIODRV-3C.asm):00041         MPISLOT:    jmp   MPISLOT1          ;$7E12
+7E12 7E7F16           ( COCOIODRV-3C.asm):00041         MPISLOT:    jmp   MPISLOT1          ;$7E12
                       ( COCOIODRV-3C.asm):00042         
 7E15 7E7EAA           ( COCOIODRV-3C.asm):00043         DISPGW:     jmp   DISP_GATEWAY      ;$7E15
 7E18 7E7EC5           ( COCOIODRV-3C.asm):00044         DISPSN:     jmp   DISP_SUBNET       ;$7E18
-7E1B 7E7EDD           ( COCOIODRV-3C.asm):00045         DISPHW:     jmp   DISP_HARDWARE     ;$7E1B
-7E1E 7E7EF8           ( COCOIODRV-3C.asm):00046         DISPIPADD:  jmp   DISP_IPADDR       ;$7E1E
+7E1B 7E7EE0           ( COCOIODRV-3C.asm):00045         DISPHW:     jmp   DISP_HARDWARE     ;$7E1B
+7E1E 7E7EFB           ( COCOIODRV-3C.asm):00046         DISPIPADD:  jmp   DISP_IPADDR       ;$7E1E
                       ( COCOIODRV-3C.asm):00047         
                       ( COCOIODRV-3C.asm):00048         
 7E21                  ( COCOIODRV-3C.asm):00049         W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
-7E21 BD7F13           ( COCOIODRV-3C.asm):00050                     jsr   MPISLOT1
+7E21 BD7F16           ( COCOIODRV-3C.asm):00050                     jsr   MPISLOT1
                       ( COCOIODRV-3C.asm):00051         ;            jsr   DALLY
 7E24 B6FF68           ( COCOIODRV-3C.asm):00052                     lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
 7E27 8A80             ( COCOIODRV-3C.asm):00053                     ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
@@ -632,7 +632,7 @@
 7E3D 39               ( COCOIODRV-3C.asm):00062                     rts
                       ( COCOIODRV-3C.asm):00063         
 7E3E                  ( COCOIODRV-3C.asm):00064         W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-7E3E BD7F13           ( COCOIODRV-3C.asm):00065                     jsr   MPISLOT1
+7E3E BD7F16           ( COCOIODRV-3C.asm):00065                     jsr   MPISLOT1
                       ( COCOIODRV-3C.asm):00066         ;            jsr   DALLY
 7E41 BD7E4E           ( COCOIODRV-3C.asm):00067                     jsr   W5100_GATEWAY   ; Bring up layer 3 default route
 7E44 BD7E65           ( COCOIODRV-3C.asm):00068                     jsr   W5100_SUBNET    ; Bring up layer 3 network mask
@@ -646,7 +646,7 @@
 7E54 F7FF6A           ( COCOIODRV-3C.asm):00076                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00077         ;            jsr   DALLY
 7E57 C604             ( COCOIODRV-3C.asm):00078                     ldb   #4          ; Setup B for loop counting
-7E59 8E7FBC           ( COCOIODRV-3C.asm):00079                     ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E59 8E7FBF           ( COCOIODRV-3C.asm):00079                     ldx   #MYGATEWAY  ; Get the location of the Gateway data 
 7E5C A680             ( COCOIODRV-3C.asm):00080         GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
 7E5E B7FF6B           ( COCOIODRV-3C.asm):00081                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00082         ;            jsr   DALLY
@@ -661,7 +661,7 @@
 7E6B F7FF6A           ( COCOIODRV-3C.asm):00091                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00092         ;            jsr   DALLY
 7E6E C604             ( COCOIODRV-3C.asm):00093                     ldb   #4          ; Setup B for loop counting
-7E70 8E7FC0           ( COCOIODRV-3C.asm):00094                     ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E70 8E7FC3           ( COCOIODRV-3C.asm):00094                     ldx   #MYSUBNET   ; Get the location of the Subnet data
 7E73 A680             ( COCOIODRV-3C.asm):00095         SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
 7E75 B7FF6B           ( COCOIODRV-3C.asm):00096                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00097         ;            jsr   DALLY
@@ -676,7 +676,7 @@
 7E82 F7FF6A           ( COCOIODRV-3C.asm):00106                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00107         ;            jsr   DALLY
 7E85 C606             ( COCOIODRV-3C.asm):00108                     ldb   #6          ; Setup B for loop counting
-7E87 8E7FC4           ( COCOIODRV-3C.asm):00109                     ldx   #MYMAC      ; Get the location of the MAC data
+7E87 8E7FC7           ( COCOIODRV-3C.asm):00109                     ldx   #MYMAC      ; Get the location of the MAC data
 7E8A A680             ( COCOIODRV-3C.asm):00110         SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
 7E8C B7FF6B           ( COCOIODRV-3C.asm):00111                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00112         ;            jsr   DALLY
@@ -691,7 +691,7 @@
 7E99 F7FF6A           ( COCOIODRV-3C.asm):00121                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00122         ;            jsr   DALLY
 7E9C C604             ( COCOIODRV-3C.asm):00123                     ldb   #4          ; Setup B for loop counting
-7E9E 8E7FCA           ( COCOIODRV-3C.asm):00124                     ldx   #MYIP       ; Get the location of the IP data
+7E9E 8E7FCD           ( COCOIODRV-3C.asm):00124                     ldx   #MYIP       ; Get the location of the IP data
 7EA1 A680             ( COCOIODRV-3C.asm):00125         SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
 7EA3 B7FF6B           ( COCOIODRV-3C.asm):00126                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00127         ;            jsr   DALLY
@@ -701,8 +701,8 @@
 7EA9 39               ( COCOIODRV-3C.asm):00131                     rts
                       ( COCOIODRV-3C.asm):00132         
 7EAA                  ( COCOIODRV-3C.asm):00133         DISP_GATEWAY:
-7EAA CC7F80           ( COCOIODRV-3C.asm):00134                     ldd   #GWLABEL
-7EAD BD7F6C           ( COCOIODRV-3C.asm):00135                     jsr   DISPSTR0    ; Display the Label
+7EAA CC7F83           ( COCOIODRV-3C.asm):00134                     ldd   #GWLABEL
+7EAD BD7F6F           ( COCOIODRV-3C.asm):00135                     jsr   DISPSTR0    ; Display the Label
 7EB0 CC0001           ( COCOIODRV-3C.asm):00136                     ldd   #GAR0       ; W5100S Gateway Address Register 0
 7EB3 B7FF69           ( COCOIODRV-3C.asm):00137                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
 7EB6 F7FF6A           ( COCOIODRV-3C.asm):00138                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
@@ -710,8 +710,8 @@
                       ( COCOIODRV-3C.asm):00140         
 7EB9 C604             ( COCOIODRV-3C.asm):00141                     ldb   #4          ; Setup B for loop counting
 7EBB                  ( COCOIODRV-3C.asm):00142         DGWRLOOP:   
-7EBB BD7F34           ( COCOIODRV-3C.asm):00143                     jsr   BIN2HEX
-7EBE BD7F5D           ( COCOIODRV-3C.asm):00144                     jsr   DISPB2H
+7EBB BD7F37           ( COCOIODRV-3C.asm):00143                     jsr   BIN2HEX
+7EBE BD7F60           ( COCOIODRV-3C.asm):00144                     jsr   DISPB2H
                       ( COCOIODRV-3C.asm):00145         ;            jsr   DALLY
 7EC1 5A               ( COCOIODRV-3C.asm):00146                     decb              ; Decrement loop counter
 7EC2 26F7             ( COCOIODRV-3C.asm):00147                     bne   DGWRLOOP    ; No, go back and do more
@@ -724,171 +724,172 @@
 7EC4 39               ( COCOIODRV-3C.asm):00154                     rts
                       ( COCOIODRV-3C.asm):00155         
 7EC5                  ( COCOIODRV-3C.asm):00156         DISP_SUBNET:
-7EC5 CC7F8F           ( COCOIODRV-3C.asm):00157                     ldd   #SNLABEL
-7EC8 BD7F6C           ( COCOIODRV-3C.asm):00158                     jsr   DISPSTR0    ; Display the Label            ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-7ECB B7FF69           ( COCOIODRV-3C.asm):00159                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7ECE F7FF6A           ( COCOIODRV-3C.asm):00160                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-                      ( COCOIODRV-3C.asm):00161         
-7ED1 C604             ( COCOIODRV-3C.asm):00162                     ldb   #4          ; Setup B for loop counting
-7ED3                  ( COCOIODRV-3C.asm):00163         DSUBRLOOP:   
-7ED3 BD7F34           ( COCOIODRV-3C.asm):00164                     jsr   BIN2HEX
-7ED6 BD7F5D           ( COCOIODRV-3C.asm):00165                     jsr   DISPB2H
-                      ( COCOIODRV-3C.asm):00166         ;            jsr   DALLY
-7ED9 5A               ( COCOIODRV-3C.asm):00167                     decb              ; Decrement loop counter
-7EDA 26F7             ( COCOIODRV-3C.asm):00168                     bne   DSUBRLOOP   ; No, go back and do more
-                      ( COCOIODRV-3C.asm):00169         ;            jsr   DALLY
-                      ( COCOIODRV-3C.asm):00170         
-                      ( COCOIODRV-3C.asm):00171         ;            LDA   '+'
-                      ( COCOIODRV-3C.asm):00172         ;            JSR   [CHROUT]
-                      ( COCOIODRV-3C.asm):00173         ;            jsr   DALLY
-                      ( COCOIODRV-3C.asm):00174         
-7EDC 39               ( COCOIODRV-3C.asm):00175                     rts
-                      ( COCOIODRV-3C.asm):00176         
-7EDD                  ( COCOIODRV-3C.asm):00177         DISP_HARDWARE:
-7EDD CC7F9E           ( COCOIODRV-3C.asm):00178                     ldd   #MALABEL
-7EE0 BD7F6C           ( COCOIODRV-3C.asm):00179                     jsr   DISPSTR0    ; Display the Label
-7EE3 CC0009           ( COCOIODRV-3C.asm):00180                     ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
-7EE6 B7FF69           ( COCOIODRV-3C.asm):00181                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7EE9 F7FF6A           ( COCOIODRV-3C.asm):00182                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-                      ( COCOIODRV-3C.asm):00183         
-7EEC C606             ( COCOIODRV-3C.asm):00184                     ldb   #6          ; Setup B for loop counting
-7EEE                  ( COCOIODRV-3C.asm):00185         DSHARLOOP:   
-7EEE BD7F34           ( COCOIODRV-3C.asm):00186                     jsr   BIN2HEX
-7EF1 BD7F5D           ( COCOIODRV-3C.asm):00187                     jsr   DISPB2H
-                      ( COCOIODRV-3C.asm):00188         ;            jsr   DALLY
-7EF4 5A               ( COCOIODRV-3C.asm):00189                     decb              ; Decrement loop counter
-7EF5 26F7             ( COCOIODRV-3C.asm):00190                     bne   DSHARLOOP   ; No, go back and do more
-                      ( COCOIODRV-3C.asm):00191         ;            jsr   DALLY
-                      ( COCOIODRV-3C.asm):00192         
-                      ( COCOIODRV-3C.asm):00193         ;            LDA   '+'
-                      ( COCOIODRV-3C.asm):00194         ;            JSR   [CHROUT]
-                      ( COCOIODRV-3C.asm):00195         ;            jsr   DALLY
-                      ( COCOIODRV-3C.asm):00196         
+7EC5 CC7F92           ( COCOIODRV-3C.asm):00157                     ldd   #SNLABEL
+7EC8 BD7F6F           ( COCOIODRV-3C.asm):00158                     jsr   DISPSTR0    ; Display the Label            
+7ECB CC0005           ( COCOIODRV-3C.asm):00159                     ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+7ECE B7FF69           ( COCOIODRV-3C.asm):00160                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7ED1 F7FF6A           ( COCOIODRV-3C.asm):00161                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                      ( COCOIODRV-3C.asm):00162         
+7ED4 C604             ( COCOIODRV-3C.asm):00163                     ldb   #4          ; Setup B for loop counting
+7ED6                  ( COCOIODRV-3C.asm):00164         DSUBRLOOP:   
+7ED6 BD7F37           ( COCOIODRV-3C.asm):00165                     jsr   BIN2HEX
+7ED9 BD7F60           ( COCOIODRV-3C.asm):00166                     jsr   DISPB2H
+                      ( COCOIODRV-3C.asm):00167         ;            jsr   DALLY
+7EDC 5A               ( COCOIODRV-3C.asm):00168                     decb              ; Decrement loop counter
+7EDD 26F7             ( COCOIODRV-3C.asm):00169                     bne   DSUBRLOOP   ; No, go back and do more
+                      ( COCOIODRV-3C.asm):00170         ;            jsr   DALLY
+                      ( COCOIODRV-3C.asm):00171         
+                      ( COCOIODRV-3C.asm):00172         ;            LDA   '+'
+                      ( COCOIODRV-3C.asm):00173         ;            JSR   [CHROUT]
+                      ( COCOIODRV-3C.asm):00174         ;            jsr   DALLY
+                      ( COCOIODRV-3C.asm):00175         
+7EDF 39               ( COCOIODRV-3C.asm):00176                     rts
+                      ( COCOIODRV-3C.asm):00177         
+7EE0                  ( COCOIODRV-3C.asm):00178         DISP_HARDWARE:
+7EE0 CC7FA1           ( COCOIODRV-3C.asm):00179                     ldd   #MALABEL
+7EE3 BD7F6F           ( COCOIODRV-3C.asm):00180                     jsr   DISPSTR0    ; Display the Label
+7EE6 CC0009           ( COCOIODRV-3C.asm):00181                     ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
+7EE9 B7FF69           ( COCOIODRV-3C.asm):00182                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7EEC F7FF6A           ( COCOIODRV-3C.asm):00183                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                      ( COCOIODRV-3C.asm):00184         
+7EEF C606             ( COCOIODRV-3C.asm):00185                     ldb   #6          ; Setup B for loop counting
+7EF1                  ( COCOIODRV-3C.asm):00186         DSHARLOOP:   
+7EF1 BD7F37           ( COCOIODRV-3C.asm):00187                     jsr   BIN2HEX
+7EF4 BD7F60           ( COCOIODRV-3C.asm):00188                     jsr   DISPB2H
+                      ( COCOIODRV-3C.asm):00189         ;            jsr   DALLY
+7EF7 5A               ( COCOIODRV-3C.asm):00190                     decb              ; Decrement loop counter
+7EF8 26F7             ( COCOIODRV-3C.asm):00191                     bne   DSHARLOOP   ; No, go back and do more
+                      ( COCOIODRV-3C.asm):00192         ;            jsr   DALLY
+                      ( COCOIODRV-3C.asm):00193         
+                      ( COCOIODRV-3C.asm):00194         ;            LDA   '+'
+                      ( COCOIODRV-3C.asm):00195         ;            JSR   [CHROUT]
+                      ( COCOIODRV-3C.asm):00196         ;            jsr   DALLY
                       ( COCOIODRV-3C.asm):00197         
                       ( COCOIODRV-3C.asm):00198         
-7EF7 39               ( COCOIODRV-3C.asm):00199                     rts
-                      ( COCOIODRV-3C.asm):00200         
-7EF8                  ( COCOIODRV-3C.asm):00201         DISP_IPADDR:
-7EF8 CC7FAD           ( COCOIODRV-3C.asm):00202                     ldd   #IPLABEL
-7EFB BD7F6C           ( COCOIODRV-3C.asm):00203                     jsr   DISPSTR0    ; Display the Label
-7EFE CC000F           ( COCOIODRV-3C.asm):00204                     ldd   #SIPR0      ; W5100S Source IP Register 0
-7F01 B7FF69           ( COCOIODRV-3C.asm):00205                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7F04 F7FF6A           ( COCOIODRV-3C.asm):00206                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-                      ( COCOIODRV-3C.asm):00207         
-7F07 C604             ( COCOIODRV-3C.asm):00208                     ldb   #4          ; Setup B for loop counting
-7F09                  ( COCOIODRV-3C.asm):00209         DSIPRLOOP:   
-7F09 BD7F34           ( COCOIODRV-3C.asm):00210                     jsr   BIN2HEX
-7F0C BD7F5D           ( COCOIODRV-3C.asm):00211                     jsr   DISPB2H
-                      ( COCOIODRV-3C.asm):00212         ;            jsr   DALLY
-7F0F 5A               ( COCOIODRV-3C.asm):00213                     decb              ; Decrement loop counter
-7F10 26F7             ( COCOIODRV-3C.asm):00214                     bne   DSIPRLOOP   ; No, go back and do more
-                      ( COCOIODRV-3C.asm):00215         ;            jsr   DALLY
-                      ( COCOIODRV-3C.asm):00216         
-                      ( COCOIODRV-3C.asm):00217         ;            LDA   '+'
-                      ( COCOIODRV-3C.asm):00218         ;            JSR   [CHROUT]
-                      ( COCOIODRV-3C.asm):00219         ;            jsr   DALLY
-                      ( COCOIODRV-3C.asm):00220         
-7F12 39               ( COCOIODRV-3C.asm):00221                     rts
-                      ( COCOIODRV-3C.asm):00222         
+                      ( COCOIODRV-3C.asm):00199         
+7EFA 39               ( COCOIODRV-3C.asm):00200                     rts
+                      ( COCOIODRV-3C.asm):00201         
+7EFB                  ( COCOIODRV-3C.asm):00202         DISP_IPADDR:
+7EFB CC7FB0           ( COCOIODRV-3C.asm):00203                     ldd   #IPLABEL
+7EFE BD7F6F           ( COCOIODRV-3C.asm):00204                     jsr   DISPSTR0    ; Display the Label
+7F01 CC000F           ( COCOIODRV-3C.asm):00205                     ldd   #SIPR0      ; W5100S Source IP Register 0
+7F04 B7FF69           ( COCOIODRV-3C.asm):00206                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7F07 F7FF6A           ( COCOIODRV-3C.asm):00207                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                      ( COCOIODRV-3C.asm):00208         
+7F0A C604             ( COCOIODRV-3C.asm):00209                     ldb   #4          ; Setup B for loop counting
+7F0C                  ( COCOIODRV-3C.asm):00210         DSIPRLOOP:   
+7F0C BD7F37           ( COCOIODRV-3C.asm):00211                     jsr   BIN2HEX
+7F0F BD7F60           ( COCOIODRV-3C.asm):00212                     jsr   DISPB2H
+                      ( COCOIODRV-3C.asm):00213         ;            jsr   DALLY
+7F12 5A               ( COCOIODRV-3C.asm):00214                     decb              ; Decrement loop counter
+7F13 26F7             ( COCOIODRV-3C.asm):00215                     bne   DSIPRLOOP   ; No, go back and do more
+                      ( COCOIODRV-3C.asm):00216         ;            jsr   DALLY
+                      ( COCOIODRV-3C.asm):00217         
+                      ( COCOIODRV-3C.asm):00218         ;            LDA   '+'
+                      ( COCOIODRV-3C.asm):00219         ;            JSR   [CHROUT]
+                      ( COCOIODRV-3C.asm):00220         ;            jsr   DALLY
+                      ( COCOIODRV-3C.asm):00221         
+7F15 39               ( COCOIODRV-3C.asm):00222                     rts
                       ( COCOIODRV-3C.asm):00223         
                       ( COCOIODRV-3C.asm):00224         
                       ( COCOIODRV-3C.asm):00225         
-7F13                  ( COCOIODRV-3C.asm):00226         MPISLOT1:                     ; Configure Multipack SCS to slot 1
-7F13 B6FF7F           ( COCOIODRV-3C.asm):00227                     lda   $FF7F       ; Read the MPI slot control
-7F16 84F0             ( COCOIODRV-3C.asm):00228                     anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
-7F18 B7FF7F           ( COCOIODRV-3C.asm):00229                     sta   $FF7F       ; Write the updated SCS
-7F1B 39               ( COCOIODRV-3C.asm):00230                     rts
-                      ( COCOIODRV-3C.asm):00231         
-7F1C B6FF02           ( COCOIODRV-3C.asm):00232         DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
-7F1F B6FF03           ( COCOIODRV-3C.asm):00233         DILLY1:     lda   PIA0BC      ; load up the current flags
-7F22 2AFB             ( COCOIODRV-3C.asm):00234                     bpl   DILLY1      ; if bit 7 not set, keep checking flags
-7F24 B6FF02           ( COCOIODRV-3C.asm):00235                     lda   PIA0BD      ; clear the interrupt that just happened
-7F27 39               ( COCOIODRV-3C.asm):00236                     rts
-                      ( COCOIODRV-3C.asm):00237         
-7F28 3410             ( COCOIODRV-3C.asm):00238         DALLY:      pshs  X
-7F2A 8E1000           ( COCOIODRV-3C.asm):00239                     ldx   #$1000      ; A maximum delay loop 
-7F2D 301F             ( COCOIODRV-3C.asm):00240         DALLY1:     leax  -1,X        ; Decrement X
-7F2F 26FC             ( COCOIODRV-3C.asm):00241                     bne   DALLY1      ; if X>0 not done yet
-7F31 3510             ( COCOIODRV-3C.asm):00242                     puls  X
-7F33 39               ( COCOIODRV-3C.asm):00243                     rts
-                      ( COCOIODRV-3C.asm):00244         
+                      ( COCOIODRV-3C.asm):00226         
+7F16                  ( COCOIODRV-3C.asm):00227         MPISLOT1:                     ; Configure Multipack SCS to slot 1
+7F16 B6FF7F           ( COCOIODRV-3C.asm):00228                     lda   $FF7F       ; Read the MPI slot control
+7F19 84F0             ( COCOIODRV-3C.asm):00229                     anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+7F1B B7FF7F           ( COCOIODRV-3C.asm):00230                     sta   $FF7F       ; Write the updated SCS
+7F1E 39               ( COCOIODRV-3C.asm):00231                     rts
+                      ( COCOIODRV-3C.asm):00232         
+7F1F B6FF02           ( COCOIODRV-3C.asm):00233         DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
+7F22 B6FF03           ( COCOIODRV-3C.asm):00234         DILLY1:     lda   PIA0BC      ; load up the current flags
+7F25 2AFB             ( COCOIODRV-3C.asm):00235                     bpl   DILLY1      ; if bit 7 not set, keep checking flags
+7F27 B6FF02           ( COCOIODRV-3C.asm):00236                     lda   PIA0BD      ; clear the interrupt that just happened
+7F2A 39               ( COCOIODRV-3C.asm):00237                     rts
+                      ( COCOIODRV-3C.asm):00238         
+7F2B 3410             ( COCOIODRV-3C.asm):00239         DALLY:      pshs  X
+7F2D 8E1000           ( COCOIODRV-3C.asm):00240                     ldx   #$1000      ; A maximum delay loop 
+7F30 301F             ( COCOIODRV-3C.asm):00241         DALLY1:     leax  -1,X        ; Decrement X
+7F32 26FC             ( COCOIODRV-3C.asm):00242                     bne   DALLY1      ; if X>0 not done yet
+7F34 3510             ( COCOIODRV-3C.asm):00243                     puls  X
+7F36 39               ( COCOIODRV-3C.asm):00244                     rts
                       ( COCOIODRV-3C.asm):00245         
                       ( COCOIODRV-3C.asm):00246         
                       ( COCOIODRV-3C.asm):00247         
-7F34                  ( COCOIODRV-3C.asm):00248         BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
-                      ( COCOIODRV-3C.asm):00249         
-7F34 3406             ( COCOIODRV-3C.asm):00250                     PSHS  D           ; Save D ( A&B ) for later
-                      ( COCOIODRV-3C.asm):00251         
-7F36 B6FF6B           ( COCOIODRV-3C.asm):00252                     LDA   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
-                      ( COCOIODRV-3C.asm):00253                     ;
-                      ( COCOIODRV-3C.asm):00254                     ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
-                      ( COCOIODRV-3C.asm):00255                     ;
-7F39 1F89             ( COCOIODRV-3C.asm):00256                     TFR   A,B         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
-7F3B 44               ( COCOIODRV-3C.asm):00257                     LSRA
-7F3C 44               ( COCOIODRV-3C.asm):00258                     LSRA
-7F3D 44               ( COCOIODRV-3C.asm):00259                     LSRA
-7F3E 44               ( COCOIODRV-3C.asm):00260                     LSRA
-7F3F 8109             ( COCOIODRV-3C.asm):00261                     CMPA  #9
-7F41 2302             ( COCOIODRV-3C.asm):00262                     BLS   AD30        ; BRANCH IF HIGH DIGIT IS DECIMAL
-7F43 8B07             ( COCOIODRV-3C.asm):00263                     ADDA  #7          ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
-                      ( COCOIODRV-3C.asm):00264                                       ; CHARACTER WILL BE IN 'A'..'F'
-7F45 8B30             ( COCOIODRV-3C.asm):00265         AD30:       ADDA  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-7F47 B77F5B           ( COCOIODRV-3C.asm):00266                     STA HEX1VAL       ; STORE ASCII DATA
-                      ( COCOIODRV-3C.asm):00267         
-                      ( COCOIODRV-3C.asm):00268                     ;
-                      ( COCOIODRV-3C.asm):00269                     ; CONVERT LESS SIGNIFICANT DIGIT TO ASCII
-                      ( COCOIODRV-3C.asm):00270                     ; 
-7F4A C40F             ( COCOIODRV-3C.asm):00271                     ANDB  #$0F        ; MASK OFF LOW DIGIT    
-7F4C C109             ( COCOIODRV-3C.asm):00272                     CMPB  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
-7F4E 2302             ( COCOIODRV-3C.asm):00273                     BLS   AD30LD      ; ELSE ADD 7 SO AFTER ADDING '0' THE
-7F50 CB07             ( COCOIODRV-3C.asm):00274                     ADDB  #7          ; CHARACTER WILL BE IN 'A'..'F'
-7F52 CB30             ( COCOIODRV-3C.asm):00275         AD30LD:     ADDB  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-7F54 F77F5C           ( COCOIODRV-3C.asm):00276                     STB HEX2VAL       ; STORE ASCII DATA
-                      ( COCOIODRV-3C.asm):00277         
-7F57 3506             ( COCOIODRV-3C.asm):00278                     PULS  D           ; Restore D ( A&B )
-                      ( COCOIODRV-3C.asm):00279         
-7F59 39               ( COCOIODRV-3C.asm):00280                     RTS  
-                      ( COCOIODRV-3C.asm):00281         
-7F5A 00               ( COCOIODRV-3C.asm):00282         BINVAL:     fcb   $00
-7F5B 00               ( COCOIODRV-3C.asm):00283         HEX1VAL:    fcb   $00
-7F5C 00               ( COCOIODRV-3C.asm):00284         HEX2VAL:    fcb   $00
-                      ( COCOIODRV-3C.asm):00285         
-7F5D B67F5B           ( COCOIODRV-3C.asm):00286         DISPB2H:    LDA   HEX1VAL
-7F60 AD9FA002         ( COCOIODRV-3C.asm):00287                     JSR   [CHROUT]
-7F64 B67F5C           ( COCOIODRV-3C.asm):00288                     LDA   HEX2VAL
-7F67 AD9FA002         ( COCOIODRV-3C.asm):00289                     JSR   [CHROUT]
-7F6B 39               ( COCOIODRV-3C.asm):00290                     RTS
-                      ( COCOIODRV-3C.asm):00291         
-7F6C                  ( COCOIODRV-3C.asm):00292         DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
-7F6C 3436             ( COCOIODRV-3C.asm):00293                     PSHS  D,X,Y       ; Save D ( A&B ), X & Y for later
-                      ( COCOIODRV-3C.asm):00294         
-7F6E 1F01             ( COCOIODRV-3C.asm):00295                     TFR   D,X         ; Copy D to X, for Head of StringZ
-7F70 C600             ( COCOIODRV-3C.asm):00296                     ldb   #0          ; Setup B for MAX loop, 256
-7F72 A680             ( COCOIODRV-3C.asm):00297         DISPSTRLP:  lda   ,X+         ; Load A with the byte of the String
-7F74 2707             ( COCOIODRV-3C.asm):00298                     BEQ   DISPSTRX    ; End of String Reached   
-7F76 AD9FA002         ( COCOIODRV-3C.asm):00299                     JSR   [CHROUT]    ; Output Character on Screen
-7F7A 5A               ( COCOIODRV-3C.asm):00300                     decb              ; Decrement loop counter
-7F7B 26F5             ( COCOIODRV-3C.asm):00301                     bne   DISPSTRLP   ; No, go back and do more
-                      ( COCOIODRV-3C.asm):00302         
-7F7D                  ( COCOIODRV-3C.asm):00303         DISPSTRX:
-7F7D 3536             ( COCOIODRV-3C.asm):00304                     PULS  D,X,Y       ; Restore D ( A&B ), X & Y
-                      ( COCOIODRV-3C.asm):00305         
-7F7F 39               ( COCOIODRV-3C.asm):00306                     rts
-                      ( COCOIODRV-3C.asm):00307         
-7F80 474154455741593A ( COCOIODRV-3C.asm):00308         GWLABEL:    fcn   "GATEWAY:     "
+                      ( COCOIODRV-3C.asm):00248         
+7F37                  ( COCOIODRV-3C.asm):00249         BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
+                      ( COCOIODRV-3C.asm):00250         
+7F37 3406             ( COCOIODRV-3C.asm):00251                     PSHS  D           ; Save D ( A&B ) for later
+                      ( COCOIODRV-3C.asm):00252         
+7F39 B6FF6B           ( COCOIODRV-3C.asm):00253                     LDA   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
+                      ( COCOIODRV-3C.asm):00254                     ;
+                      ( COCOIODRV-3C.asm):00255                     ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
+                      ( COCOIODRV-3C.asm):00256                     ;
+7F3C 1F89             ( COCOIODRV-3C.asm):00257                     TFR   A,B         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
+7F3E 44               ( COCOIODRV-3C.asm):00258                     LSRA
+7F3F 44               ( COCOIODRV-3C.asm):00259                     LSRA
+7F40 44               ( COCOIODRV-3C.asm):00260                     LSRA
+7F41 44               ( COCOIODRV-3C.asm):00261                     LSRA
+7F42 8109             ( COCOIODRV-3C.asm):00262                     CMPA  #9
+7F44 2302             ( COCOIODRV-3C.asm):00263                     BLS   AD30        ; BRANCH IF HIGH DIGIT IS DECIMAL
+7F46 8B07             ( COCOIODRV-3C.asm):00264                     ADDA  #7          ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
+                      ( COCOIODRV-3C.asm):00265                                       ; CHARACTER WILL BE IN 'A'..'F'
+7F48 8B30             ( COCOIODRV-3C.asm):00266         AD30:       ADDA  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+7F4A B77F5E           ( COCOIODRV-3C.asm):00267                     STA HEX1VAL       ; STORE ASCII DATA
+                      ( COCOIODRV-3C.asm):00268         
+                      ( COCOIODRV-3C.asm):00269                     ;
+                      ( COCOIODRV-3C.asm):00270                     ; CONVERT LESS SIGNIFICANT DIGIT TO ASCII
+                      ( COCOIODRV-3C.asm):00271                     ; 
+7F4D C40F             ( COCOIODRV-3C.asm):00272                     ANDB  #$0F        ; MASK OFF LOW DIGIT    
+7F4F C109             ( COCOIODRV-3C.asm):00273                     CMPB  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
+7F51 2302             ( COCOIODRV-3C.asm):00274                     BLS   AD30LD      ; ELSE ADD 7 SO AFTER ADDING '0' THE
+7F53 CB07             ( COCOIODRV-3C.asm):00275                     ADDB  #7          ; CHARACTER WILL BE IN 'A'..'F'
+7F55 CB30             ( COCOIODRV-3C.asm):00276         AD30LD:     ADDB  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+7F57 F77F5F           ( COCOIODRV-3C.asm):00277                     STB HEX2VAL       ; STORE ASCII DATA
+                      ( COCOIODRV-3C.asm):00278         
+7F5A 3506             ( COCOIODRV-3C.asm):00279                     PULS  D           ; Restore D ( A&B )
+                      ( COCOIODRV-3C.asm):00280         
+7F5C 39               ( COCOIODRV-3C.asm):00281                     RTS  
+                      ( COCOIODRV-3C.asm):00282         
+7F5D 00               ( COCOIODRV-3C.asm):00283         BINVAL:     fcb   $00
+7F5E 00               ( COCOIODRV-3C.asm):00284         HEX1VAL:    fcb   $00
+7F5F 00               ( COCOIODRV-3C.asm):00285         HEX2VAL:    fcb   $00
+                      ( COCOIODRV-3C.asm):00286         
+7F60 B67F5E           ( COCOIODRV-3C.asm):00287         DISPB2H:    LDA   HEX1VAL
+7F63 AD9FA002         ( COCOIODRV-3C.asm):00288                     JSR   [CHROUT]
+7F67 B67F5F           ( COCOIODRV-3C.asm):00289                     LDA   HEX2VAL
+7F6A AD9FA002         ( COCOIODRV-3C.asm):00290                     JSR   [CHROUT]
+7F6E 39               ( COCOIODRV-3C.asm):00291                     RTS
+                      ( COCOIODRV-3C.asm):00292         
+7F6F                  ( COCOIODRV-3C.asm):00293         DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
+7F6F 3436             ( COCOIODRV-3C.asm):00294                     PSHS  D,X,Y       ; Save D ( A&B ), X & Y for later
+                      ( COCOIODRV-3C.asm):00295         
+7F71 1F01             ( COCOIODRV-3C.asm):00296                     TFR   D,X         ; Copy D to X, for Head of StringZ
+7F73 C600             ( COCOIODRV-3C.asm):00297                     ldb   #0          ; Setup B for MAX loop, 256
+7F75 A680             ( COCOIODRV-3C.asm):00298         DISPSTRLP:  lda   ,X+         ; Load A with the byte of the String
+7F77 2707             ( COCOIODRV-3C.asm):00299                     BEQ   DISPSTRX    ; End of String Reached   
+7F79 AD9FA002         ( COCOIODRV-3C.asm):00300                     JSR   [CHROUT]    ; Output Character on Screen
+7F7D 5A               ( COCOIODRV-3C.asm):00301                     decb              ; Decrement loop counter
+7F7E 26F5             ( COCOIODRV-3C.asm):00302                     bne   DISPSTRLP   ; No, go back and do more
+                      ( COCOIODRV-3C.asm):00303         
+7F80                  ( COCOIODRV-3C.asm):00304         DISPSTRX:
+7F80 3536             ( COCOIODRV-3C.asm):00305                     PULS  D,X,Y       ; Restore D ( A&B ), X & Y
+                      ( COCOIODRV-3C.asm):00306         
+7F82 39               ( COCOIODRV-3C.asm):00307                     rts
+                      ( COCOIODRV-3C.asm):00308         
+7F83 474154455741593A ( COCOIODRV-3C.asm):00309         GWLABEL:    fcn   "GATEWAY:     "
      202020202000
-7F8E 00               ( COCOIODRV-3C.asm):00309                     fcb   $00
-7F8F 5355424E45543A20 ( COCOIODRV-3C.asm):00310         SNLABEL:    fcn   "SUBNET:      "
+7F91 00               ( COCOIODRV-3C.asm):00310                     fcb   $00
+7F92 5355424E45543A20 ( COCOIODRV-3C.asm):00311         SNLABEL:    fcn   "SUBNET:      "
      202020202000
-7F9D 00               ( COCOIODRV-3C.asm):00311                     fcb   $00
-7F9E 4D41432041444452 ( COCOIODRV-3C.asm):00312         MALABEL:    fcn   "MAC ADDRESS: "
+7FA0 00               ( COCOIODRV-3C.asm):00312                     fcb   $00
+7FA1 4D41432041444452 ( COCOIODRV-3C.asm):00313         MALABEL:    fcn   "MAC ADDRESS: "
      4553533A2000
-7FAC 00               ( COCOIODRV-3C.asm):00313                     fcb   $00
-7FAD 4950204144445245 ( COCOIODRV-3C.asm):00314         IPLABEL:    fcn   "IP ADDRESS:  "
+7FAF 00               ( COCOIODRV-3C.asm):00314                     fcb   $00
+7FB0 4950204144445245 ( COCOIODRV-3C.asm):00315         IPLABEL:    fcn   "IP ADDRESS:  "
      53533A202000
-7FBB 00               ( COCOIODRV-3C.asm):00315                     fcb   $00
-                      ( COCOIODRV-3C.asm):00316         
-                      ( COCOIODRV-3C.asm):00317                     include "COCOIOCFG.asm"
+7FBE 00               ( COCOIODRV-3C.asm):00316                     fcb   $00
+                      ( COCOIODRV-3C.asm):00317         
+                      ( COCOIODRV-3C.asm):00318                     include "COCOIOCFG.asm"
                       (    COCOIOCFG.asm):00001         ;*********************************************************************
                       (    COCOIOCFG.asm):00002         ;* Title: COCOIOCFG.asm
                       (    COCOIOCFG.asm):00003         ;*********************************************************************
@@ -910,27 +911,27 @@
                       (    COCOIOCFG.asm):00019         ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
                       (    COCOIOCFG.asm):00020         ;*********************************************************************
                       (    COCOIOCFG.asm):00021         
-7FBC                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
-7FBC C0A8FDFE         (    COCOIOCFG.asm):00023                     fcb   192,168,253,254
+7FBF                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
+7FBF C0A8FDFE         (    COCOIOCFG.asm):00023                     fcb   192,168,253,254
                       (    COCOIOCFG.asm):00024         
-7FC0                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
-7FC0 FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
+7FC3                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
+7FC3 FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
                       (    COCOIOCFG.asm):00027         
-7FC4                  (    COCOIOCFG.asm):00028         MYMAC:                        ; My Source Hardware Address
-7FC4 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
+7FC7                  (    COCOIOCFG.asm):00028         MYMAC:                        ; My Source Hardware Address
+7FC7 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
                       (    COCOIOCFG.asm):00030         
-7FCA                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
-7FCA C0A8FD0A         (    COCOIOCFG.asm):00032                     fcb   192,168,253,10
+7FCD                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
+7FCD C0A8FD0A         (    COCOIOCFG.asm):00032                     fcb   192,168,253,10
                       (    COCOIOCFG.asm):00033                                       ; End of My CoCoIO configuration
-                      ( COCOIODRV-3C.asm):00318         
-                      ( COCOIODRV-3C.asm):00319                     end   RESET       ; End of driver
+                      ( COCOIODRV-3C.asm):00319         
+                      ( COCOIODRV-3C.asm):00320                     end   RESET       ; End of driver
 
 Symbol Table:
-[ G] AD30                             7F45
-[ G] AD30LD                           7F52
+[ G] AD30                             7F48
+[ G] AD30LD                           7F55
 [ G] AUTO_INCRE                       0002
-[ G] BIN2HEX                          7F34
-[ G] BINVAL                           7F5A
+[ G] BIN2HEX                          7F37
+[ G] BINVAL                           7F5D
 [ G] BUFSIZE0K                        0000
 [ G] BUFSIZE1K                        0001
 [ G] BUFSIZE2K                        0002
@@ -945,43 +946,43 @@ Symbol Table:
 [ G] CIO1DATA                         FF7B
 [ G] CLKLCKR                          0070
 [ G] CONFIG                           7E03
-[ G] DALLY                            7F28
-[ G] DALLY1                           7F2D
+[ G] DALLY                            7F2B
+[ G] DALLY1                           7F30
 [ G] DGWRLOOP                         7EBB
-[ G] DILLY                            7F1C
-[ G] DILLY1                           7F1F
+[ G] DILLY                            7F1F
+[ G] DILLY1                           7F22
 [ G] DISP_GATEWAY                     7EAA
-[ G] DISP_HARDWARE                    7EDD
-[ G] DISP_IPADDR                      7EF8
+[ G] DISP_HARDWARE                    7EE0
+[ G] DISP_IPADDR                      7EFB
 [ G] DISP_SUBNET                      7EC5
-[ G] DISPB2H                          7F5D
+[ G] DISPB2H                          7F60
 [ G] DISPGW                           7E15
 [ G] DISPHW                           7E1B
 [ G] DISPIPADD                        7E1E
 [ G] DISPSN                           7E18
-[ G] DISPSTR0                         7F6C
-[ G] DISPSTRLP                        7F72
-[ G] DISPSTRX                         7F7D
-[ G] DSHARLOOP                        7EEE
-[ G] DSIPRLOOP                        7F09
-[ G] DSUBRLOOP                        7ED3
+[ G] DISPSTR0                         7F6F
+[ G] DISPSTRLP                        7F75
+[ G] DISPSTRX                         7F80
+[ G] DSHARLOOP                        7EF1
+[ G] DSIPRLOOP                        7F0C
+[ G] DSUBRLOOP                        7ED6
 [ G] GAR0                             0001
 [ G] GAR1                             0002
 [ G] GAR2                             0003
 [ G] GAR3                             0004
 [ G] GATEWAY                          7E06
-[ G] GWLABEL                          7F80
+[ G] GWLABEL                          7F83
 [ G] GWRLOOP                          7E5C
 [ G] HARDWARE                         7E0C
-[ G] HEX1VAL                          7F5B
-[ G] HEX2VAL                          7F5C
+[ G] HEX1VAL                          7F5E
+[ G] HEX2VAL                          7F5F
 [ G] IMR                              0016
 [ G] IMR2                             0021
 [ G] INDIRECT                         0001
 [ G] INTPTMR0                         0013
 [ G] INTPTMR1                         0014
 [ G] IPADDR                           7E0F
-[ G] IPLABEL                          7FAD
+[ G] IPLABEL                          7FB0
 [ G] IR                               0015
 [ G] IR2                              0020
 [ G] IR2_WOL                          0001
@@ -997,13 +998,13 @@ Symbol Table:
 [ G] IRM_RECV                         0004
 [ G] IRM_SNDOK                        0010
 [ G] IRM_TMOUT                        0008
-[ G] MALABEL                          7F9E
+[ G] MALABEL                          7FA1
 [ G] MASK1K                           03FF
 [ G] MASK2K                           07FF
 [ G] MASK4K                           0FFF
 [ G] MASK8K                           1FFF
 [ G] MPISLOT                          7E12
-[ G] MPISLOT1                         7F13
+[ G] MPISLOT1                         7F16
 [ G] MR                               0000
 [ G] MR2                              0030
 [ G] MR2_CLKSEL                       0080
@@ -1028,10 +1029,10 @@ Symbol Table:
 [ G] MSR_8KB_S1                       000C
 [ G] MSR_8KB_S2                       0030
 [ G] MSR_8KB_S3                       00C0
-[ G] MYGATEWAY                        7FBC
-[ G] MYIP                             7FCA
-[ G] MYMAC                            7FC4
-[ G] MYSUBNET                         7FC0
+[ G] MYGATEWAY                        7FBF
+[ G] MYIP                             7FCD
+[ G] MYMAC                            7FC7
+[ G] MYSUBNET                         7FC3
 [ G] NETLCKR                          0071
 [ G] PHAR0                            0032
 [ G] PHAR1                            0033
@@ -1338,7 +1339,7 @@ Symbol Table:
 [ G] SLRCR                            004F
 [ G] SLRTR0                           004D
 [ G] SLRTR1                           004E
-[ G] SNLABEL                          7F8F
+[ G] SNLABEL                          7F92
 [ G] SOCK_CLOS                        0000
 [ G] SOCK_ESTB                        0017
 [ G] SOCK_FIWA                        0018

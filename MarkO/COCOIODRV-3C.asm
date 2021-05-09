@@ -155,7 +155,8 @@ DGWRLOOP:
 
 DISP_SUBNET:
             ldd   #SNLABEL
-            jsr   DISPSTR0    ; Display the Label            ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+            jsr   DISPSTR0    ; Display the Label            
+            ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
             sta   CIO0ADDR    ; CoCoIO Address Register MSB
             stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
 
