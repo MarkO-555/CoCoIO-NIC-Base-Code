@@ -315,7 +315,7 @@ MALABEL:    fcc   "MAC ADDRESS: "
 IPLABEL:    fcc   "IP ADDRESS:  "
             fcb   $0D,$0A,$00
 
-INITSOC0:
+BUFRSOC0:   ; This sets up Socket 0, with 8KB RX and TX Buffers
             ldd   #RMSR       ; RX Memory Size Register
             sta   CIO0ADDR    ; CoCoIO Address Register MSB
             stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
@@ -325,14 +325,27 @@ INITSOC0:
             sta   CIO0DATA    ; Store it to W5100S
 ;            jsr   DALLY
 
-            ldd   #TMSR       ; TX Memory Size Register
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+;            ldd   #TMSR       ; TX Memory Size Register
+;            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+;            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
 ;            jsr   DALLY
 
             lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
             sta   CIO0DATA    ; Store it to W5100S
 ;            jsr   DALLY
+
+
+INITSOC0:
+            ; The Local Port.         
+            ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+;            jsr   DALLY
+
+            lda   #$C000      ; Port $C000
+            sta   CIO0DATA    ; Store it to W5100S
+;            jsr   DALLY
+
 
 
             ldd   #S0_MR      ; Socket 0 Mode Register
@@ -344,15 +357,6 @@ INITSOC0:
             sta   CIO0DATA    ; Store it to W5100S
 ;            jsr   DALLY
 
-
-            ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-;            jsr   DALLY
-
-            lda   #$C000      ; Port $C000
-            sta   CIO0DATA    ; Store it to W5100S
-;            jsr   DALLY
 
 
 
