@@ -333,9 +333,17 @@ RXBASE:     equ   $6000
 
                   ; TX and RX MASKS ARE IDENTICAL
 MASK8K:     equ   $1FFF
+MASK8KH:    equ   $1F
+MASK8KL:    equ   $FF
 MASK4K:     equ   $0FFF
+MASK4KH:    equ   $0F
+MASK4KL:    equ   $FF
 MASK2K:     equ   $07FF
+MASK2KH:    equ   $07
+MASK2KL:    equ   $FF
 MASK1K:     equ   $03FF
+MASK1KH:    equ   $03
+MASK1KL:    equ   $FF
 
 
 

@@ -646,7 +646,7 @@
 7E54 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E57 C604                   ldb   #4          ; Setup B for loop counting
-7E59 8E7FBF                 ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E59 8E7FC3                 ldx   #MYGATEWAY  ; Get the location of the Gateway data 
 7E5C A680       GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
 7E5E B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -661,7 +661,7 @@
 7E6B F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E6E C604                   ldb   #4          ; Setup B for loop counting
-7E70 8E7FC3                 ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E70 8E7FC7                 ldx   #MYSUBNET   ; Get the location of the Subnet data
 7E73 A680       SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
 7E75 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -676,7 +676,7 @@
 7E82 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E85 C606                   ldb   #6          ; Setup B for loop counting
-7E87 8E7FC7                 ldx   #MYMAC      ; Get the location of the MAC data
+7E87 8E7FCB                 ldx   #MYMAC      ; Get the location of the MAC data
 7E8A A680       SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
 7E8C B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -691,7 +691,7 @@
 7E99 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E9C C604                   ldb   #4          ; Setup B for loop counting
-7E9E 8E7FCD                 ldx   #MYIP       ; Get the location of the IP data
+7E9E 8E7FD1                 ldx   #MYIP       ; Get the location of the IP data
 7EA1 A680       SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
 7EA3 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -724,7 +724,7 @@
 7EC4 39                     rts
                 
 7EC5            DISP_SUBNET:
-7EC5 CC7F92                 ldd   #SNLABEL
+7EC5 CC7F93                 ldd   #SNLABEL
 7EC8 BD7F6F                 jsr   DISPSTR0    ; Display the Label            
 7ECB CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
 7ECE B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
@@ -746,7 +746,7 @@
 7EDF 39                     rts
                 
 7EE0            DISP_HARDWARE:
-7EE0 CC7FA1                 ldd   #MALABEL
+7EE0 CC7FA3                 ldd   #MALABEL
 7EE3 BD7F6F                 jsr   DISPSTR0    ; Display the Label
 7EE6 CC0009                 ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
 7EE9 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
@@ -770,7 +770,7 @@
 7EFA 39                     rts
                 
 7EFB            DISP_IPADDR:
-7EFB CC7FB0                 ldd   #IPLABEL
+7EFB CC7FB3                 ldd   #IPLABEL
 7EFE BD7F6F                 jsr   DISPSTR0    ; Display the Label
 7F01 CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
 7F04 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
@@ -876,18 +876,18 @@
                 
 7F82 39                     rts
                 
-7F83 4741544557 GWLABEL:    fcn   "GATEWAY:     "
+7F83 4741544557 GWLABEL:    fcc   "GATEWAY:     "
      2020202020
-7F91 00                     fcb   $00
-7F92 5355424E45 SNLABEL:    fcn   "SUBNET:      "
+7F90 0D0A00                 fcb   $0D,$0A,$00
+7F93 5355424E45 SNLABEL:    fcc   "SUBNET:      "
      2020202020
-7FA0 00                     fcb   $00
-7FA1 4D41432041 MALABEL:    fcn   "MAC ADDRESS: "
+7FA0 0D0A00                 fcb   $0D,$0A,$00
+7FA3 4D41432041 MALABEL:    fcc   "MAC ADDRESS: "
      4553533A20
-7FAF 00                     fcb   $00
-7FB0 4950204144 IPLABEL:    fcn   "IP ADDRESS:  "
+7FB0 0D0A00                 fcb   $0D,$0A,$00
+7FB3 4950204144 IPLABEL:    fcc   "IP ADDRESS:  "
      53533A2020
-7FBE 00                     fcb   $00
+7FC0 0D0A00                 fcb   $0D,$0A,$00
                 
                             include "COCOIOCFG.asm"
                 ;*********************************************************************
@@ -911,17 +911,17 @@
                 ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
                 ;*********************************************************************
                 
-7FBF            MYGATEWAY:                    ; My Gateway IP Address
-7FBF C0A8FDFE               fcb   192,168,253,254
+7FC3            MYGATEWAY:                    ; My Gateway IP Address
+7FC3 C0A8FDFE               fcb   192,168,253,254
                 
-7FC3            MYSUBNET:                     ; My Subnet Mask
-7FC3 FFFFFF00               fcb   255,255,255,0 
+7FC7            MYSUBNET:                     ; My Subnet Mask
+7FC7 FFFFFF00               fcb   255,255,255,0 
                 
-7FC7            MYMAC:                        ; My Source Hardware Address
-7FC7 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
+7FCB            MYMAC:                        ; My Source Hardware Address
+7FCB 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
                 
-7FCD            MYIP:                         ; My Source IP Address
-7FCD C0A8FD0A               fcb   192,168,253,10
+7FD1            MYIP:                         ; My Source IP Address
+7FD1 C0A8FD0A               fcb   192,168,253,10
                                               ; End of My CoCoIO configuration
                 
                             end   RESET       ; End of driver

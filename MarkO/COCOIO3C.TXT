@@ -646,7 +646,7 @@
 7E54 F7FF6A           ( COCOIODRV-3C.asm):00076                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00077         ;            jsr   DALLY
 7E57 C604             ( COCOIODRV-3C.asm):00078                     ldb   #4          ; Setup B for loop counting
-7E59 8E7FBF           ( COCOIODRV-3C.asm):00079                     ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E59 8E7FC3           ( COCOIODRV-3C.asm):00079                     ldx   #MYGATEWAY  ; Get the location of the Gateway data 
 7E5C A680             ( COCOIODRV-3C.asm):00080         GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
 7E5E B7FF6B           ( COCOIODRV-3C.asm):00081                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00082         ;            jsr   DALLY
@@ -661,7 +661,7 @@
 7E6B F7FF6A           ( COCOIODRV-3C.asm):00091                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00092         ;            jsr   DALLY
 7E6E C604             ( COCOIODRV-3C.asm):00093                     ldb   #4          ; Setup B for loop counting
-7E70 8E7FC3           ( COCOIODRV-3C.asm):00094                     ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E70 8E7FC7           ( COCOIODRV-3C.asm):00094                     ldx   #MYSUBNET   ; Get the location of the Subnet data
 7E73 A680             ( COCOIODRV-3C.asm):00095         SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
 7E75 B7FF6B           ( COCOIODRV-3C.asm):00096                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00097         ;            jsr   DALLY
@@ -676,7 +676,7 @@
 7E82 F7FF6A           ( COCOIODRV-3C.asm):00106                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00107         ;            jsr   DALLY
 7E85 C606             ( COCOIODRV-3C.asm):00108                     ldb   #6          ; Setup B for loop counting
-7E87 8E7FC7           ( COCOIODRV-3C.asm):00109                     ldx   #MYMAC      ; Get the location of the MAC data
+7E87 8E7FCB           ( COCOIODRV-3C.asm):00109                     ldx   #MYMAC      ; Get the location of the MAC data
 7E8A A680             ( COCOIODRV-3C.asm):00110         SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
 7E8C B7FF6B           ( COCOIODRV-3C.asm):00111                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00112         ;            jsr   DALLY
@@ -691,7 +691,7 @@
 7E99 F7FF6A           ( COCOIODRV-3C.asm):00121                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-3C.asm):00122         ;            jsr   DALLY
 7E9C C604             ( COCOIODRV-3C.asm):00123                     ldb   #4          ; Setup B for loop counting
-7E9E 8E7FCD           ( COCOIODRV-3C.asm):00124                     ldx   #MYIP       ; Get the location of the IP data
+7E9E 8E7FD1           ( COCOIODRV-3C.asm):00124                     ldx   #MYIP       ; Get the location of the IP data
 7EA1 A680             ( COCOIODRV-3C.asm):00125         SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
 7EA3 B7FF6B           ( COCOIODRV-3C.asm):00126                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-3C.asm):00127         ;            jsr   DALLY
@@ -724,7 +724,7 @@
 7EC4 39               ( COCOIODRV-3C.asm):00154                     rts
                       ( COCOIODRV-3C.asm):00155         
 7EC5                  ( COCOIODRV-3C.asm):00156         DISP_SUBNET:
-7EC5 CC7F92           ( COCOIODRV-3C.asm):00157                     ldd   #SNLABEL
+7EC5 CC7F93           ( COCOIODRV-3C.asm):00157                     ldd   #SNLABEL
 7EC8 BD7F6F           ( COCOIODRV-3C.asm):00158                     jsr   DISPSTR0    ; Display the Label            
 7ECB CC0005           ( COCOIODRV-3C.asm):00159                     ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
 7ECE B7FF69           ( COCOIODRV-3C.asm):00160                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
@@ -746,7 +746,7 @@
 7EDF 39               ( COCOIODRV-3C.asm):00176                     rts
                       ( COCOIODRV-3C.asm):00177         
 7EE0                  ( COCOIODRV-3C.asm):00178         DISP_HARDWARE:
-7EE0 CC7FA1           ( COCOIODRV-3C.asm):00179                     ldd   #MALABEL
+7EE0 CC7FA3           ( COCOIODRV-3C.asm):00179                     ldd   #MALABEL
 7EE3 BD7F6F           ( COCOIODRV-3C.asm):00180                     jsr   DISPSTR0    ; Display the Label
 7EE6 CC0009           ( COCOIODRV-3C.asm):00181                     ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
 7EE9 B7FF69           ( COCOIODRV-3C.asm):00182                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
@@ -770,7 +770,7 @@
 7EFA 39               ( COCOIODRV-3C.asm):00200                     rts
                       ( COCOIODRV-3C.asm):00201         
 7EFB                  ( COCOIODRV-3C.asm):00202         DISP_IPADDR:
-7EFB CC7FB0           ( COCOIODRV-3C.asm):00203                     ldd   #IPLABEL
+7EFB CC7FB3           ( COCOIODRV-3C.asm):00203                     ldd   #IPLABEL
 7EFE BD7F6F           ( COCOIODRV-3C.asm):00204                     jsr   DISPSTR0    ; Display the Label
 7F01 CC000F           ( COCOIODRV-3C.asm):00205                     ldd   #SIPR0      ; W5100S Source IP Register 0
 7F04 B7FF69           ( COCOIODRV-3C.asm):00206                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
@@ -876,18 +876,18 @@
                       ( COCOIODRV-3C.asm):00306         
 7F82 39               ( COCOIODRV-3C.asm):00307                     rts
                       ( COCOIODRV-3C.asm):00308         
-7F83 474154455741593A ( COCOIODRV-3C.asm):00309         GWLABEL:    fcn   "GATEWAY:     "
-     202020202000
-7F91 00               ( COCOIODRV-3C.asm):00310                     fcb   $00
-7F92 5355424E45543A20 ( COCOIODRV-3C.asm):00311         SNLABEL:    fcn   "SUBNET:      "
-     202020202000
-7FA0 00               ( COCOIODRV-3C.asm):00312                     fcb   $00
-7FA1 4D41432041444452 ( COCOIODRV-3C.asm):00313         MALABEL:    fcn   "MAC ADDRESS: "
-     4553533A2000
-7FAF 00               ( COCOIODRV-3C.asm):00314                     fcb   $00
-7FB0 4950204144445245 ( COCOIODRV-3C.asm):00315         IPLABEL:    fcn   "IP ADDRESS:  "
-     53533A202000
-7FBE 00               ( COCOIODRV-3C.asm):00316                     fcb   $00
+7F83 474154455741593A ( COCOIODRV-3C.asm):00309         GWLABEL:    fcc   "GATEWAY:     "
+     2020202020
+7F90 0D0A00           ( COCOIODRV-3C.asm):00310                     fcb   $0D,$0A,$00
+7F93 5355424E45543A20 ( COCOIODRV-3C.asm):00311         SNLABEL:    fcc   "SUBNET:      "
+     2020202020
+7FA0 0D0A00           ( COCOIODRV-3C.asm):00312                     fcb   $0D,$0A,$00
+7FA3 4D41432041444452 ( COCOIODRV-3C.asm):00313         MALABEL:    fcc   "MAC ADDRESS: "
+     4553533A20
+7FB0 0D0A00           ( COCOIODRV-3C.asm):00314                     fcb   $0D,$0A,$00
+7FB3 4950204144445245 ( COCOIODRV-3C.asm):00315         IPLABEL:    fcc   "IP ADDRESS:  "
+     53533A2020
+7FC0 0D0A00           ( COCOIODRV-3C.asm):00316                     fcb   $0D,$0A,$00
                       ( COCOIODRV-3C.asm):00317         
                       ( COCOIODRV-3C.asm):00318                     include "COCOIOCFG.asm"
                       (    COCOIOCFG.asm):00001         ;*********************************************************************
@@ -911,17 +911,17 @@
                       (    COCOIOCFG.asm):00019         ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
                       (    COCOIOCFG.asm):00020         ;*********************************************************************
                       (    COCOIOCFG.asm):00021         
-7FBF                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
-7FBF C0A8FDFE         (    COCOIOCFG.asm):00023                     fcb   192,168,253,254
+7FC3                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
+7FC3 C0A8FDFE         (    COCOIOCFG.asm):00023                     fcb   192,168,253,254
                       (    COCOIOCFG.asm):00024         
-7FC3                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
-7FC3 FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
+7FC7                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
+7FC7 FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
                       (    COCOIOCFG.asm):00027         
-7FC7                  (    COCOIOCFG.asm):00028         MYMAC:                        ; My Source Hardware Address
-7FC7 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
+7FCB                  (    COCOIOCFG.asm):00028         MYMAC:                        ; My Source Hardware Address
+7FCB 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
                       (    COCOIOCFG.asm):00030         
-7FCD                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
-7FCD C0A8FD0A         (    COCOIOCFG.asm):00032                     fcb   192,168,253,10
+7FD1                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
+7FD1 C0A8FD0A         (    COCOIOCFG.asm):00032                     fcb   192,168,253,10
                       (    COCOIOCFG.asm):00033                                       ; End of My CoCoIO configuration
                       ( COCOIODRV-3C.asm):00319         
                       ( COCOIODRV-3C.asm):00320                     end   RESET       ; End of driver
@@ -982,7 +982,7 @@ Symbol Table:
 [ G] INTPTMR0                         0013
 [ G] INTPTMR1                         0014
 [ G] IPADDR                           7E0F
-[ G] IPLABEL                          7FB0
+[ G] IPLABEL                          7FB3
 [ G] IR                               0015
 [ G] IR2                              0020
 [ G] IR2_WOL                          0001
@@ -998,7 +998,7 @@ Symbol Table:
 [ G] IRM_RECV                         0004
 [ G] IRM_SNDOK                        0010
 [ G] IRM_TMOUT                        0008
-[ G] MALABEL                          7FA1
+[ G] MALABEL                          7FA3
 [ G] MASK1K                           03FF
 [ G] MASK2K                           07FF
 [ G] MASK4K                           0FFF
@@ -1029,10 +1029,10 @@ Symbol Table:
 [ G] MSR_8KB_S1                       000C
 [ G] MSR_8KB_S2                       0030
 [ G] MSR_8KB_S3                       00C0
-[ G] MYGATEWAY                        7FBF
-[ G] MYIP                             7FCD
-[ G] MYMAC                            7FC7
-[ G] MYSUBNET                         7FC3
+[ G] MYGATEWAY                        7FC3
+[ G] MYIP                             7FD1
+[ G] MYMAC                            7FCB
+[ G] MYSUBNET                         7FC7
 [ G] NETLCKR                          0071
 [ G] PHAR0                            0032
 [ G] PHAR1                            0033
@@ -1339,7 +1339,7 @@ Symbol Table:
 [ G] SLRCR                            004F
 [ G] SLRTR0                           004D
 [ G] SLRTR1                           004E
-[ G] SNLABEL                          7F92
+[ G] SNLABEL                          7F93
 [ G] SOCK_CLOS                        0000
 [ G] SOCK_ESTB                        0017
 [ G] SOCK_FIWA                        0018

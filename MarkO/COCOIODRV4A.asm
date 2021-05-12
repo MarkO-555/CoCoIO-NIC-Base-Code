@@ -315,6 +315,68 @@ MALABEL:    fcc   "MAC ADDRESS: "
 IPLABEL:    fcc   "IP ADDRESS:  "
             fcb   $0D,$0A,$00
 
+INITSOC0:
+            ldd   #RMSR       ; RX Memory Size Register
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+;            jsr   DALLY
+
+            lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+            sta   CIO0DATA    ; Store it to W5100S
+;            jsr   DALLY
+
+            ldd   #TMSR       ; TX Memory Size Register
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+;            jsr   DALLY
+
+            lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+            sta   CIO0DATA    ; Store it to W5100S
+;            jsr   DALLY
+
+
+            ldd   #S0_MR      ; Socket 0 Mode Register
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+;            jsr   DALLY
+
+            lda   #S_CR_OPEN  ; Open Command
+            sta   CIO0DATA    ; Store it to W5100S
+;            jsr   DALLY
+
+
+            ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+;            jsr   DALLY
+
+            lda   #$C000      ; Port $C000
+            sta   CIO0DATA    ; Store it to W5100S
+;            jsr   DALLY
+
+
+
+
+
+S0_MR
+
+
+
+
+
+FORGNIP:                      ; Foreign IP Address
+            fcb   192,168,253,100
+
+FORGNPORT:                    ; Foreign Port
+            fdb   20000       
+
+FORGNC:                       ; My Source Hardware Address
+            fcb   $00,$08,$DC,$00,$00,$01
+
+FORGNP:                        ; My Source IP Address
+            fcb   192,168,253,10
+
+
             include "COCOIOCFG.asm"
 
             end   RESET       ; End of driver
