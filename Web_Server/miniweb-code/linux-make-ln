@@ -1,0 +1,4 @@
+#!/bin/bash
+#
+# Make a link to the http directory
+ln -s bin/htdocs htdocs
