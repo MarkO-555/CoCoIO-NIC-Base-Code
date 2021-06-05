@@ -357,207 +357,215 @@
                       (    W5100SEQU.asm):00333         
                       (    W5100SEQU.asm):00334                           ; TX and RX MASKS ARE IDENTICAL
      1FFF             (    W5100SEQU.asm):00335         MASK8K:     equ   $1FFF
-     0FFF             (    W5100SEQU.asm):00336         MASK4K:     equ   $0FFF
-     07FF             (    W5100SEQU.asm):00337         MASK2K:     equ   $07FF
-     03FF             (    W5100SEQU.asm):00338         MASK1K:     equ   $03FF
-                      (    W5100SEQU.asm):00339         
-                      (    W5100SEQU.asm):00340         
-                      (    W5100SEQU.asm):00341         
-                      (    W5100SEQU.asm):00342         
-                      (    W5100SEQU.asm):00343                           ; STATUS Equates
-                      (    W5100SEQU.asm):00344         
-                      (    W5100SEQU.asm):00345                                 ; SETUP Values
-     0080             (    W5100SEQU.asm):00346         RESET:      equ   $80         ; Reset Command for W5100
-     0010             (    W5100SEQU.asm):00347         PINGBLOCK:  equ   $10         ; PING Response Block
-     0008             (    W5100SEQU.asm):00348         PPPOE_ENA:  equ   $08         ; PPPoE Enable
-                      (    W5100SEQU.asm):00349                                       ; The following are ALWAYS SET on W5100S
-     0002             (    W5100SEQU.asm):00350         AUTO_INCRE: equ   $02         ; Auto Increment
-     0001             (    W5100SEQU.asm):00351         INDIRECT:   equ   $01         ; Indirect Bus Mode
+     001F             (    W5100SEQU.asm):00336         MASK8KH:    equ   $1F
+     00FF             (    W5100SEQU.asm):00337         MASK8KL:    equ   $FF
+     0FFF             (    W5100SEQU.asm):00338         MASK4K:     equ   $0FFF
+     000F             (    W5100SEQU.asm):00339         MASK4KH:    equ   $0F
+     00FF             (    W5100SEQU.asm):00340         MASK4KL:    equ   $FF
+     07FF             (    W5100SEQU.asm):00341         MASK2K:     equ   $07FF
+     0007             (    W5100SEQU.asm):00342         MASK2KH:    equ   $07
+     00FF             (    W5100SEQU.asm):00343         MASK2KL:    equ   $FF
+     03FF             (    W5100SEQU.asm):00344         MASK1K:     equ   $03FF
+     0003             (    W5100SEQU.asm):00345         MASK1KH:    equ   $03
+     00FF             (    W5100SEQU.asm):00346         MASK1KL:    equ   $FF
+                      (    W5100SEQU.asm):00347         
+                      (    W5100SEQU.asm):00348         
+                      (    W5100SEQU.asm):00349         
+                      (    W5100SEQU.asm):00350         
+                      (    W5100SEQU.asm):00351                           ; STATUS Equates
                       (    W5100SEQU.asm):00352         
-                      (    W5100SEQU.asm):00353                           ; COMMON Values
-                      (    W5100SEQU.asm):00354                                 ; Interrupt Register
-     0080             (    W5100SEQU.asm):00355         IR_CONFLCT: equ   $80         ; IP Address Conflict
-     0040             (    W5100SEQU.asm):00356         IR_UNREACH: equ   $40         ; Destination Port Unreachable
-     0020             (    W5100SEQU.asm):00357         IR_PPPTERM: equ   $20         ; PPPoE Terminated
-     0008             (    W5100SEQU.asm):00358         IR_SOCK3:   equ   $08         ; Socket 3 Interrupt
-     0004             (    W5100SEQU.asm):00359         IR_SOCK2:   equ   $04         ; Socket 2 Interrupt
-     0002             (    W5100SEQU.asm):00360         IR_SOCK1:   equ   $02         ; Socket 1 Interrupt
-     0001             (    W5100SEQU.asm):00361         IR_SOCK0:   equ   $01         ; Socket 0 Interrupt
-                      (    W5100SEQU.asm):00362         
-                      (    W5100SEQU.asm):00363         ; IMR_?????   Interrupt Mask Register, Same as Above
-                      (    W5100SEQU.asm):00364         ; For Clarity, the above could have IMR_CONFLCT equ set
-                      (    W5100SEQU.asm):00365         
-                      (    W5100SEQU.asm):00366         ; Memory Size Register Mask is Identical for RX and TX
-     00C0             (    W5100SEQU.asm):00367         MSR_8KB_S3: equ   %11000000   ; Memory Size, 8KB, Socket 3
-     0080             (    W5100SEQU.asm):00368         MSR_4KB_S3: equ   %10000000   ; Memory Size, 4KB, Socket 3
-     0040             (    W5100SEQU.asm):00369         MSR_2KB_S3: equ   %01000000   ; Memory Size, 2KB, Socket 3
-     0000             (    W5100SEQU.asm):00370         MSR_1KB_S3: equ   %00000000   ; Memory Size, 1KB, Socket 3
-                      (    W5100SEQU.asm):00371         
-     0030             (    W5100SEQU.asm):00372         MSR_8KB_S2: equ   %00110000   ; Memory Size, 8KB, Socket 2
-     0020             (    W5100SEQU.asm):00373         MSR_4KB_S2: equ   %00100000   ; Memory Size, 4KB, Socket 2
-     0010             (    W5100SEQU.asm):00374         MSR_2KB_S2: equ   %00010000   ; Memory Size, 2KB, Socket 2
-     0000             (    W5100SEQU.asm):00375         MSR_1KB_S2: equ   %00000000   ; Memory Size, 1KB, Socket 2
-                      (    W5100SEQU.asm):00376         
-     000C             (    W5100SEQU.asm):00377         MSR_8KB_S1: equ   %00001100   ; Memory Size, 8KB, Socket 1
-     0008             (    W5100SEQU.asm):00378         MSR_4KB_S1: equ   %00001000   ; Memory Size, 4KB, Socket 1
-     0004             (    W5100SEQU.asm):00379         MSR_2KB_S1: equ   %00000100   ; Memory Size, 2KB, Socket 1
-     0000             (    W5100SEQU.asm):00380         MSR_1KB_S1: equ   %00000000   ; Memory Size, 1KB, Socket 1
-                      (    W5100SEQU.asm):00381         
-     0003             (    W5100SEQU.asm):00382         MSR_8KB_S0: equ   %00000011   ; Memory Size, 8KB, Socket 0
-     0002             (    W5100SEQU.asm):00383         MSR_4KB_S0: equ   %00000010   ; Memory Size, 4KB, Socket 0
-     0001             (    W5100SEQU.asm):00384         MSR_2KB_S0: equ   %00000001   ; Memory Size, 2KB, Socket 0
-     0000             (    W5100SEQU.asm):00385         MSR_1KB_S0: equ   %00000000   ; Memory Size, 1KB, Socket 0
-                      (    W5100SEQU.asm):00386         
-                      (    W5100SEQU.asm):00387         
-                      (    W5100SEQU.asm):00388                                 ; Interrupt Register 2
-     0001             (    W5100SEQU.asm):00389         IR2_WOL:    equ   %00000001   ; WOL MAGIC Packet Interrupt
-                      (    W5100SEQU.asm):00390         
-                      (    W5100SEQU.asm):00391         ; IMR2_?????   Interrupt 2 Mask Register, Same as Above
-                      (    W5100SEQU.asm):00392         ; For Clarity, the above could have IMR2_WOL equ set
-                      (    W5100SEQU.asm):00393         
-                      (    W5100SEQU.asm):00394                                 ; PPP Link Control Protocol, Magic Number
-     0001             (    W5100SEQU.asm):00395         PMAGICM:     equ   %00000001   ; LCP Magic Number: 0x01010101
-                      (    W5100SEQU.asm):00396         
-                      (    W5100SEQU.asm):00397                                 ; Mode Register 2
-     0080             (    W5100SEQU.asm):00398         MR2_CLKSEL: equ   %10000000   ; 25MHz, else PHCR1 Value
-     0040             (    W5100SEQU.asm):00399         MR2_IEN:    equ   %01000000   ; INTn Enable, else INTn Disable
-     0020             (    W5100SEQU.asm):00400         MR2_NOPRST: equ   %00100000   ; DO NOT respond to incoming Bad Port, TCP
-     0010             (    W5100SEQU.asm):00401         MR2_UDPURB: equ   %00010000   ; DO NOT respond to incoming Bad Port, UDP
-     0008             (    W5100SEQU.asm):00402         MR2_WOL:    equ   %00001000   ; Receive Wake On LAN ( WOL ) Packet
-     0002             (    W5100SEQU.asm):00403         MR2_FARP:   equ   %00000010   ; UDP Mode, Force ARP on every Packet
+                      (    W5100SEQU.asm):00353                                 ; SETUP Values
+     0080             (    W5100SEQU.asm):00354         RESET:      equ   $80         ; Reset Command for W5100
+     0010             (    W5100SEQU.asm):00355         PINGBLOCK:  equ   $10         ; PING Response Block
+     0008             (    W5100SEQU.asm):00356         PPPOE_ENA:  equ   $08         ; PPPoE Enable
+                      (    W5100SEQU.asm):00357                                       ; The following are ALWAYS SET on W5100S
+     0002             (    W5100SEQU.asm):00358         AUTO_INCRE: equ   $02         ; Auto Increment
+     0001             (    W5100SEQU.asm):00359         INDIRECT:   equ   $01         ; Indirect Bus Mode
+                      (    W5100SEQU.asm):00360         
+                      (    W5100SEQU.asm):00361                           ; COMMON Values
+                      (    W5100SEQU.asm):00362                                 ; Interrupt Register
+     0080             (    W5100SEQU.asm):00363         IR_CONFLCT: equ   $80         ; IP Address Conflict
+     0040             (    W5100SEQU.asm):00364         IR_UNREACH: equ   $40         ; Destination Port Unreachable
+     0020             (    W5100SEQU.asm):00365         IR_PPPTERM: equ   $20         ; PPPoE Terminated
+     0008             (    W5100SEQU.asm):00366         IR_SOCK3:   equ   $08         ; Socket 3 Interrupt
+     0004             (    W5100SEQU.asm):00367         IR_SOCK2:   equ   $04         ; Socket 2 Interrupt
+     0002             (    W5100SEQU.asm):00368         IR_SOCK1:   equ   $02         ; Socket 1 Interrupt
+     0001             (    W5100SEQU.asm):00369         IR_SOCK0:   equ   $01         ; Socket 0 Interrupt
+                      (    W5100SEQU.asm):00370         
+                      (    W5100SEQU.asm):00371         ; IMR_?????   Interrupt Mask Register, Same as Above
+                      (    W5100SEQU.asm):00372         ; For Clarity, the above could have IMR_CONFLCT equ set
+                      (    W5100SEQU.asm):00373         
+                      (    W5100SEQU.asm):00374         ; Memory Size Register Mask is Identical for RX and TX
+     00C0             (    W5100SEQU.asm):00375         MSR_8KB_S3: equ   %11000000   ; Memory Size, 8KB, Socket 3
+     0080             (    W5100SEQU.asm):00376         MSR_4KB_S3: equ   %10000000   ; Memory Size, 4KB, Socket 3
+     0040             (    W5100SEQU.asm):00377         MSR_2KB_S3: equ   %01000000   ; Memory Size, 2KB, Socket 3
+     0000             (    W5100SEQU.asm):00378         MSR_1KB_S3: equ   %00000000   ; Memory Size, 1KB, Socket 3
+                      (    W5100SEQU.asm):00379         
+     0030             (    W5100SEQU.asm):00380         MSR_8KB_S2: equ   %00110000   ; Memory Size, 8KB, Socket 2
+     0020             (    W5100SEQU.asm):00381         MSR_4KB_S2: equ   %00100000   ; Memory Size, 4KB, Socket 2
+     0010             (    W5100SEQU.asm):00382         MSR_2KB_S2: equ   %00010000   ; Memory Size, 2KB, Socket 2
+     0000             (    W5100SEQU.asm):00383         MSR_1KB_S2: equ   %00000000   ; Memory Size, 1KB, Socket 2
+                      (    W5100SEQU.asm):00384         
+     000C             (    W5100SEQU.asm):00385         MSR_8KB_S1: equ   %00001100   ; Memory Size, 8KB, Socket 1
+     0008             (    W5100SEQU.asm):00386         MSR_4KB_S1: equ   %00001000   ; Memory Size, 4KB, Socket 1
+     0004             (    W5100SEQU.asm):00387         MSR_2KB_S1: equ   %00000100   ; Memory Size, 2KB, Socket 1
+     0000             (    W5100SEQU.asm):00388         MSR_1KB_S1: equ   %00000000   ; Memory Size, 1KB, Socket 1
+                      (    W5100SEQU.asm):00389         
+     0003             (    W5100SEQU.asm):00390         MSR_8KB_S0: equ   %00000011   ; Memory Size, 8KB, Socket 0
+     0002             (    W5100SEQU.asm):00391         MSR_4KB_S0: equ   %00000010   ; Memory Size, 4KB, Socket 0
+     0001             (    W5100SEQU.asm):00392         MSR_2KB_S0: equ   %00000001   ; Memory Size, 2KB, Socket 0
+     0000             (    W5100SEQU.asm):00393         MSR_1KB_S0: equ   %00000000   ; Memory Size, 1KB, Socket 0
+                      (    W5100SEQU.asm):00394         
+                      (    W5100SEQU.asm):00395         
+                      (    W5100SEQU.asm):00396                                 ; Interrupt Register 2
+     0001             (    W5100SEQU.asm):00397         IR2_WOL:    equ   %00000001   ; WOL MAGIC Packet Interrupt
+                      (    W5100SEQU.asm):00398         
+                      (    W5100SEQU.asm):00399         ; IMR2_?????   Interrupt 2 Mask Register, Same as Above
+                      (    W5100SEQU.asm):00400         ; For Clarity, the above could have IMR2_WOL equ set
+                      (    W5100SEQU.asm):00401         
+                      (    W5100SEQU.asm):00402                                 ; PPP Link Control Protocol, Magic Number
+     0001             (    W5100SEQU.asm):00403         PMAGICM:     equ   %00000001   ; LCP Magic Number: 0x01010101
                       (    W5100SEQU.asm):00404         
-                      (    W5100SEQU.asm):00405         
-                      (    W5100SEQU.asm):00406         
-                      (    W5100SEQU.asm):00407                                 ; PPPoE Mode Registers
-                      (    W5100SEQU.asm):00408         
-                      (    W5100SEQU.asm):00409         
-                      (    W5100SEQU.asm):00410                                 ; PHY Mode Registers
-                      (    W5100SEQU.asm):00411         ;PHYSR0
-                      (    W5100SEQU.asm):00412         ;PHYSR1
-                      (    W5100SEQU.asm):00413         ;PHYRAR
-                      (    W5100SEQU.asm):00414         ;PHYDIVR
-                      (    W5100SEQU.asm):00415         ;PHYCR0
-                      (    W5100SEQU.asm):00416         ;PHYCR1
+                      (    W5100SEQU.asm):00405                                 ; Mode Register 2
+     0080             (    W5100SEQU.asm):00406         MR2_CLKSEL: equ   %10000000   ; 25MHz, else PHCR1 Value
+     0040             (    W5100SEQU.asm):00407         MR2_IEN:    equ   %01000000   ; INTn Enable, else INTn Disable
+     0020             (    W5100SEQU.asm):00408         MR2_NOPRST: equ   %00100000   ; DO NOT respond to incoming Bad Port, TCP
+     0010             (    W5100SEQU.asm):00409         MR2_UDPURB: equ   %00010000   ; DO NOT respond to incoming Bad Port, UDP
+     0008             (    W5100SEQU.asm):00410         MR2_WOL:    equ   %00001000   ; Receive Wake On LAN ( WOL ) Packet
+     0002             (    W5100SEQU.asm):00411         MR2_FARP:   equ   %00000010   ; UDP Mode, Force ARP on every Packet
+                      (    W5100SEQU.asm):00412         
+                      (    W5100SEQU.asm):00413         
+                      (    W5100SEQU.asm):00414         
+                      (    W5100SEQU.asm):00415                                 ; PPPoE Mode Registers
+                      (    W5100SEQU.asm):00416         
                       (    W5100SEQU.asm):00417         
-                      (    W5100SEQU.asm):00418         
-                      (    W5100SEQU.asm):00419                                 ; SOCKET-less Command Register
-     0002             (    W5100SEQU.asm):00420         SLCR_ARP:   equ   %00000010   ; Transmit ARP Packet
-     0001             (    W5100SEQU.asm):00421         SLCR_PING:  equ   %00000001   ; Transmit Ping Request
-                      (    W5100SEQU.asm):00422         
-                      (    W5100SEQU.asm):00423                                 ; SOCKET-less Interrupt (Mask) Register
-     0004             (    W5100SEQU.asm):00424         SLIMR_TOUT: equ   %00000100   ; Enable TIMEOUT Interrupt
-     0002             (    W5100SEQU.asm):00425         SLIMR_ARP:  equ   %00000010   ; Enable ARP Interrupt
-     0001             (    W5100SEQU.asm):00426         SLIMR_PING: equ   %00000001   ; Enable Ping Interrupt
-                      (    W5100SEQU.asm):00427         
-                      (    W5100SEQU.asm):00428                                 ; SOCKET-less Interrupt Register
-     0004             (    W5100SEQU.asm):00429         SLIR_TOUT:  equ   %00000100   ; Occured, TIMEOUT Interrupt
-     0002             (    W5100SEQU.asm):00430         SLIR_ARP:   equ   %00000010   ; Occured, ARP Interrupt
-     0001             (    W5100SEQU.asm):00431         SLIR_PING:  equ   %00000001   ; Occured, Ping Interrupt
-                      (    W5100SEQU.asm):00432         
-                      (    W5100SEQU.asm):00433         
-                      (    W5100SEQU.asm):00434                           ; SOCKET Values
+                      (    W5100SEQU.asm):00418                                 ; PHY Mode Registers
+                      (    W5100SEQU.asm):00419         ;PHYSR0
+                      (    W5100SEQU.asm):00420         ;PHYSR1
+                      (    W5100SEQU.asm):00421         ;PHYRAR
+                      (    W5100SEQU.asm):00422         ;PHYDIVR
+                      (    W5100SEQU.asm):00423         ;PHYCR0
+                      (    W5100SEQU.asm):00424         ;PHYCR1
+                      (    W5100SEQU.asm):00425         
+                      (    W5100SEQU.asm):00426         
+                      (    W5100SEQU.asm):00427                                 ; SOCKET-less Command Register
+     0002             (    W5100SEQU.asm):00428         SLCR_ARP:   equ   %00000010   ; Transmit ARP Packet
+     0001             (    W5100SEQU.asm):00429         SLCR_PING:  equ   %00000001   ; Transmit Ping Request
+                      (    W5100SEQU.asm):00430         
+                      (    W5100SEQU.asm):00431                                 ; SOCKET-less Interrupt (Mask) Register
+     0004             (    W5100SEQU.asm):00432         SLIMR_TOUT: equ   %00000100   ; Enable TIMEOUT Interrupt
+     0002             (    W5100SEQU.asm):00433         SLIMR_ARP:  equ   %00000010   ; Enable ARP Interrupt
+     0001             (    W5100SEQU.asm):00434         SLIMR_PING: equ   %00000001   ; Enable Ping Interrupt
                       (    W5100SEQU.asm):00435         
-                      (    W5100SEQU.asm):00436                                 ; Socket Mode Register ( S0 - S3 )
-     0080             (    W5100SEQU.asm):00437         S_MR_MULTI: equ   %10000000   ; UDP Multicast
-     0040             (    W5100SEQU.asm):00438         S_MR_MF:    equ   %01000000   ; MAC Filter Enable
-     0020             (    W5100SEQU.asm):00439         S_MR_ND_MC: equ   %00100000   ; No Delayed ACK / Multicast IGMP Version (MC)
+                      (    W5100SEQU.asm):00436                                 ; SOCKET-less Interrupt Register
+     0004             (    W5100SEQU.asm):00437         SLIR_TOUT:  equ   %00000100   ; Occured, TIMEOUT Interrupt
+     0002             (    W5100SEQU.asm):00438         SLIR_ARP:   equ   %00000010   ; Occured, ARP Interrupt
+     0001             (    W5100SEQU.asm):00439         SLIR_PING:  equ   %00000001   ; Occured, Ping Interrupt
                       (    W5100SEQU.asm):00440         
-     0004             (    W5100SEQU.asm):00441         S_MR_MRAW:  equ   %00000100   ; Set Protocol, MACRAW
-     0003             (    W5100SEQU.asm):00442         S_MR_IPRAW: equ   %00000011   ; Set Protocol, IPRAW
-     0002             (    W5100SEQU.asm):00443         S_MR_UDP:   equ   %00000010   ; Set Protocol, UDP
-     0001             (    W5100SEQU.asm):00444         S_MR_TCP:   equ   %00000001   ; Set Protocol, TCP
-     0000             (    W5100SEQU.asm):00445         S_MR_CLSD:  equ   %00000000   ; Socket CLOSED
-                      (    W5100SEQU.asm):00446         
-                      (    W5100SEQU.asm):00447         
-                      (    W5100SEQU.asm):00448                                 ; Socket Command Register ( S0 - S3 )
-     0001             (    W5100SEQU.asm):00449         S_CR_OPEN:  equ   %00000001   ; Open Command
-     0002             (    W5100SEQU.asm):00450         S_CR_LSTEN: equ   %00000010   ; Listen Command
-     0004             (    W5100SEQU.asm):00451         S_CR_CNNCT: equ   %00000100   ; Connect Command
-     0008             (    W5100SEQU.asm):00452         S_CR_DSCON: equ   %00001000   ; Disconnect Command
-     0010             (    W5100SEQU.asm):00453         S_CR_CLOSE: equ   %00010000   ; Close Command
-     0020             (    W5100SEQU.asm):00454         S_CR_SEND:  equ   %00100000   ; Send Command
-     0021             (    W5100SEQU.asm):00455         S_CR_SMAC:  equ   %00100001   ; Send MAC Command
-     0022             (    W5100SEQU.asm):00456         S_CR_SKEEP: equ   %00100010   ; Send Keep Command
-     0040             (    W5100SEQU.asm):00457         S_CR_RECV:  equ   %01000000   ; RECV Command
-                      (    W5100SEQU.asm):00458         
-                      (    W5100SEQU.asm):00459         
-                      (    W5100SEQU.asm):00460                                 ; SOCKET Interrupt Register ( S0 - S3 )
-     0010             (    W5100SEQU.asm):00461         SIR_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
-     0008             (    W5100SEQU.asm):00462         SIR_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
-     0004             (    W5100SEQU.asm):00463         SIR_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
-     0002             (    W5100SEQU.asm):00464         SIR_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
-     0001             (    W5100SEQU.asm):00465         SIR_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
+                      (    W5100SEQU.asm):00441         
+                      (    W5100SEQU.asm):00442                           ; SOCKET Values
+                      (    W5100SEQU.asm):00443         
+                      (    W5100SEQU.asm):00444                                 ; Socket Mode Register ( S0 - S3 )
+     0080             (    W5100SEQU.asm):00445         S_MR_MULTI: equ   %10000000   ; UDP Multicast
+     0040             (    W5100SEQU.asm):00446         S_MR_MF:    equ   %01000000   ; MAC Filter Enable
+     0020             (    W5100SEQU.asm):00447         S_MR_ND_MC: equ   %00100000   ; No Delayed ACK / Multicast IGMP Version (MC)
+                      (    W5100SEQU.asm):00448         
+     0004             (    W5100SEQU.asm):00449         S_MR_MRAW:  equ   %00000100   ; Set Protocol, MACRAW
+     0003             (    W5100SEQU.asm):00450         S_MR_IPRAW: equ   %00000011   ; Set Protocol, IPRAW
+     0002             (    W5100SEQU.asm):00451         S_MR_UDP:   equ   %00000010   ; Set Protocol, UDP
+     0001             (    W5100SEQU.asm):00452         S_MR_TCP:   equ   %00000001   ; Set Protocol, TCP
+     0000             (    W5100SEQU.asm):00453         S_MR_CLSD:  equ   %00000000   ; Socket CLOSED
+                      (    W5100SEQU.asm):00454         
+                      (    W5100SEQU.asm):00455         
+                      (    W5100SEQU.asm):00456                                 ; Socket Command Register ( S0 - S3 )
+     0001             (    W5100SEQU.asm):00457         S_CR_OPEN:  equ   %00000001   ; Open Command
+     0002             (    W5100SEQU.asm):00458         S_CR_LSTEN: equ   %00000010   ; Listen Command
+     0004             (    W5100SEQU.asm):00459         S_CR_CNNCT: equ   %00000100   ; Connect Command
+     0008             (    W5100SEQU.asm):00460         S_CR_DSCON: equ   %00001000   ; Disconnect Command
+     0010             (    W5100SEQU.asm):00461         S_CR_CLOSE: equ   %00010000   ; Close Command
+     0020             (    W5100SEQU.asm):00462         S_CR_SEND:  equ   %00100000   ; Send Command
+     0021             (    W5100SEQU.asm):00463         S_CR_SMAC:  equ   %00100001   ; Send MAC Command
+     0022             (    W5100SEQU.asm):00464         S_CR_SKEEP: equ   %00100010   ; Send Keep Command
+     0040             (    W5100SEQU.asm):00465         S_CR_RECV:  equ   %01000000   ; RECV Command
                       (    W5100SEQU.asm):00466         
                       (    W5100SEQU.asm):00467         
-                      (    W5100SEQU.asm):00468                                 ; Socket Status Register ( S0 - S3 )
-     0000             (    W5100SEQU.asm):00469         S_SR_CLSD: equ    %00000000   ; Socket Closed
-     0013             (    W5100SEQU.asm):00470         S_SR_INIT: equ    %00010011   ; Socket Opened as TCP Mode
-     0014             (    W5100SEQU.asm):00471         S_SR_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
-     0017             (    W5100SEQU.asm):00472         S_SR_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
-     001C             (    W5100SEQU.asm):00473         S_SR_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
-     0022             (    W5100SEQU.asm):00474         S_SR_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
-     0032             (    W5100SEQU.asm):00475         S_SR_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
-     0042             (    W5100SEQU.asm):00476         S_SR_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
-                      (    W5100SEQU.asm):00477                                 ; Socket Status Register, Temp Status ( S0 - S3 )
-     0015             (    W5100SEQU.asm):00478         S_SR_SSNT: equ    %00010101   ; Socket Sent the Connect Request
-     0016             (    W5100SEQU.asm):00479         S_SR_SRCV: equ    %00010110   ; Socket Received the Connect Request
-     0018             (    W5100SEQU.asm):00480         S_SR_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
-     001B             (    W5100SEQU.asm):00481         S_SR_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
-     001D             (    W5100SEQU.asm):00482         S_SR_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
-                      (    W5100SEQU.asm):00483         
-                      (    W5100SEQU.asm):00484                                 ; Socket Status Register, ALT ( S0 - S3 )
-     0000             (    W5100SEQU.asm):00485         SOCK_CLOS: equ    %00000000   ; Socket Closed
-     0013             (    W5100SEQU.asm):00486         SOCK_INIT: equ    %00010011   ; Socket Opened as TCP Mode
-     0014             (    W5100SEQU.asm):00487         SOCK_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
-     0017             (    W5100SEQU.asm):00488         SOCK_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
-     001C             (    W5100SEQU.asm):00489         SOCK_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
-     0022             (    W5100SEQU.asm):00490         SOCK_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
-     0032             (    W5100SEQU.asm):00491         SOCK_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
-     0042             (    W5100SEQU.asm):00492         SOCK_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
-                      (    W5100SEQU.asm):00493                                 ; Socket Status Register, ALT, Temp Status ( S0 - S3 )
-     0015             (    W5100SEQU.asm):00494         SOCK_SSNT: equ    %00010101   ; Socket Sent the Connect Request
-     0016             (    W5100SEQU.asm):00495         SOCK_SRCV: equ    %00010110   ; Socket Received the Connect Request
-     0018             (    W5100SEQU.asm):00496         SOCK_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
-     001B             (    W5100SEQU.asm):00497         SOCK_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
-     001D             (    W5100SEQU.asm):00498         SOCK_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
-                      (    W5100SEQU.asm):00499         
-                      (    W5100SEQU.asm):00500         
-                      (    W5100SEQU.asm):00501                                 ; Socket Buffer Size, per Socket ( S0 - S3 )
-                      (    W5100SEQU.asm):00502                                 ; This is a Duplicate of the RMSR/TMSR Registers
-     0000             (    W5100SEQU.asm):00503         S_BUFSZ0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
-     0001             (    W5100SEQU.asm):00504         S_BUFSZ1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
-     0002             (    W5100SEQU.asm):00505         S_BUFSZ2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
-     0004             (    W5100SEQU.asm):00506         S_BUFSZ4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
-     0008             (    W5100SEQU.asm):00507         S_BUFSZ8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
+                      (    W5100SEQU.asm):00468                                 ; SOCKET Interrupt Register ( S0 - S3 )
+     0010             (    W5100SEQU.asm):00469         SIR_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
+     0008             (    W5100SEQU.asm):00470         SIR_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
+     0004             (    W5100SEQU.asm):00471         SIR_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
+     0002             (    W5100SEQU.asm):00472         SIR_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
+     0001             (    W5100SEQU.asm):00473         SIR_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
+                      (    W5100SEQU.asm):00474         
+                      (    W5100SEQU.asm):00475         
+                      (    W5100SEQU.asm):00476                                 ; Socket Status Register ( S0 - S3 )
+     0000             (    W5100SEQU.asm):00477         S_SR_CLSD: equ    %00000000   ; Socket Closed
+     0013             (    W5100SEQU.asm):00478         S_SR_INIT: equ    %00010011   ; Socket Opened as TCP Mode
+     0014             (    W5100SEQU.asm):00479         S_SR_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
+     0017             (    W5100SEQU.asm):00480         S_SR_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
+     001C             (    W5100SEQU.asm):00481         S_SR_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
+     0022             (    W5100SEQU.asm):00482         S_SR_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
+     0032             (    W5100SEQU.asm):00483         S_SR_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
+     0042             (    W5100SEQU.asm):00484         S_SR_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
+                      (    W5100SEQU.asm):00485                                 ; Socket Status Register, Temp Status ( S0 - S3 )
+     0015             (    W5100SEQU.asm):00486         S_SR_SSNT: equ    %00010101   ; Socket Sent the Connect Request
+     0016             (    W5100SEQU.asm):00487         S_SR_SRCV: equ    %00010110   ; Socket Received the Connect Request
+     0018             (    W5100SEQU.asm):00488         S_SR_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
+     001B             (    W5100SEQU.asm):00489         S_SR_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
+     001D             (    W5100SEQU.asm):00490         S_SR_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
+                      (    W5100SEQU.asm):00491         
+                      (    W5100SEQU.asm):00492                                 ; Socket Status Register, ALT ( S0 - S3 )
+     0000             (    W5100SEQU.asm):00493         SOCK_CLOS: equ    %00000000   ; Socket Closed
+     0013             (    W5100SEQU.asm):00494         SOCK_INIT: equ    %00010011   ; Socket Opened as TCP Mode
+     0014             (    W5100SEQU.asm):00495         SOCK_LSTN: equ    %00010100   ; Socket is TCP Mode & Waiting for Peer Connection
+     0017             (    W5100SEQU.asm):00496         SOCK_ESTB: equ    %00010111   ; Socket is TCP Mode & TCP Connection is Done
+     001C             (    W5100SEQU.asm):00497         SOCK_WAIT: equ    %00011100   ; Socket is TCP Mode & Received Disconnection Request
+     0022             (    W5100SEQU.asm):00498         SOCK_UDP:  equ    %00100010   ; Socket Opened as UDP Mode
+     0032             (    W5100SEQU.asm):00499         SOCK_IRAW: equ    %00110010   ; Socket Opened as IPRAW Mode
+     0042             (    W5100SEQU.asm):00500         SOCK_MRAW: equ    %01000010   ; Socket Opened as MACRAW Mode
+                      (    W5100SEQU.asm):00501                                 ; Socket Status Register, ALT, Temp Status ( S0 - S3 )
+     0015             (    W5100SEQU.asm):00502         SOCK_SSNT: equ    %00010101   ; Socket Sent the Connect Request
+     0016             (    W5100SEQU.asm):00503         SOCK_SRCV: equ    %00010110   ; Socket Received the Connect Request
+     0018             (    W5100SEQU.asm):00504         SOCK_FIWA: equ    %00011000   ; Socket is in SOCKET Closed ( FIN WAIT)
+     001B             (    W5100SEQU.asm):00505         SOCK_TIWA: equ    %00011011   ; Socket is in SOCKET Closed ( TIME WAIT)
+     001D             (    W5100SEQU.asm):00506         SOCK_LACK: equ    %00011101   ; Socket is in SOCKET Closed ( LAST ACK )
+                      (    W5100SEQU.asm):00507         
                       (    W5100SEQU.asm):00508         
-                      (    W5100SEQU.asm):00509                                 ; Socket Buffer Size, per Socket, ALT ( S0 - S3 )
+                      (    W5100SEQU.asm):00509                                 ; Socket Buffer Size, per Socket ( S0 - S3 )
                       (    W5100SEQU.asm):00510                                 ; This is a Duplicate of the RMSR/TMSR Registers
-     0000             (    W5100SEQU.asm):00511         BUFSIZE0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
-     0001             (    W5100SEQU.asm):00512         BUFSIZE1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
-     0002             (    W5100SEQU.asm):00513         BUFSIZE2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
-     0004             (    W5100SEQU.asm):00514         BUFSIZE4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
-     0008             (    W5100SEQU.asm):00515         BUFSIZE8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
+     0000             (    W5100SEQU.asm):00511         S_BUFSZ0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
+     0001             (    W5100SEQU.asm):00512         S_BUFSZ1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
+     0002             (    W5100SEQU.asm):00513         S_BUFSZ2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
+     0004             (    W5100SEQU.asm):00514         S_BUFSZ4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
+     0008             (    W5100SEQU.asm):00515         S_BUFSZ8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
                       (    W5100SEQU.asm):00516         
-                      (    W5100SEQU.asm):00517         
-                      (    W5100SEQU.asm):00518                                 ; SOCKET Interrupt MASK Register ( S0 - S3 )
-     0010             (    W5100SEQU.asm):00519         IRM_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
-     0008             (    W5100SEQU.asm):00520         IRM_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
-     0004             (    W5100SEQU.asm):00521         IRM_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
-     0002             (    W5100SEQU.asm):00522         IRM_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
-     0001             (    W5100SEQU.asm):00523         IRM_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
+                      (    W5100SEQU.asm):00517                                 ; Socket Buffer Size, per Socket, ALT ( S0 - S3 )
+                      (    W5100SEQU.asm):00518                                 ; This is a Duplicate of the RMSR/TMSR Registers
+     0000             (    W5100SEQU.asm):00519         BUFSIZE0K: equ    %00000000   ; 0KB Buffer ( RX/TX )
+     0001             (    W5100SEQU.asm):00520         BUFSIZE1K: equ    %00000001   ; 1KB Buffer ( RX/TX )
+     0002             (    W5100SEQU.asm):00521         BUFSIZE2K: equ    %00000010   ; 2KB Buffer ( RX/TX )
+     0004             (    W5100SEQU.asm):00522         BUFSIZE4K: equ    %00000100   ; 4KB Buffer ( RX/TX )
+     0008             (    W5100SEQU.asm):00523         BUFSIZE8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
                       (    W5100SEQU.asm):00524         
-                      (    W5100SEQU.asm):00525                                 ; Socket Mode Register 2 ( S0 - S3 )
-     0040             (    W5100SEQU.asm):00526         S_MR2_MBBLK: equ   %01000000  ; Broadcast Blocking on MACRAW Mode
-     0020             (    W5100SEQU.asm):00527         S_MR2_MMBLK: equ   %00100000  ; Multicast Blocking on MACRAW Mode
-     0010             (    W5100SEQU.asm):00528         S_MR2_I6BLK: equ   %00010000  ; IPv6 Packet Blocking on MACRAW Mode
-                      (    W5100SEQU.asm):00529         
-     0002             (    W5100SEQU.asm):00530         S_MR2_BRDB:  equ   %00000010  ; Broadcast Blocking on UDP Mode
-                      (    W5100SEQU.asm):00531                                       ; or Force PSH on TCP Mode                                    
-     0001             (    W5100SEQU.asm):00532         S_MR2_UNIB:  equ   %00000001  ; Unicast Blocking on UDP Multicast Mode
-                      (    W5100SEQU.asm):00533         
-                      (    W5100SEQU.asm):00534         
-                      (    W5100SEQU.asm):00535         
-                      (    W5100SEQU.asm):00536                                       ; End of Equates
+                      (    W5100SEQU.asm):00525         
+                      (    W5100SEQU.asm):00526                                 ; SOCKET Interrupt MASK Register ( S0 - S3 )
+     0010             (    W5100SEQU.asm):00527         IRM_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
+     0008             (    W5100SEQU.asm):00528         IRM_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
+     0004             (    W5100SEQU.asm):00529         IRM_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
+     0002             (    W5100SEQU.asm):00530         IRM_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
+     0001             (    W5100SEQU.asm):00531         IRM_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
+                      (    W5100SEQU.asm):00532         
+                      (    W5100SEQU.asm):00533                                 ; Socket Mode Register 2 ( S0 - S3 )
+     0040             (    W5100SEQU.asm):00534         S_MR2_MBBLK: equ   %01000000  ; Broadcast Blocking on MACRAW Mode
+     0020             (    W5100SEQU.asm):00535         S_MR2_MMBLK: equ   %00100000  ; Multicast Blocking on MACRAW Mode
+     0010             (    W5100SEQU.asm):00536         S_MR2_I6BLK: equ   %00010000  ; IPv6 Packet Blocking on MACRAW Mode
+                      (    W5100SEQU.asm):00537         
+     0002             (    W5100SEQU.asm):00538         S_MR2_BRDB:  equ   %00000010  ; Broadcast Blocking on UDP Mode
+                      (    W5100SEQU.asm):00539                                       ; or Force PSH on TCP Mode                                    
+     0001             (    W5100SEQU.asm):00540         S_MR2_UNIB:  equ   %00000001  ; Unicast Blocking on UDP Multicast Mode
+                      (    W5100SEQU.asm):00541         
+                      (    W5100SEQU.asm):00542         
+                      (    W5100SEQU.asm):00543         
+                      (    W5100SEQU.asm):00544                                       ; End of Equates
                       ( COCOIODRV-3C.asm):00025                     include "COCOIOEQU.asm"
                       (    COCOIOEQU.asm):00001         ;*********************************************************************
                       (    COCOIOEQU.asm):00002         ;* Title: COCOIOEQU.asm
@@ -876,20 +884,24 @@
                       ( COCOIODRV-3C.asm):00306         
 7F82 39               ( COCOIODRV-3C.asm):00307                     rts
                       ( COCOIODRV-3C.asm):00308         
-7F83 474154455741593A ( COCOIODRV-3C.asm):00309         GWLABEL:    fcc   "GATEWAY:     "
+7F83 0D0A             ( COCOIODRV-3C.asm):00309         GWLABEL:    fcb   $0D,$0A
+7F85 474154455741593A ( COCOIODRV-3C.asm):00310                     fcc   "GATEWAY:     "
      2020202020
-7F90 0D0A00           ( COCOIODRV-3C.asm):00310                     fcb   $0D,$0A,$00
-7F93 5355424E45543A20 ( COCOIODRV-3C.asm):00311         SNLABEL:    fcc   "SUBNET:      "
+7F92 00               ( COCOIODRV-3C.asm):00311                     fcb   $00
+7F93 0D0A             ( COCOIODRV-3C.asm):00312         SNLABEL:    fcb   $0D,$0A
+7F95 5355424E45543A20 ( COCOIODRV-3C.asm):00313                     fcc   "SUBNET:      "
      2020202020
-7FA0 0D0A00           ( COCOIODRV-3C.asm):00312                     fcb   $0D,$0A,$00
-7FA3 4D41432041444452 ( COCOIODRV-3C.asm):00313         MALABEL:    fcc   "MAC ADDRESS: "
+7FA2 00               ( COCOIODRV-3C.asm):00314                     fcb   $00
+7FA3 0D0A             ( COCOIODRV-3C.asm):00315         MALABEL:    fcb   $0D,$0A
+7FA5 4D41432041444452 ( COCOIODRV-3C.asm):00316                     fcc   "MAC ADDRESS: "
      4553533A20
-7FB0 0D0A00           ( COCOIODRV-3C.asm):00314                     fcb   $0D,$0A,$00
-7FB3 4950204144445245 ( COCOIODRV-3C.asm):00315         IPLABEL:    fcc   "IP ADDRESS:  "
+7FB2 00               ( COCOIODRV-3C.asm):00317                     fcb   $00
+7FB3 0D0A             ( COCOIODRV-3C.asm):00318         IPLABEL:    fcb   $0D,$0A
+7FB5 4950204144445245 ( COCOIODRV-3C.asm):00319                     fcc   "IP ADDRESS:  "
      53533A2020
-7FC0 0D0A00           ( COCOIODRV-3C.asm):00316                     fcb   $0D,$0A,$00
-                      ( COCOIODRV-3C.asm):00317         
-                      ( COCOIODRV-3C.asm):00318                     include "COCOIOCFG.asm"
+7FC2 00               ( COCOIODRV-3C.asm):00320                     fcb   $00
+                      ( COCOIODRV-3C.asm):00321         
+                      ( COCOIODRV-3C.asm):00322                     include "COCOIOCFG.asm"
                       (    COCOIOCFG.asm):00001         ;*********************************************************************
                       (    COCOIOCFG.asm):00002         ;* Title: COCOIOCFG.asm
                       (    COCOIOCFG.asm):00003         ;*********************************************************************
@@ -923,8 +935,8 @@
 7FD1                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
 7FD1 C0A8FD0A         (    COCOIOCFG.asm):00032                     fcb   192,168,253,10
                       (    COCOIOCFG.asm):00033                                       ; End of My CoCoIO configuration
-                      ( COCOIODRV-3C.asm):00319         
-                      ( COCOIODRV-3C.asm):00320                     end   RESET       ; End of driver
+                      ( COCOIODRV-3C.asm):00323         
+                      ( COCOIODRV-3C.asm):00324                     end   RESET       ; End of driver
 
 Symbol Table:
 [ G] AD30                             7F48
@@ -1000,9 +1012,17 @@ Symbol Table:
 [ G] IRM_TMOUT                        0008
 [ G] MALABEL                          7FA3
 [ G] MASK1K                           03FF
+[ G] MASK1KH                          0003
+[ G] MASK1KL                          00FF
 [ G] MASK2K                           07FF
+[ G] MASK2KH                          0007
+[ G] MASK2KL                          00FF
 [ G] MASK4K                           0FFF
+[ G] MASK4KH                          000F
+[ G] MASK4KL                          00FF
 [ G] MASK8K                           1FFF
+[ G] MASK8KH                          001F
+[ G] MASK8KL                          00FF
 [ G] MPISLOT                          7E12
 [ G] MPISLOT1                         7F16
 [ G] MR                               0000

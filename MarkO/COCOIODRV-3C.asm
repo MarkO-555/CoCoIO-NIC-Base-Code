@@ -306,14 +306,18 @@ DISPSTRX:
 
             rts
 
-GWLABEL:    fcc   "GATEWAY:     "
-            fcb   $0D,$0A,$00
-SNLABEL:    fcc   "SUBNET:      "
-            fcb   $0D,$0A,$00
-MALABEL:    fcc   "MAC ADDRESS: "
-            fcb   $0D,$0A,$00
-IPLABEL:    fcc   "IP ADDRESS:  "
-            fcb   $0D,$0A,$00
+GWLABEL:    fcb   $0D,$0A
+            fcc   "GATEWAY:     "
+            fcb   $00
+SNLABEL:    fcb   $0D,$0A
+            fcc   "SUBNET:      "
+            fcb   $00
+MALABEL:    fcb   $0D,$0A
+            fcc   "MAC ADDRESS: "
+            fcb   $00
+IPLABEL:    fcb   $0D,$0A
+            fcc   "IP ADDRESS:  "
+            fcb   $00
 
             include "COCOIOCFG.asm"
 

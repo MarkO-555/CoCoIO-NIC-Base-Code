@@ -357,9 +357,17 @@
                 
                                   ; TX and RX MASKS ARE IDENTICAL
      1FFF       MASK8K:     equ   $1FFF
+     001F       MASK8KH:    equ   $1F
+     00FF       MASK8KL:    equ   $FF
      0FFF       MASK4K:     equ   $0FFF
+     000F       MASK4KH:    equ   $0F
+     00FF       MASK4KL:    equ   $FF
      07FF       MASK2K:     equ   $07FF
+     0007       MASK2KH:    equ   $07
+     00FF       MASK2KL:    equ   $FF
      03FF       MASK1K:     equ   $03FF
+     0003       MASK1KH:    equ   $03
+     00FF       MASK1KL:    equ   $FF
                 
                 
                 
@@ -876,18 +884,22 @@
                 
 7F82 39                     rts
                 
-7F83 4741544557 GWLABEL:    fcc   "GATEWAY:     "
+7F83 0D0A       GWLABEL:    fcb   $0D,$0A
+7F85 4741544557             fcc   "GATEWAY:     "
      2020202020
-7F90 0D0A00                 fcb   $0D,$0A,$00
-7F93 5355424E45 SNLABEL:    fcc   "SUBNET:      "
+7F92 00                     fcb   $00
+7F93 0D0A       SNLABEL:    fcb   $0D,$0A
+7F95 5355424E45             fcc   "SUBNET:      "
      2020202020
-7FA0 0D0A00                 fcb   $0D,$0A,$00
-7FA3 4D41432041 MALABEL:    fcc   "MAC ADDRESS: "
+7FA2 00                     fcb   $00
+7FA3 0D0A       MALABEL:    fcb   $0D,$0A
+7FA5 4D41432041             fcc   "MAC ADDRESS: "
      4553533A20
-7FB0 0D0A00                 fcb   $0D,$0A,$00
-7FB3 4950204144 IPLABEL:    fcc   "IP ADDRESS:  "
+7FB2 00                     fcb   $00
+7FB3 0D0A       IPLABEL:    fcb   $0D,$0A
+7FB5 4950204144             fcc   "IP ADDRESS:  "
      53533A2020
-7FC0 0D0A00                 fcb   $0D,$0A,$00
+7FC2 00                     fcb   $00
                 
                             include "COCOIOCFG.asm"
                 ;*********************************************************************
@@ -1000,9 +1012,17 @@ Symbol Table:
 [ G] IRM_TMOUT 
 [ G] MALABEL   
 [ G] MASK1K    
+[ G] MASK1KH   
+[ G] MASK1KL   
 [ G] MASK2K    
+[ G] MASK2KH   
+[ G] MASK2KL   
 [ G] MASK4K    
+[ G] MASK4KH   
+[ G] MASK4KL   
 [ G] MASK8K    
+[ G] MASK8KH   
+[ G] MASK8KL   
 [ G] MPISLOT   
 [ G] MPISLOT1  
 [ G] MR        
