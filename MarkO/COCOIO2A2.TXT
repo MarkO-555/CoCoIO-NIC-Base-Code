@@ -350,6 +350,27 @@
      0734       S3_RCR:     equ   $0734       ; Socket 3 Retransmission Count Register
                 
                 
+                                  ;Transmit and Receive Buffers
+                
+     4000       TXBASE:     equ   $4000
+     6000       RXBASE:     equ   $6000
+                
+                                  ; TX and RX MASKS ARE IDENTICAL
+     1FFF       MASK8K:     equ   $1FFF
+     001F       MASK8KH:    equ   $1F
+     00FF       MASK8KL:    equ   $FF
+     0FFF       MASK4K:     equ   $0FFF
+     000F       MASK4KH:    equ   $0F
+     00FF       MASK4KL:    equ   $FF
+     07FF       MASK2K:     equ   $07FF
+     0007       MASK2KH:    equ   $07
+     00FF       MASK2KL:    equ   $FF
+     03FF       MASK1K:     equ   $03FF
+     0003       MASK1KH:    equ   $03
+     00FF       MASK1KL:    equ   $FF
+                
+                
+                
                 
                                   ; STATUS Equates
                 
@@ -526,9 +547,22 @@
      0008       BUFSIZE8K: equ    %00001000   ; 8KB Buffer ( RX/TX )
                 
                 
-                                        ; Interrupt Register
+                                        ; SOCKET Interrupt MASK Register ( S0 - S3 )
+     0010       IRM_SNDOK: equ    %00010000   ; Occured, SEND OK Interrupt
+     0008       IRM_TMOUT: equ    %00001000   ; Occured, TIMEOUT Interrupt
+     0004       IRM_RECV:  equ    %00000100   ; Occured, RECEIVED Interrupt
+     0002       IRM_DSCON: equ    %00000010   ; Occured, DISCONNECT Interrupt
+     0001       IRM_CNNCT: equ    %00000001   ; Occured, CONNECTED Interrupt
                 
                                         ; Socket Mode Register 2 ( S0 - S3 )
+     0040       S_MR2_MBBLK: equ   %01000000  ; Broadcast Blocking on MACRAW Mode
+     0020       S_MR2_MMBLK: equ   %00100000  ; Multicast Blocking on MACRAW Mode
+     0010       S_MR2_I6BLK: equ   %00010000  ; IPv6 Packet Blocking on MACRAW Mode
+                
+     0002       S_MR2_BRDB:  equ   %00000010  ; Broadcast Blocking on UDP Mode
+                                              ; or Force PSH on TCP Mode                                    
+     0001       S_MR2_UNIB:  equ   %00000001  ; Unicast Blocking on UDP Multicast Mode
+                
                 
                 
                                               ; End of Equates
@@ -706,7 +740,7 @@
                 ;*********************************************************************
                 
 7EBF            MYGATEWAY:                    ; My Gateway IP Address
-7EBF C0A8FDFE               fcb   192,168,253,254
+7EBF C0A8FEFE               fcb   192,168,254,254
                 
 7EC3            MYSUBNET:                     ; My Subnet Mask
 7EC3 FFFFFF00               fcb   255,255,255,0 
@@ -715,7 +749,7 @@
 7EC7 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
                 
 7ECD            MYIP:                         ; My Source IP Address
-7ECD C0A8FD0A               fcb   192,168,253,10
+7ECD C0A8FE0A               fcb   192,168,254,10
                                               ; End of My CoCoIO configuration
                 
                             end   RESET       ; End of driver
@@ -762,6 +796,23 @@ Symbol Table:
 [ G] IR_SOCK2  
 [ G] IR_SOCK3  
 [ G] IR_UNREACH
+[ G] IRM_CNNCT 
+[ G] IRM_DSCON 
+[ G] IRM_RECV  
+[ G] IRM_SNDOK 
+[ G] IRM_TMOUT 
+[ G] MASK1K    
+[ G] MASK1KH   
+[ G] MASK1KL   
+[ G] MASK2K    
+[ G] MASK2KH   
+[ G] MASK2KL   
+[ G] MASK4K    
+[ G] MASK4KH   
+[ G] MASK4KL   
+[ G] MASK8K    
+[ G] MASK8KH   
+[ G] MASK8KL   
 [ G] MPISLOT   
 [ G] MPISLOT1  
 [ G] MR        
@@ -834,6 +885,7 @@ Symbol Table:
 [ G] RSTDONE   
 [ G] RTR0      
 [ G] RTR1      
+[ G] RXBASE    
 [ G] S0_CR     
 [ G] S0_DHAR0  
 [ G] S0_DHAR1  
@@ -1028,6 +1080,11 @@ Symbol Table:
 [ G] S_CR_SEND 
 [ G] S_CR_SKEEP
 [ G] S_CR_SMAC 
+[ G] S_MR2_BRDB
+[ G] S_MR2_I6BL
+[ G] S_MR2_MBBL
+[ G] S_MR2_MMBL
+[ G] S_MR2_UNIB
 [ G] S_MR_CLSD 
 [ G] S_MR_IPRAW
 [ G] S_MR_MF   
@@ -1114,6 +1171,7 @@ Symbol Table:
 [ G] TCNTR0    
 [ G] TCNTR1    
 [ G] TMSR      
+[ G] TXBASE    
 [ G] UIPR0     
 [ G] UIPR1     
 [ G] UIPR2     

@@ -20,7 +20,7 @@
 ;*********************************************************************
 
 MYGATEWAY:                    ; My Gateway IP Address
-            fcb   192,168,253,254
+            fcb   192,168,254,254
 
 MYSUBNET:                     ; My Subnet Mask
             fcb   255,255,255,0 
@@ -29,5 +29,5 @@ MYMAC:                        ; My Source Hardware Address
             fcb   $00,$08,$DC,$00,$00,$01
 
 MYIP:                         ; My Source IP Address
-            fcb   192,168,253,10
+            fcb   192,168,254,10
                               ; End of My CoCoIO configuration

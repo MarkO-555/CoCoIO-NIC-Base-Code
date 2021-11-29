@@ -616,16 +616,16 @@
 7E09 7E7E65     SUBNET:     jmp   W5100_SUBNET      ;$7E09
 7E0C 7E7E7C     HARDWARE:   jmp   W5100_HARDWARE    ;$7E0C
 7E0F 7E7E93     IPADDR:     jmp   W5100_IPADDR      ;$7E0F
-7E12 7E7F92     MPISLOT:    jmp   MPISLOT1          ;$7E12
+7E12 7E7F16     MPISLOT:    jmp   MPISLOT1          ;$7E12
                 
 7E15 7E7EAA     DISPGW:     jmp   DISP_GATEWAY      ;$7E15
-7E18 7E7EDE     DISPSN:     jmp   DISP_SUBNET       ;$7E18
-7E1B 7E7F12     DISPHW:     jmp   DISP_HARDWARE     ;$7E1B
-7E1E 7E7F5E     DISPIPADD:  jmp   DISP_IPADDR       ;$7E1E
+7E18 7E7EC5     DISPSN:     jmp   DISP_SUBNET       ;$7E18
+7E1B 7E7EE0     DISPHW:     jmp   DISP_HARDWARE     ;$7E1B
+7E1E 7E7EFB     DISPIPADD:  jmp   DISP_IPADDR       ;$7E1E
                 
                 
 7E21            W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
-7E21 BD7F92                 jsr   MPISLOT1
+7E21 BD7F16                 jsr   MPISLOT1
                 ;            jsr   DALLY
 7E24 B6FF68                 lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
 7E27 8A80                   ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
@@ -640,7 +640,7 @@
 7E3D 39                     rts
                 
 7E3E            W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-7E3E BD7F92                 jsr   MPISLOT1
+7E3E BD7F16                 jsr   MPISLOT1
                 ;            jsr   DALLY
 7E41 BD7E4E                 jsr   W5100_GATEWAY   ; Bring up layer 3 default route
 7E44 BD7E65                 jsr   W5100_SUBNET    ; Bring up layer 3 network mask
@@ -654,7 +654,7 @@
 7E54 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E57 C604                   ldb   #4          ; Setup B for loop counting
-7E59 8E7FEA                 ldx   #MYGATEWAY  ; Get the location of the Gateway data 
+7E59 8E8000                 ldx   #MYGATEWAY  ; Get the location of the Gateway data 
 7E5C A680       GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
 7E5E B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -669,7 +669,7 @@
 7E6B F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E6E C604                   ldb   #4          ; Setup B for loop counting
-7E70 8E7FEE                 ldx   #MYSUBNET   ; Get the location of the Subnet data
+7E70 8E8004                 ldx   #MYSUBNET   ; Get the location of the Subnet data
 7E73 A680       SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
 7E75 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -684,7 +684,7 @@
 7E82 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E85 C606                   ldb   #6          ; Setup B for loop counting
-7E87 8E7FF2                 ldx   #MYMAC      ; Get the location of the MAC data
+7E87 8E8008                 ldx   #MYMAC      ; Get the location of the MAC data
 7E8A A680       SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
 7E8C B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -699,7 +699,7 @@
 7E99 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
 7E9C C604                   ldb   #4          ; Setup B for loop counting
-7E9E 8E7FF8                 ldx   #MYIP       ; Get the location of the IP data
+7E9E 8E800E                 ldx   #MYIP       ; Get the location of the IP data
 7EA1 A680       SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
 7EA3 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
@@ -709,197 +709,263 @@
 7EA9 39                     rts
                 
 7EAA            DISP_GATEWAY:
-7EAA CC0001                 ldd   #GAR0       ; W5100S Gateway Address Register 0
-7EAD B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7EB0 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-                ;            jsr   DALLY
-7EB3 BD7FB3                 jsr   BIN2HEX
-7EB6 BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7EB9 962B                   LDA   '+'
-7EBB AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7EBF BD7FB3                 jsr   BIN2HEX
-7EC2 BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7EC5 962B                   LDA   '+'
-7EC7 AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7ECB BD7FB3                 jsr   BIN2HEX
-7ECE BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7ED1 962B                   LDA   '+'
-7ED3 AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7ED7 BD7FB3                 jsr   BIN2HEX
-7EDA BD7FD8                 jsr   DISPB2H
+7EAA CC7F83                 ldd   #GWLABEL
+7EAD BD7F6F                 jsr   DISPSTR0    ; Display the Label
+7EB0 CC0001                 ldd   #GAR0       ; W5100S Gateway Address Register 0
+7EB3 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7EB6 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
                 
-7EDD 39                     rts
+7EB9 C604                   ldb   #4          ; Setup B for loop counting
+7EBB            DGWRLOOP:   
+7EBB BD7F37                 jsr   BIN2HEX
+7EBE BD7F60                 jsr   DISPB2H
+                ;            jsr   DALLY
+7EC1 5A                     decb              ; Decrement loop counter
+7EC2 26F7                   bne   DGWRLOOP    ; No, go back and do more
+                ;            jsr   DALLY
                 
-7EDE            DISP_SUBNET:
-7EDE CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-7EE1 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7EE4 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                ;            LDA   '+'
+                ;            JSR   [CHROUT]
+                ;            jsr   DALLY
                 
-7EE7 BD7FB3                 jsr   BIN2HEX
-7EEA BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7EED 962B                   LDA   '+'
-7EEF AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7EF3 BD7FB3                 jsr   BIN2HEX
-7EF6 BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7EF9 962B                   LDA   '+'
-7EFB AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7EFF BD7FB3                 jsr   BIN2HEX
-7F02 BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7F05 962B                   LDA   '+'
-7F07 AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7F0B BD7FB3                 jsr   BIN2HEX
-7F0E BD7FD8                 jsr   DISPB2H
+7EC4 39                     rts
                 
-7F11 39                     rts
+7EC5            DISP_SUBNET:
+7EC5 CC7F91                 ldd   #SNLABEL
+7EC8 BD7F6F                 jsr   DISPSTR0    ; Display the Label            
+7ECB CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+7ECE B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7ED1 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 
-7F12            DISP_HARDWARE:
-7F12 CC0009                 ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
-7F15 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7F18 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7ED4 C604                   ldb   #4          ; Setup B for loop counting
+7ED6            DSUBRLOOP:   
+7ED6 BD7F37                 jsr   BIN2HEX
+7ED9 BD7F60                 jsr   DISPB2H
+                ;            jsr   DALLY
+7EDC 5A                     decb              ; Decrement loop counter
+7EDD 26F7                   bne   DSUBRLOOP   ; No, go back and do more
+                ;            jsr   DALLY
                 
-7F1B BD7FB3                 jsr   BIN2HEX
-7F1E BD7FD8                 jsr   DISPB2H
+                ;            LDA   '+'
+                ;            JSR   [CHROUT]
                 ;            jsr   DALLY
-7F21 962B                   LDA   '+'
-7F23 AD9FA002               JSR   [CHROUT]
+                
+7EDF 39                     rts
+                
+7EE0            DISP_HARDWARE:
+7EE0 CC7F9F                 ldd   #MALABEL
+7EE3 BD7F6F                 jsr   DISPSTR0    ; Display the Label
+7EE6 CC0009                 ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
+7EE9 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7EEC F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                
+7EEF C606                   ldb   #6          ; Setup B for loop counting
+7EF1            DSHARLOOP:   
+7EF1 BD7F37                 jsr   BIN2HEX
+7EF4 BD7F60                 jsr   DISPB2H
                 ;            jsr   DALLY
-7F27 BD7FB3                 jsr   BIN2HEX
-7F2A BD7FD8                 jsr   DISPB2H
+7EF7 5A                     decb              ; Decrement loop counter
+7EF8 26F7                   bne   DSHARLOOP   ; No, go back and do more
                 ;            jsr   DALLY
-7F2D 962B                   LDA   '+'
-7F2F AD9FA002               JSR   [CHROUT]
+                
+                ;            LDA   '+'
+                ;            JSR   [CHROUT]
                 ;            jsr   DALLY
-7F33 BD7FB3                 jsr   BIN2HEX
-7F36 BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7F39 962B                   LDA   '+'
-7F3B AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7F3F BD7FB3                 jsr   BIN2HEX
-7F42 BD7FD8                 jsr   DISPB2H
-7F45 962B                   LDA   '+'
-7F47 AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7F4B BD7FB3                 jsr   BIN2HEX
-7F4E BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7F51 962B                   LDA   '+'
-7F53 AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7F57 BD7FB3                 jsr   BIN2HEX
-7F5A BD7FD8                 jsr   DISPB2H
                 
                 
-7F5D 39                     rts
                 
-7F5E            DISP_IPADDR:
-7F5E CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
-7F61 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-7F64 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+7EFA 39                     rts
                 
-7F67 BD7FB3                 jsr   BIN2HEX
-7F6A BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7F6D 962B                   LDA   '+'
-7F6F AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7F73 BD7FB3                 jsr   BIN2HEX
-7F76 BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7F79 962B                   LDA   '+'
-7F7B AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7F7F BD7FB3                 jsr   BIN2HEX
-7F82 BD7FD8                 jsr   DISPB2H
-                ;            jsr   DALLY
-7F85 962B                   LDA   '+'
-7F87 AD9FA002               JSR   [CHROUT]
-                ;            jsr   DALLY
-7F8B BD7FB3                 jsr   BIN2HEX
-7F8E BD7FD8                 jsr   DISPB2H
+7EFB            DISP_IPADDR:
+7EFB CC7FAD                 ldd   #IPLABEL
+7EFE BD7F6F                 jsr   DISPSTR0    ; Display the Label
+7F01 CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
+7F04 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7F07 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 
-7F91 39                     rts
+7F0A C604                   ldb   #4          ; Setup B for loop counting
+7F0C            DSIPRLOOP:   
+7F0C BD7F37                 jsr   BIN2HEX
+7F0F BD7F60                 jsr   DISPB2H
+                ;            jsr   DALLY
+7F12 5A                     decb              ; Decrement loop counter
+7F13 26F7                   bne   DSIPRLOOP   ; No, go back and do more
+                ;            jsr   DALLY
+                
+                ;            LDA   '+'
+                ;            JSR   [CHROUT]
+                ;            jsr   DALLY
+                
+7F15 39                     rts
                 
                 
                 
                 
-7F92            MPISLOT1:                     ; Configure Multipack SCS to slot 1
-7F92 B6FF7F                 lda   $FF7F       ; Read the MPI slot control
-7F95 84F0                   anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
-7F97 B7FF7F                 sta   $FF7F       ; Write the updated SCS
-7F9A 39                     rts
+7F16            MPISLOT1:                     ; Configure Multipack SCS to slot 1
+7F16 B6FF7F                 lda   $FF7F       ; Read the MPI slot control
+7F19 84F0                   anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+7F1B B7FF7F                 sta   $FF7F       ; Write the updated SCS
+7F1E 39                     rts
                 
-7F9B B6FF02     DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
-7F9E B6FF03     DILLY1:     lda   PIA0BC      ; load up the current flags
-7FA1 2AFB                   bpl   DILLY1      ; if bit 7 not set, keep checking flags
-7FA3 B6FF02                 lda   PIA0BD      ; clear the interrupt that just happened
-7FA6 39                     rts
+7F1F B6FF02     DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
+7F22 B6FF03     DILLY1:     lda   PIA0BC      ; load up the current flags
+7F25 2AFB                   bpl   DILLY1      ; if bit 7 not set, keep checking flags
+7F27 B6FF02                 lda   PIA0BD      ; clear the interrupt that just happened
+7F2A 39                     rts
                 
-7FA7 3410       DALLY:      pshs  X
-7FA9 8E1000                 ldx   #$1000      ; A maximum delay loop 
-7FAC 301F       DALLY1:     leax  -1,X        ; Decrement X
-7FAE 26FC                   bne   DALLY1      ; if X>0 not done yet
-7FB0 3510                   puls  X
-7FB2 39                     rts
-                
-                
+7F2B 3410       DALLY:      pshs  X
+7F2D 8E1000                 ldx   #$1000      ; A maximum delay loop 
+7F30 301F       DALLY1:     leax  -1,X        ; Decrement X
+7F32 26FC                   bne   DALLY1      ; if X>0 not done yet
+7F34 3510                   puls  X
+7F36 39                     rts
                 
                 
-7FB3            BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
                 
-7FB3 B6FF6B                 LDA   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
+                
+7F37            BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
+                
+7F37 3406                   pshs  D           ; Save D ( A&B ) for later
+                
+7F39 B6FF6B                 lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
                             ;
                             ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
                             ;
-7FB6 1F89                   TFR   A,B         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
-7FB8 44                     LSRA
-7FB9 44                     LSRA
-7FBA 44                     LSRA
-7FBB 44                     LSRA
-7FBC 8109                   CMPA  #9
-7FBE 2302                   BLS   AD30        ; BRANCH IF HIGH DIGIT IS DECIMAL
-7FC0 8B07                   ADDA  #7          ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
-                                              ; CHARACTER WILL BE IN 'A'..'F'
-7FC2 8B30       AD30:       ADDA  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-7FC4 B77FD6                 STA HEX1VAL       ; STORE ASCII DATA
+7F3C 1F89                   tfr   A,B         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
+7F3E 44                     lsra
+7F3F 44                     lsra
+7F40 44                     lsra
+7F41 44                     lsra
+7F42 8109                   cmpa  #9          ; BRANCH IF HIGH DIGIT IS DECIMAL
+7F44 2302                   bls   AD30        ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
+7F46 8B07                   adda  #7          ; CHARACTER WILL BE IN 'A'..'F'
+7F48 8B30       AD30:       adda  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+7F4A B77F5E                 sta HEX1VAL       ; STORE ASCII DATA
                 
                             ;
                             ; CONVERT LESS SIGNIFICANT DIGIT TO ASCII
                             ; 
-7FC7 C40F                   ANDB  #$0F        ; MASK OFF LOW DIGIT    
-7FC9 C109                   CMPB  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
-7FCB 2302                   BLS   AD30LD      ; ELSE ADD 7 SO AFTER ADDING '0' THE
-7FCD CB07                   ADDB  #7          ; CHARACTER WILL BE IN 'A'..'F'
-7FCF CB30       AD30LD:     ADDB  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-7FD1 F77FD7                 STB HEX2VAL       ; STORE ASCII DATA
+7F4D C40F                   andb  #$0F        ; MASK OFF LOW DIGIT    
+7F4F C109                   cmpb  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
+7F51 2302                   bls   AD30LD      ; ELSE ADD 7 SO AFTER ADDING '0' THE
+7F53 CB07                   addb  #7          ; CHARACTER WILL BE IN 'A'..'F'
+7F55 CB30       AD30LD:     addb  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+7F57 F77F5F                 stb   HEX2VAL     ; STORE ASCII DATA
                 
-7FD4 39                     RTS  
+7F5A 3506                   puls  D           ; Restore D ( A&B )
                 
-7FD5 00         BINVAL:     fcb   $00
-7FD6 00         HEX1VAL:    fcb   $00
-7FD7 00         HEX2VAL:    fcb   $00
+7F5C 39                     rts  
                 
-7FD8 B67FD6     DISPB2H:    LDA   HEX1VAL
-7FDB AD9FA002               JSR   [CHROUT]
-7FDF B67FD7                 LDA   HEX2VAL
-7FE2 AD9FA002               JSR   [CHROUT]
-7FE6 39                     RTS
+7F5D 00         BINVAL:     fcb   $00
+7F5E 00         HEX1VAL:    fcb   $00
+7F5F 00         HEX2VAL:    fcb   $00
                 
-7FE7 B67FD6     DISPSTR0:   LDA   HEX1VAL
+7F60 B67F5E     DISPB2H:    lda   HEX1VAL
+7F63 AD9FA002               jsr   [CHROUT]
+7F67 B67F5F                 lda   HEX2VAL
+7F6A AD9FA002               jsr   [CHROUT]
+7F6E 39                     rts
                 
+7F6F            DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
+7F6F 3436                   pshs  D,X,Y       ; Save D ( A&B ), X & Y for later
+                
+7F71 1F01                   tfr   D,X         ; Copy D to X, for Head of StringZ
+7F73 C600                   ldb   #0          ; Setup B for MAX loop, 256
+7F75 A680       DISPSTRLP:  lda   ,X+         ; Load A with the byte of the String
+7F77 2707                   beq   DISPSTRX    ; End of String Reached   
+7F79 AD9FA002               jsr   [CHROUT]    ; Output Character on Screen
+7F7D 5A                     decb              ; Decrement loop counter
+7F7E 26F5                   bne   DISPSTRLP   ; No, go back and do more
+                
+7F80            DISPSTRX:
+7F80 3536                   puls  D,X,Y       ; Restore D ( A&B ), X & Y
+                
+7F82 39                     rts
+                
+7F83 4741544557 GWLABEL:    fcc   "GATEWAY:     "
+     2020202020
+                ;            fcb   $0D,$0A,$00
+7F90 00                     fcb   $00
+7F91 5355424E45 SNLABEL:    fcc   "SUBNET:      "
+     2020202020
+                ;            fcb   $0D,$0A,$00
+7F9E 00                     fcb   $00
+7F9F 4D41432041 MALABEL:    fcc   "MAC ADDRESS: "
+     4553533A20
+                ;            fcb   $0D,$0A,$00
+7FAC 00                     fcb   $00
+7FAD 4950204144 IPLABEL:    fcc   "IP ADDRESS:  "
+     53533A2020
+                ;            fcb   $0D,$0A,$00
+7FBA 00                     fcb   $00
+                
+7FBB            BUFRSOC0:   ; This sets up Socket 0, with 8KB RX and TX Buffers
+7FBB CC001A                 ldd   #RMSR       ; RX Memory Size Register
+7FBE B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7FC1 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                ;            jsr   DALLY
+                
+7FC4 8603                   lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+7FC6 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+                ;            jsr   DALLY
+                
+                ;            ldd   #TMSR       ; TX Memory Size Register
+                ;            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+                ;            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                ;            jsr   DALLY
+                
+7FC9 8603                   lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+7FCB B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+                ;            jsr   DALLY
+7FCE 39                     rts
+                
+                
+7FCF            INITSOC0:
+                            ; The Local Port.         
+7FCF CC0404                 ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
+7FD2 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7FD5 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                ;            jsr   DALLY
+                
+7FD8 CCC000                 ldd   #$C000      ; Port $C000
+7FDB B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7FDE F7FF6B                 stb   CIO0DATA    ; Store it to W5100S
+                ;            jsr   DALLY
+                
+                
+                
+7FE1 CC0400                 ldd   #S0_MR      ; Socket 0 Mode Register
+7FE4 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+7FE7 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                ;            jsr   DALLY
+                
+7FEA 8601                   lda   #S_CR_OPEN  ; Open Command
+7FEC B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+                ;            jsr   DALLY
+7FEF 39                     rts
+                
+                
+                
+                
+                
+                ;     S0_MR
+                
+                
+                
+                
+                
+7FF0            FORGNIP:                      ; Foreign IP Address
+7FF0 C0A8FE64               fcb   192,168,254,100
+                
+7FF4            FORGNPORT:                    ; Foreign Port
+7FF4 4E20                   fdb   20000       
+                
+7FF6            FORGNC:                       ; My Source Hardware Address
+7FF6 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
+                
+7FFC            FORGNP:                        ; My Source IP Address
+7FFC C0A8FE0A               fcb   192,168,254,10
                 
                 
                             include "COCOIOCFG.asm"
@@ -924,17 +990,17 @@
                 ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
                 ;*********************************************************************
                 
-7FEA            MYGATEWAY:                    ; My Gateway IP Address
-7FEA C0A8FEFE               fcb   192,168,254,254
+8000            MYGATEWAY:                    ; My Gateway IP Address
+8000 C0A8FEFE               fcb   192,168,254,254
                 
-7FEE            MYSUBNET:                     ; My Subnet Mask
-7FEE FFFFFF00               fcb   255,255,255,0 
+8004            MYSUBNET:                     ; My Subnet Mask
+8004 FFFFFF00               fcb   255,255,255,0 
                 
-7FF2            MYMAC:                        ; My Source Hardware Address
-7FF2 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
+8008            MYMAC:                        ; My Source Hardware Address
+8008 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
                 
-7FF8            MYIP:                         ; My Source IP Address
-7FF8 C0A8FE0A               fcb   192,168,254,10
+800E            MYIP:                         ; My Source IP Address
+800E C0A8FE0A               fcb   192,168,254,10
                                               ; End of My CoCoIO configuration
                 
                             end   RESET       ; End of driver
@@ -945,6 +1011,7 @@ Symbol Table:
 [ G] AUTO_INCRE
 [ G] BIN2HEX   
 [ G] BINVAL    
+[ G] BUFRSOC0  
 [ G] BUFSIZE0K 
 [ G] BUFSIZE1K 
 [ G] BUFSIZE2K 
@@ -961,6 +1028,7 @@ Symbol Table:
 [ G] CONFIG    
 [ G] DALLY     
 [ G] DALLY1    
+[ G] DGWRLOOP  
 [ G] DILLY     
 [ G] DILLY1    
 [ G] DISP_GATEW
@@ -973,11 +1041,21 @@ Symbol Table:
 [ G] DISPIPADD 
 [ G] DISPSN    
 [ G] DISPSTR0  
+[ G] DISPSTRLP 
+[ G] DISPSTRX  
+[ G] DSHARLOOP 
+[ G] DSIPRLOOP 
+[ G] DSUBRLOOP 
+[ G] FORGNC    
+[ G] FORGNIP   
+[ G] FORGNP    
+[ G] FORGNPORT 
 [ G] GAR0      
 [ G] GAR1      
 [ G] GAR2      
 [ G] GAR3      
 [ G] GATEWAY   
+[ G] GWLABEL   
 [ G] GWRLOOP   
 [ G] HARDWARE  
 [ G] HEX1VAL   
@@ -985,9 +1063,11 @@ Symbol Table:
 [ G] IMR       
 [ G] IMR2      
 [ G] INDIRECT  
+[ G] INITSOC0  
 [ G] INTPTMR0  
 [ G] INTPTMR1  
 [ G] IPADDR    
+[ G] IPLABEL   
 [ G] IR        
 [ G] IR2       
 [ G] IR2_WOL   
@@ -1003,6 +1083,7 @@ Symbol Table:
 [ G] IRM_RECV  
 [ G] IRM_SNDOK 
 [ G] IRM_TMOUT 
+[ G] MALABEL   
 [ G] MASK1K    
 [ G] MASK1KH   
 [ G] MASK1KL   
@@ -1351,6 +1432,7 @@ Symbol Table:
 [ G] SLRCR     
 [ G] SLRTR0    
 [ G] SLRTR1    
+[ G] SNLABEL   
 [ G] SOCK_CLOS 
 [ G] SOCK_ESTB 
 [ G] SOCK_FIWA 

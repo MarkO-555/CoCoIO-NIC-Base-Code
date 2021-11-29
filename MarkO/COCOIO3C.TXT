@@ -924,7 +924,7 @@
                       (    COCOIOCFG.asm):00020         ;*********************************************************************
                       (    COCOIOCFG.asm):00021         
 7FC3                  (    COCOIOCFG.asm):00022         MYGATEWAY:                    ; My Gateway IP Address
-7FC3 C0A8FDFE         (    COCOIOCFG.asm):00023                     fcb   192,168,253,254
+7FC3 C0A8FEFE         (    COCOIOCFG.asm):00023                     fcb   192,168,254,254
                       (    COCOIOCFG.asm):00024         
 7FC7                  (    COCOIOCFG.asm):00025         MYSUBNET:                     ; My Subnet Mask
 7FC7 FFFFFF00         (    COCOIOCFG.asm):00026                     fcb   255,255,255,0 
@@ -933,7 +933,7 @@
 7FCB 0008DC000001     (    COCOIOCFG.asm):00029                     fcb   $00,$08,$DC,$00,$00,$01
                       (    COCOIOCFG.asm):00030         
 7FD1                  (    COCOIOCFG.asm):00031         MYIP:                         ; My Source IP Address
-7FD1 C0A8FD0A         (    COCOIOCFG.asm):00032                     fcb   192,168,253,10
+7FD1 C0A8FE0A         (    COCOIOCFG.asm):00032                     fcb   192,168,254,10
                       (    COCOIOCFG.asm):00033                                       ; End of My CoCoIO configuration
                       ( COCOIODRV-3C.asm):00323         
                       ( COCOIODRV-3C.asm):00324                     end   RESET       ; End of driver

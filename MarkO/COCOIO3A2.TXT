@@ -357,9 +357,17 @@
                 
                                   ; TX and RX MASKS ARE IDENTICAL
      1FFF       MASK8K:     equ   $1FFF
+     001F       MASK8KH:    equ   $1F
+     00FF       MASK8KL:    equ   $FF
      0FFF       MASK4K:     equ   $0FFF
+     000F       MASK4KH:    equ   $0F
+     00FF       MASK4KL:    equ   $FF
      07FF       MASK2K:     equ   $07FF
+     0007       MASK2KH:    equ   $07
+     00FF       MASK2KL:    equ   $FF
      03FF       MASK1K:     equ   $03FF
+     0003       MASK1KH:    equ   $03
+     00FF       MASK1KL:    equ   $FF
                 
                 
                 
@@ -819,7 +827,7 @@
                 ;*********************************************************************
                 
 7F4C            MYGATEWAY:                    ; My Gateway IP Address
-7F4C C0A8FDFE               fcb   192,168,253,254
+7F4C C0A8FEFE               fcb   192,168,254,254
                 
 7F50            MYSUBNET:                     ; My Subnet Mask
 7F50 FFFFFF00               fcb   255,255,255,0 
@@ -828,7 +836,7 @@
 7F54 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
                 
 7F5A            MYIP:                         ; My Source IP Address
-7F5A C0A8FD0A               fcb   192,168,253,10
+7F5A C0A8FE0A               fcb   192,168,254,10
                                               ; End of My CoCoIO configuration
                 
                             end   RESET       ; End of driver
@@ -897,9 +905,17 @@ Symbol Table:
 [ G] IRM_SNDOK 
 [ G] IRM_TMOUT 
 [ G] MASK1K    
+[ G] MASK1KH   
+[ G] MASK1KL   
 [ G] MASK2K    
+[ G] MASK2KH   
+[ G] MASK2KL   
 [ G] MASK4K    
+[ G] MASK4KH   
+[ G] MASK4KL   
 [ G] MASK8K    
+[ G] MASK8KH   
+[ G] MASK8KL   
 [ G] MPISLOT   
 [ G] MPISLOT1  
 [ G] MR        

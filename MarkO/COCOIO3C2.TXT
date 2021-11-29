@@ -924,7 +924,7 @@
                 ;*********************************************************************
                 
 7FC3            MYGATEWAY:                    ; My Gateway IP Address
-7FC3 C0A8FDFE               fcb   192,168,253,254
+7FC3 C0A8FEFE               fcb   192,168,254,254
                 
 7FC7            MYSUBNET:                     ; My Subnet Mask
 7FC7 FFFFFF00               fcb   255,255,255,0 
@@ -933,7 +933,7 @@
 7FCB 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
                 
 7FD1            MYIP:                         ; My Source IP Address
-7FD1 C0A8FD0A               fcb   192,168,253,10
+7FD1 C0A8FE0A               fcb   192,168,254,10
                                               ; End of My CoCoIO configuration
                 
                             end   RESET       ; End of driver

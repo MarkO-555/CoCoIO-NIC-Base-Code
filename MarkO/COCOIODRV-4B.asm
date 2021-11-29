@@ -1,5 +1,5 @@
 ;*********************************************************************
-;* Title: COCOIODRV-2A.asm
+;* Title: COCOIODRV-4B.asm
 ;*********************************************************************
 ;* Author: R. Allen Murphey, & MarkO
 ;*
@@ -34,16 +34,17 @@ CHROUT:     equ   $A002
             org   $7E00
 RESETP:     jmp   W5100_RST         ;$7E00
 CONFIG:     jmp   W5100_CFG         ;$7E03
-GATEWAY:    jmp   W5100_GATEWAY     ;$7E06
-SUBNET:     jmp   W5100_SUBNET      ;$7E09
-HARDWARE:   jmp   W5100_HARDWARE    ;$7E0C
-IPADDR:     jmp   W5100_IPADDR      ;$7E0F
-MPISLOT:    jmp   MPISLOT1          ;$7E12
+SETREG:     jmp   W5100_SETREG      ;$7E06
+GATEWAY:    jmp   W5100_GATEWAY     ;$7Exx
+SUBNET:     jmp   W5100_SUBNET      ;$7Exx
+HARDWARE:   jmp   W5100_HARDWARE    ;$7Exx
+IPADDR:     jmp   W5100_IPADDR      ;$7Exx
+MPISLOT:    jmp   MPISLOT1          ;$7Exx
 
-DISPGW:     jmp   DISP_GATEWAY      ;$7E15
-DISPSN:     jmp   DISP_SUBNET       ;$7E18
-DISPHW:     jmp   DISP_HARDWARE     ;$7E1B
-DISPIPADD:  jmp   DISP_IPADDR       ;$7E1E
+DISPGW:     jmp   DISP_GATEWAY      ;$7Exx
+DISPSN:     jmp   DISP_SUBNET       ;$7Exx
+DISPHW:     jmp   DISP_HARDWARE     ;$7Exx
+DISPIPADD:  jmp   DISP_IPADDR       ;$7Exx
 
 
 W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
@@ -64,70 +65,54 @@ SETMODE:    ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPP
 W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
             jsr   MPISLOT1
 ;            jsr   DALLY
-            jsr   W5100_GATEWAY   ; Bring up layer 3 default route
-            jsr   W5100_SUBNET    ; Bring up layer 3 network mask
-            jsr   W5100_HARDWARE  ; Bring up layer 2 address
-            jsr   W5100_IPADDR    ; Bring up layer 3 address
+                                  ; Bring up layer 3 default route
+            ldd   #GAR0           ; W5100S Gateway Address Register 0
+            ldx   #MYGATEWAY      ; Get the location of the Gateway data 
+            ldy   #4              ; Setup for loop counting
+            jsr   W5100_SETREG
+
+                                  ; Bring up layer 3 network mask
+            ldd   #SUBR0          ; W5100S Subnet Mask Address Register 0
+            ldx   #MYSUBNET       ; Get the location of the Subnet data
+            ldy   #4              ; Setup for loop counting
+            jsr   W5100_SETREG
+
+                                  ; Bring up layer 2 address
+            ldd   #SHAR0          ; W5100S Source Hardware Address Register 0
+            ldx   #MYMAC          ; Get the location of the MAC data
+            ldy   #6              ; Setup for loop counting
+            jsr   W5100_SETREG
+
+                                  ; Bring up layer 3 address
+            ldd   #SIPR0          ; W5100S Source IP Register 0
+            ldx   #MYIP           ; Get the location of the IP data
+            ldy   #4              ; Setup for loop counting
+            jsr   W5100_SETREG
             rts
+
+W5100_SETREG:                 ; Configure the Gateway address
+            sta   CIO0ADDR    ; CoCoIO Address Register MSB
+            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+;            jsr   DALLY
+            tfr   Y,D         ; Setup B for loop counting
+SETLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
+            sta   CIO0DATA    ; Store it to W5100S
+;            jsr   DALLY
+            decb              ; Decrement loop counter
+            bne   SETLOOP     ; No, go back and do more
+;            jsr   DALLY
+            rts
+
+
 
 W5100_GATEWAY:                ; Configure the Gateway address
-            ldd   #GAR0       ; W5100S Gateway Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-;            jsr   DALLY
-            ldb   #4          ; Setup B for loop counting
-            ldx   #MYGATEWAY  ; Get the location of the Gateway data 
-GWRLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
-            sta   CIO0DATA    ; Store it to W5100S
-;            jsr   DALLY
-            decb              ; Decrement loop counter
-            bne   GWRLOOP     ; No, go back and do more
-;            jsr   DALLY
-            rts
 
 W5100_SUBNET:                 ; Next the Subnet Mask
-            ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-;            jsr   DALLY
-            ldb   #4          ; Setup B for loop counting
-            ldx   #MYSUBNET   ; Get the location of the Subnet data
-SUBRLOOP:   lda   ,X+         ; Load A with the next byte of Subnet
-            sta   CIO0DATA    ; Store it to W5100S
-;            jsr   DALLY
-            decb              ; Decrement loop counter
-            bne   SUBRLOOP    ; No, go back and do more
-;            jsr   DALLY
-            rts
 
 W5100_HARDWARE:               ; Next the Source Hardware Address
-            ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-;            jsr   DALLY
-            ldb   #6          ; Setup B for loop counting
-            ldx   #MYMAC      ; Get the location of the MAC data
-SHARLOOP:   lda   ,X+         ; Load A with the next byte of MAC data
-            sta   CIO0DATA    ; Store it to W5100S
-;            jsr   DALLY
-            decb              ; Decrement loop counter
-            bne   SHARLOOP    ; No, go back and do more
-;            jsr   DALLY
-            rts
 
 W5100_IPADDR:                 ; Next the Source IP Address
-            ldd   #SIPR0      ; W5100S Source IP Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-;            jsr   DALLY
-            ldb   #4          ; Setup B for loop counting
-            ldx   #MYIP       ; Get the location of the IP data
-SIPRLOOP:   lda   ,X+         ; Load A with the next byte of IP data
-            sta   CIO0DATA    ; Store it to W5100S
-;            jsr   DALLY
-            decb              ; Decrement loop counter
-            bne   SIPRLOOP    ; No, go back and do more
-;            jsr   DALLY
+
             rts
 
 DISP_GATEWAY:
