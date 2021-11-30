@@ -1,0 +1,49 @@
+<HTML>
+<HEAD>
+<TITLE>Winsock Adaptations of Example Code</TITLE>
+</HEAD>
+<BODY>
+
+The code below demonstrates the minimal number of changes required to
+make the examples from the text execute under Winsock.  Further
+changes can be made to make this code more Winsock complaint (e.g.,
+test socket() failure return value as SOCKET_ERROR rather than < 0).
+
+WinSock Example code: 
+<UL>
+<LI><A HREF="code/WScode.tar.gz">Tarred and gzipped archive</A>
+<LI><A HREF="code/WScode.zip">Winzip archive</A>
+<LI>Individual Files
+<UL>
+<LI><A HREF="code/TCPEchoClientWS.c">TCPEchoClientWS.c</A>
+<LI><A HREF="code/DieWithErrorWS.c">DieWithErrorWS.c</A>
+<LI><A HREF="code/TCPEchoServerWS.c">TCPEchoServerWS.c</A>
+<LI><A HREF="code/HandleTCPClientWS.c">HandleTCPClientWS.c</A>
+<LI><A HREF="code/UDPEchoClientWS.c">UDPEchoClientWS.c</A>
+<LI><A HREF="code/UDPEchoServerWS.c">UDPEchoServerWS.c</A>
+<LI>SigAction.c - Not Available (Signals are not available under Windows)</A>
+<LI>UDPEchoServer-SIGIO.c - Not Available (Signals are not available under Windows)</A>
+<LI>UDPEchoClient-Timeout.c - Not Available (Signals are not available under Windows)</A>
+<LI>TCPEchoServer-Fork.c - Not Available (Win32 CreateProcess requires a separate executable)</A>
+<LI><A HREF="code/TCPEchoServerWS.h">TCPEchoServerWS.h</A>
+<LI><A HREF="code/CreateTCPServerSocketWS.c">CreateTCPServerSocketWS.c</A>
+<LI><A HREF="code/AcceptTCPConnectionWS.c">AcceptTCPConnectionWS.c</A>
+<LI><A HREF="code/TCPEchoServer-ThreadWS.c">TCPEchoServer-ThreadWS.c</A>
+<LI>TCPEchoServer-ForkN.c - Not Available (Win32 CreateProcess requires a separate executable)</A>
+<LI><A HREF="code/TCPEchoServer-SelectWS.c">TCPEchoServer-SelectWS.c</A>
+<LI><A HREF="code/BroadcastSenderWS.c">BroadcastSenderWS.c</A>
+<LI><A HREF="code/BroadcastReceiverWS.c">BroadcastReceiverWS.c</A>
+<LI><A HREF="code/BroadcastReceiverNonblockingWS.c">BroadcastReceiverNonblockingWS.c</A> (Added to show nonblocking WinSock socket since SIGIO example does not work)
+<LI><A HREF="code/MulticastSenderWS.c">MulticastSenderWS.c</A>
+<LI><A HREF="code/MulticastReceiverWS.c">MulticastReceiverWS.c</A>
+<LI><A HREF="code/ResolveNameWS.c">ResolveNameWS.c</A>
+<LI><A HREF="code/ResolveServiceWS.c">ResolveServiceWS.c</A>
+</UL>
+<LI>To compile:
+<UL>
+  <LI> Make sure you add wsock32.lib to library module list </LI>
+</UL>
+</UL>
+
+</BODY>
+</HTML>

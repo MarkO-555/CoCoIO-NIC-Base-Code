@@ -1,0 +1,24 @@
+!define BLANK ""
+C:\DATA\C\Open_Watcom\20151229\Socket_Server_02.obj : C:\DATA\C\Open_Watcom\&
+20151229\Socket_Server_02.c .AUTODEPEND
+ @C:
+ cd C:\DATA\C\Open_Watcom\20151229
+ *wcc386 Socket_Server_02.c -i="C:\DEV\WATCOM19/h;C:\DEV\WATCOM19/h/nt" -w4 &
+-e25 -zq -od -d2 -6r -bt=nt -fo=.obj -mf
+
+C:\DATA\C\Open_Watcom\20151229\Socket_Server_02.exe : C:\DATA\C\Open_Watcom\&
+20151229\Socket_Server_02.obj .AUTODEPEND
+ @C:
+ cd C:\DATA\C\Open_Watcom\20151229
+ @%write Socket_Server_02.lk1 FIL Socket_Server_02.obj
+ @%append Socket_Server_02.lk1 
+!ifneq BLANK ""
+ *wlib -q -n -b Socket_Server_02.imp 
+ @%append Socket_Server_02.lk1 LIBR Socket_Server_02.imp
+!endif
+!ifneq BLANK ""
+ @%append Socket_Server_02.lk1 
+!endif
+ *wlink name Socket_Server_02 d all sys nt op m op maxe=25 op q op symf @Soc&
+ket_Server_02.lk1
+

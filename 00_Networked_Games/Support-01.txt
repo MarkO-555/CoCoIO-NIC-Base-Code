@@ -1,0 +1,25 @@
+
+
+
+wget -qO- https://dl.packager.io/srv/opf/openproject-ce/key | sudo apt-key add -
+
+sudo apt-get install apt-transport-https
+
+sudo add-apt-repository universe
+
+sudo wget -O /etc/apt/sources.list.d/openproject-ce.list \
+  https://dl.packager.io/srv/opf/openproject-ce/stable/8/installer/ubuntu/18.04.repo
+
+apt-get update
+apt-get install openproject
+
+
+
+
+
+
+
+
+
+
+

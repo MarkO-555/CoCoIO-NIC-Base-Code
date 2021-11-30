@@ -35,16 +35,16 @@ CHROUT:     equ   $A002
 RESETP:     jmp   W5100_RST         ;$7E00
 CONFIG:     jmp   W5100_CFG         ;$7E03
 SETREG:     jmp   W5100_SETREG      ;$7E06
-GATEWAY:    jmp   W5100_GATEWAY     ;$7Exx
-SUBNET:     jmp   W5100_SUBNET      ;$7Exx
-HARDWARE:   jmp   W5100_HARDWARE    ;$7Exx
-IPADDR:     jmp   W5100_IPADDR      ;$7Exx
-MPISLOT:    jmp   MPISLOT1          ;$7Exx
+GATEWAY:    jmp   W5100_GATEWAY     ;$7E09
+SUBNET:     jmp   W5100_SUBNET      ;$7E0C
+HARDWARE:   jmp   W5100_HARDWARE    ;$7E0F
+IPADDR:     jmp   W5100_IPADDR      ;$7E12
+MPISLOT:    jmp   MPISLOT1          ;$7E15
 
-DISPGW:     jmp   DISP_GATEWAY      ;$7Exx
-DISPSN:     jmp   DISP_SUBNET       ;$7Exx
-DISPHW:     jmp   DISP_HARDWARE     ;$7Exx
-DISPIPADD:  jmp   DISP_IPADDR       ;$7Exx
+DISPGW:     jmp   DISP_GATEWAY      ;$7E18
+DISPSN:     jmp   DISP_SUBNET       ;$7E1B
+DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
+DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
 
 
 W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
@@ -90,12 +90,12 @@ W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
             jsr   W5100_SETREG
             rts
 
-W5100_SETREG:                 ; Configure the Gateway address
+W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Length, X for Data
             sta   CIO0ADDR    ; CoCoIO Address Register MSB
             stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
 ;            jsr   DALLY
-            tfr   Y,D         ; Setup B for loop counting
-SETLOOP:    lda   ,X+         ; Load A with the next byte of Gateway
+            tfr   y,d         ; Setup B for loop counting
+SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
             sta   CIO0DATA    ; Store it to W5100S
 ;            jsr   DALLY
             decb              ; Decrement loop counter
@@ -115,97 +115,52 @@ W5100_IPADDR:                 ; Next the Source IP Address
 
             rts
 
-DISP_GATEWAY:
+DISP_GATEWAY: D for Start, Y for length
             ldd   #GWLABEL
-            jsr   DISPSTR0    ; Display the Label
-            ldd   #GAR0       ; W5100S Gateway Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-;            jsr   DALLY
+            jsr   DISPSTR0     ; Display the Label
+            ldd   #GAR0        ; W5100S Gateway Address Register 0
+            ldy   #4           ; Setup for loop counting
+            jmp   W5100_DISREG ; Read the Registers
 
-            ldb   #4          ; Setup B for loop counting
-DGWRLOOP:   
-            jsr   BIN2HEX
-            jsr   DISPB2H
-;            jsr   DALLY
-            decb              ; Decrement loop counter
-            bne   DGWRLOOP    ; No, go back and do more
-;            jsr   DALLY
-
-;            LDA   '+'
-;            JSR   [CHROUT]
-;            jsr   DALLY
-
-            rts
 
 DISP_SUBNET:
             ldd   #SNLABEL
             jsr   DISPSTR0    ; Display the Label            
             ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+            ldy   #4           ; Setup for loop counting
+            jmp   W5100_DISREG ; Read the Registers
 
-            ldb   #4          ; Setup B for loop counting
-DSUBRLOOP:   
-            jsr   BIN2HEX
-            jsr   DISPB2H
-;            jsr   DALLY
-            decb              ; Decrement loop counter
-            bne   DSUBRLOOP   ; No, go back and do more
-;            jsr   DALLY
-
-;            LDA   '+'
-;            JSR   [CHROUT]
-;            jsr   DALLY
-
-            rts
 
 DISP_HARDWARE:
             ldd   #MALABEL
-            jsr   DISPSTR0    ; Display the Label
-            ldd   #SHAR0      ; W5100S Source Hardware Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+            jsr   DISPSTR0     ; Display the Label
+            ldd   #SHAR0       ; W5100S Source Hardware Address Register 0
+            ldy   #6           ; Setup for loop counting
+            jmp   W5100_DISREG ; Read the Registers
 
-            ldb   #6          ; Setup B for loop counting
-DSHARLOOP:   
-            jsr   BIN2HEX
-            jsr   DISPB2H
-;            jsr   DALLY
-            decb              ; Decrement loop counter
-            bne   DSHARLOOP   ; No, go back and do more
-;            jsr   DALLY
-
-;            LDA   '+'
-;            JSR   [CHROUT]
-;            jsr   DALLY
-
-
-
-            rts
 
 DISP_IPADDR:
             ldd   #IPLABEL
             jsr   DISPSTR0    ; Display the Label
             ldd   #SIPR0      ; W5100S Source IP Register 0
+            ldy   #4           ; Setup for loop counting
+            jmp   W5100_DISREG ; Read the Registers
+
+
+W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
+;            ldd   #GWLABEL
+;            jsr   DISPSTR0    ; Display the Label
+;            ldd   #GAR0       ; W5100S Gateway Address Register 0
             sta   CIO0ADDR    ; CoCoIO Address Register MSB
             stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
-
-            ldb   #4          ; Setup B for loop counting
-DSIPRLOOP:   
+            tfr   y,d         ; Setup B for loop counting
+DISLOOP:   
             jsr   BIN2HEX
             jsr   DISPB2H
-;            jsr   DALLY
             decb              ; Decrement loop counter
-            bne   DSIPRLOOP   ; No, go back and do more
-;            jsr   DALLY
-
-;            LDA   '+'
-;            JSR   [CHROUT]
-;            jsr   DALLY
+            bne   DISLOOP     ; No, go back and do more
 
             rts
-
 
 
 
@@ -221,11 +176,11 @@ DILLY1:     lda   PIA0BC      ; load up the current flags
             lda   PIA0BD      ; clear the interrupt that just happened
             rts
 
-DALLY:      pshs  X
+DALLY:      pshs  x
             ldx   #$1000      ; A maximum delay loop 
-DALLY1:     leax  -1,X        ; Decrement X
+DALLY1:     leax  -1,x        ; Decrement X
             bne   DALLY1      ; if X>0 not done yet
-            puls  X
+            puls  x
             rts
 
 
@@ -233,40 +188,36 @@ DALLY1:     leax  -1,X        ; Decrement X
 
 BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
 
-            pshs  D           ; Save D ( A&B ) for later
+            pshs  d           ; Save D ( A&B ) for later
 
             lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
             ;
             ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
             ;
-            tfr   A,B         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
+            tfr   a,b         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
             lsra
             lsra
             lsra
             lsra
             cmpa  #9          ; BRANCH IF HIGH DIGIT IS DECIMAL
-            bls   AD30        ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
+            bls   B2H30       ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
             adda  #7          ; CHARACTER WILL BE IN 'A'..'F'
-AD30:       adda  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+B2H30:      adda  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
             sta HEX1VAL       ; STORE ASCII DATA
 
             ;
             ; CONVERT LESS SIGNIFICANT DIGIT TO ASCII
             ; 
-            andb  #$0F        ; MASK OFF LOW DIGIT    
+            andb  #$0f        ; MASK OFF LOW DIGIT    
             cmpb  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
-            bls   AD30LD      ; ELSE ADD 7 SO AFTER ADDING '0' THE
+            bls   B2H30LD     ; ELSE ADD 7 SO AFTER ADDING '0' THE
             addb  #7          ; CHARACTER WILL BE IN 'A'..'F'
-AD30LD:     addb  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+B2H30LD:    addb  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
             stb   HEX2VAL     ; STORE ASCII DATA
 
-            puls  D           ; Restore D ( A&B )
+            puls  d           ; Restore D ( A&B )
 
             rts  
-
-BINVAL:     fcb   $00
-HEX1VAL:    fcb   $00
-HEX2VAL:    fcb   $00
 
 DISPB2H:    lda   HEX1VAL
             jsr   [CHROUT]
@@ -274,19 +225,25 @@ DISPB2H:    lda   HEX1VAL
             jsr   [CHROUT]
             rts
 
-DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
-            pshs  D,X,Y       ; Save D ( A&B ), X & Y for later
+BINVAL:     fcb   $00
+HEX1VAL:    fcb   $00
+HEX2VAL:    fcb   $00
 
-            tfr   D,X         ; Copy D to X, for Head of StringZ
+
+
+DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
+            pshs  d,x,y       ; Save D ( A&B ), X & Y for later
+
+            tfr   d,x         ; Copy D to X, for Head of StringZ
             ldb   #0          ; Setup B for MAX loop, 256
-DISPSTRLP:  lda   ,X+         ; Load A with the byte of the String
+DISPSTRLP:  lda   ,x+         ; Load A with the byte of the String
             beq   DISPSTRX    ; End of String Reached   
             jsr   [CHROUT]    ; Output Character on Screen
             decb              ; Decrement loop counter
             bne   DISPSTRLP   ; No, go back and do more
 
 DISPSTRX:
-            puls  D,X,Y       ; Restore D ( A&B ), X & Y
+            puls  d,x,y       ; Restore D ( A&B ), X & Y
 
             rts
 

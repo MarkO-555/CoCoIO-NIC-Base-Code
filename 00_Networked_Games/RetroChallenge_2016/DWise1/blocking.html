@@ -1,0 +1,1979 @@
+<HTML>
+<HEAD>
+<TITLE>Dealing With and Getting Around Blocking Sockets</TITLE>
+
+<meta name="Author" content="David C. Wise">
+
+</HEAD>
+<BODY bgcolor="#ffffe0">
+<H1>
+<CENTER>
+<b> DWise1's Sockets Programming Pages</b>
+<P>
+Dealing With and Getting Around Blocking Sockets
+</CENTER>
+</H1>
+<hr>
+<CENTER>               
+<FONT size=+2><b> HARD HAT AREA<br>
+<IMG SRC="../Bauarbeiter.gif"><br>
+WATCH YOUR STEP
+</b>
+</FONT>
+</CENTER>
+<HR>
+<H3>Table of Contents:</H3>
+<BLOCKQUOTE>
+<UL>
+<LI><A HREF="#INTRO">Introduction</A>
+<LI><A HREF="#WHY">So Why do Sockets Block?</A>
+<LI><A HREF="#TECHNIQUES">What are the Basic Programming Techniques for Dealing with Blocking Sockets?</A>
+<LI><A HREF="#SELECT">Using <CODE>select</CODE></A>
+<LI><A HREF="#NONBLOCK">Using non-blocking sockets.</A>
+<LI><A HREF="#THREADS">Using multithreading or multitasking.</A>
+<LI><A HREF="#KYBD">Some Possible Ways to Detect Keyboard Input</A>
+<P>
+<HR WIDTH=50% ALIGN=LEFT>
+<P>
+<LI>Link to Sample Code: <A HREF="samples.html#ECHO_SERVERS">Multi-client TCP and UDP echo servers</A> that use the techniques covered on this page
+</UL>
+</BLOCKQUOTE>
+<HR>
+<A NAME="INTRO"><H3>Introduction</H3>
+<BLOCKQUOTE>
+It's a simple fact of life:  <B>Sockets block</B>.
+<P>
+If you haven't encountered it yet, then don't consider yourself lucky, but rather realize that you 
+have not yet advanced very far in sockets programming.
+In no time at all, you will find your program "hanging" and refusing to respond, whereupon you will
+start howling in indignation.
+<P>
+Relax.  Every sockets programmer has had to learn to deal with blocking sockets and that is what you will also need to do.
+Learn to deal with it.  Learn what's going on, what blocking sockets are about, and how to work with them.
+</BLOCKQUOTE>
+<HR>
+<A NAME="WHY"><H3>So Why do Sockets Block?</H3>
+<BLOCKQUOTE>
+It's in the nature of the beast.  You could just as well ask why we should expect sockets to <I>not</I> block.
+<P>
+Consider any normal function call.
+You jump into the function, it performs its task <I>or fails for some reason</I> (this will be important later), and then it returns.
+If it takes that function a long time to perform its task, then it's going to be a long time before it returns.
+That's only natural.
+Well, that's exactly what a blocking sockets function call does, only since that function's task is to read a socket, that means that it won't return until it has read that socket.
+That means that if there's nothing ready to be read, then it's going to wait until there is something there, which will usually be a very noticeably long indeterminate time.
+<I>That</I> is why a sockets function call will block. 
+Because it can't perform its task until data is available to be read.
+Or, in the case of <CODE>accept</CODE>, until a client tries to connect to the server.
+<P>
+Now, please note that blocking should not be anything new for you.
+You should have already encountered it as part of basic keyboard I/O, 
+in the standard input functions that read the user's input from the keyboard. 
+When you call one of those, it will not return until the user has entered his input and hit ENTER. 
+So that function might not return for several minutes or hours or however many days it takes the user to get around to providing input.
+That's blocking.  That's perfectly normal and to be expected.
+<P>
+In sockets, the functions that are particular problematic are accept() and recv() and recvfrom().
+Especially in a multi-client server, you cannot afford to sit there waiting for the next client to 
+connect -- which could literally take days to happen -- and be unable to handle any of the clients who
+have already connected. 
+This makes learning how to deal with blocking functions absolutely essential.
+<P>
+So blocking is perfectly normal behavior and sockets programmers need to learn basic programming techniques that will take that behavior into account as we write robust responsive applications.
+
+</BLOCKQUOTE>
+<HR>
+<A NAME="TECHNIQUES"><H3>What are the Basic Programming Techniques for Dealing with Blocking Sockets?</H3>
+<BLOCKQUOTE>
+There are basically four ways to deal with blocking, three of them meaningful and one trivial.
+The first approach will only be mentioned here;   
+the remaining three approaches will be introduced here and discussed more fully in their own sections below.
+
+<BLOCKQUOTE>
+<DL>
+<DT><B>1. Have a design that doesn't care about blocking.</B> </DT>
+<DD>This is the trivial one. 
+An example would be a server that can quickly service a client and immediately disconnect.
+Or a client that connects to a server to make a single request, receive a single response, and disconnects immediately.
+My echo and broadcast time <A HREF="samples.html#ECHO">sample programs</A> are prime examples of this approach.
+<P>
+A surprising number of small applications can use this approach, but it doesn't take much complexity to bump up against its inherent limitations, especially when you start writing <i>tcp</I> servers that handle more than one client.
+Your first experiments will undoubtedly use this approach, but you will very quickly outgrow it as your projects become even slightly more ambitious.
+<P><A NAME="UDP">
+Though interestingly, a <I>udp</I> server is able to use this approach and still handle multiple clients easily, 
+<I>but only so long as it doesn't need to do anything else while waiting for the next datagram.</I>
+This is because it can handle all clients through the same socket, whereas a tcp server needs multiple sockets, the listening socket plus a separate socket for each client.
+I include the udp server in <A HREF="samples.html#ECHO_SERVERS">my sample servers</A> along with a client to stress-test it, but it's the same basic server as I provide in my earlier and simpler <A HREF="samples.html#ECHO">echo sample programs</A>.
+</DD>
+<P>
+<DT><B>2. <A HREF="#SELECT">Use the <CODE>select</CODE> function</A>. </B></DT>
+<DD>It would be nice to know before you call it whether the call will block.  Well, that's what <code>select</CODE> does for you.
+Basically, you give the <CODE>select</CODE> function a set of sockets that you want to read from, 
+it will test them all, 
+and it will return almost immediately with a set of which of those sockets are ready to be read.
+This way, <CODE>select</CODE> will tell you which sockets have data waiting to be read and 
+hence will not block when you call them.
+<P>
+The basic approach is to write a loop in which you initialize the sets (there are actually three sets), call <CODE>select</CODE>, 
+then test all the sockets in each set and process the ones that have something to process. 
+I will cover this in much more detail below.
+<P>
+In addition, in UNIX/Linux/BSD (<I>but not in Windows</I>) you can also have <CODE>select</CODE> test the keyboard (<CODE>stdin</CODE>, the standard input file) for input data, thus getting around being blocked waiting for the user to type something in.
+This works in UNIX because nearly everything in UNIX, including sockets, is a file and hence <CODE>select</CODE> works on sets of file descriptors.
+It does not work in Windows because there sockets are different from files and <CODE>select</CODE> is specifically designed to test sockets and nothing else.
+To test for keyboard input in a Windows console application, you would need to use some other method,
+such as the non-standard <CODE>conio</CODE> library or Console API functions, which are outside the scope of this page.
+<P>
+Using <CODE>select</CODE> is one of the easiest methods for a beginner to learn first. 
+Among <A HREF="samples.html#ECHO_SERVERS">my sample servers</A> I include a multi-client tcp server that uses <CODE>select</CODE>.
+I also include a tcp echo client that can be used to stress-test all the tcp echo servers.
+</DD>
+<P>
+<DT><B>3. <A HREF="#NONBLOCK">Use non-blocking sockets</A>. </B></DT>
+<DD>Another nice thing would be for the call to immediately and tell you whether it was able to read anything or not.
+That's what non-blocking sockets do for you.
+<P>
+Each socket has a number of properties and options that you can change: buffer sizes, timeouts, and the like.
+One of these options is choosing to make the socket <I>non-blocking</I>.
+"Cool," you may think.  "What better way to deal with blocking than to turn it off and be rid of it?" 
+Well, it's not quite that easy.  
+Actually, turning off blocking complicates the handling of the socket, because now you're having it behave differently than it normally does; that requires special handling.
+<P>
+Basically, turning blocking off means that the function will always return immediately.
+Remember what I said above about a function returning either when it has performed its task or else had encountered an error?  Well, that's what happens with a non-blocking socket.
+If there's data to be processed, then the function will process it.
+But if there's no data to be processed, then the function returns with an error.
+It's an error because conditions prevented the function for performing its task.
+What condition?  No data.  What's the error?  A special one created specifically for this situation:
+EWOULDBLOCK, that basically says that this socket would have blocked if it had been a blocking socket. 
+<P>
+So the basic procedure for each socket will be to try to read it and if it returns with an error, then test whether that error is EWOULDBLOCK.
+If it is a different error, then process that error as you normally would.
+But if it is EWOULDBLOCK, then you continue on about your business, processing other sockets, etc,
+and then come back to this socket and try again.
+<P>
+Performing that error testing for each socket makes the code a bit more complex, but not much more. 
+Non-blocking sockets would be another of the easiest methods for a beginner to learn.
+It's pretty much a toss-up between non-blocking sockets and <CODE>select</CODE>:
+<OL>
+<LI>Non-blocking sockets involves less code, just modifying your testing for errors by adding a test for EWOULDBLOCK and EAGAIN (if applicable), whereas using <CODE>select</CODE> requires learning some new concepts and writing about 20 lines of code.
+<P>
+<LI>Once you've written those 20-some lines of code for <CODE>select</CODE>, you can reuse them over and over again with minimal changes (mainly related to how you manage your multiple sockets).
+OTOH, with non-blocking sockets you will have to customize the handling of each socket.
+<P>
+<LI>The code for <CODE>select</CODE> only needs to appear in one place in your code, whereas the code to support non-blocking sockets will be distributed throughout your code, complicating code maintenance. 
+<P>
+<LI>Which method you choose will have an direct impact on how you design and code your application.
+Eg, if you want to centralize our handling of the client sessions and have them all tested and handled at the same time, then <CODE>select</CODE> would be a natural choice,
+whereas if you want a more distributed approach then non-blocking sockets may work better for you.
+<P>
+<LI>If you need features of both methods, then there's no reason why you can't use both; it's up to you to decide how.
+For example, bringing the next method, multithreading, into this, I can see where I might combine multithreading with another method if I want a thread to be able to remain responsive while waiting for data to come in on its socket.
+</OL>
+<P>
+Among <A HREF="samples.html#ECHO_SERVERS">my sample servers</A> I include a multi-client tcp server that uses non-blocking sockets.
+<P>
+<HR WIDTH=40%>
+<P>
+I've just stumbled across a socket option called SO_RCVTIMEO which sets a timeout for receiving.
+When it times out and nothing was received, then it returns an error of EWOULDBLOCK.
+It appears that it was supported in the original BSD sockets and should still be supported in Linux.
+Visual C++ also reports that it is supported in Winsock2, which implies that it was not supported in version 1.x.
+I know nothing about the particulars of using it, but Google'ing on it reveals that it might conflict with other methods.
+<P>
+It should be noted that Java supports it, but I have to learn more to find out how it should be used.
+</DD>
+<P>
+<DT><B>4. <A HREF="#THREADS">Use multithreading or multitasking</A>. </B></DT>
+<DD>Yet another nice thing would be if the program could do more than one thing at a time, like continuing to respond to the user or updating the display while it's waiting on a socket for data.
+Yet again, we have something that can do that too.
+<P>
+Both Windows and UNIX support multithreading such that it's a fairly common practice, though the library calls to implement multithreading are quite different between the two operating systems.
+They also both support multitasking with processes, again quite differently, but it's a vastly more common practice in UNIX than it is in Windows -- indeed, in UNIX programming <CODE>fork</CODE>ing could be considered a life-style.
+<P>
+Basically, the approach would be to have a different thread or process handle each socket so that when the socket blocks it only blocks its own thread/process and not any of the other threads/processes.
+This way, a blocking socket does not affect your ability to service any of the other sockets or the rest of the program's functionality. 
+However, if you are not already familiar with multithreading, it has a greater learning curve (there are a lot of resource-sharing and synchronization issues you very definitely need to learn about) and multithreaded code is a lot harder to debug than single-threaded code.
+<P>
+This approach requires much more programming skill, so it might be something that you would want to tackle in the future. But it should eventually be learned, because it involves valuable programming skills and knowledge that are very useful in other kinds of projects.  
+Plus, this is the approach of choice, taken by many commercial applications.
+<P>
+Among <A HREF="samples.html#ECHO_SERVERS">my sample servers</A> I include a multi-client tcp server that uses multithreading under Windows.
+</DD>
+<P>
+<HR WIDTH=50%>
+<P>
+<DT><B>Methods Specific to Certain Languages/Environments</B></DT>
+<DD>
+The discussion on this page generally applies to the C programming language.
+However, some programmings languages that support sockets will encapsulate the sockets API and hide a lot of the details from the programmer.
+Java is a good example of this, as most of the details are encapsulated in the classes, Socket (for TCP) and DatagramSocket (for UDP).
+Both of those Java classes have a <CODE>setSoTimeout()</CODE> method which will set up the socket to time out during a receive operation, whereupon it would throw a <CODE>InterruptedIOException</CODE>.
+This and multithreading appear to be the usual ways for Java to handle blocking.
+<P>
+In addition, Winsock has expanded the API with its WSA* family of functions to integrate it into the Windows environment and the Windows messaging system.
+For example, <CODE>WSAAsyncSelect()</CODE> will set up which sockets are to be watched and then when they receive data to be read <I>Windows</I> will send a notification message to the window that <CODE>WSAAsyncSelect</CODE> had told it to notify.
+This way, your program doesn't have to keep calling <CODE>select</CODE> to check on the sockets, 
+but rather you call <CODE>WSAAsyncSelect</CODE> only once and <CODE>WSAAsyncSelect</CODE> then  delegates to the operating system the actual socket checking and notifying.
+</DD>
+</DL>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<HR>
+<A NAME="SELECT"><H3>Using <CODE>select</CODE></H3>
+<BLOCKQUOTE>
+Using <CODE>select</CODE> is one of the easiest non-trivial methods for a beginner to learn. 
+Even though it introduces some new concepts, functions, data types, and macros, the reason for that all and how it works is readily apparent so it should make a lot of sense with a little bit of study.
+Plus, once you've implemented it in one place, you can reuse it in all your other programs with minimal modification.
+<P>
+OK, so here's the basic problem:
+when you read from a socket and there's data waiting there to be read then the function will return immediately with that data, but if there's nothing to read yet then it will block and you're stuck.
+So what you want to be able to do is to know before you make that function call whether there's any data waiting to be read.
+If there is then you make the function call, but if there isn't then you skip that socket this time around.
+<P>
+That's what <CODE>select</CODE> does for you.
+You load up to three sets -- read, write, and exception -- with the sockets you want it to test 
+and it tests those sockets and reports back to you which ones are ready for those operations.
+Armed with that information, you can then process the sockets that are ready and ignore the rest for the time being.
+By selectively processing your sockets thus, you will never be blocked by your blocking sockets.
+<P>
+Here is the definition of <CODE>select</CODE>:
+
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<B>int select (int nfds, fd_set *read-fds, fd_set *write-fds, fd_set *except-fds, struct timeval *timeout);</B>
+<BLOCKQUOTE>
+<DL>
+<DT>int nfds</DT>
+<DD>The highest-numbered file descriptor in any of the three sets, plus 1. The usual thing is to pass FD_SETSIZE as the value of this argument.<BR>
+In Winsock, this parameter is ignored; it is included only for compatibility with Berkeley sockets. 
+</DD>
+<DT>fd_set *read-fds</DT>
+<DD>An optional pointer to a set of sockets to be checked for readability. 
+</DD>
+<DT>fd_set *write-fds</DT>
+<DD>An optional pointer to a set of sockets to be checked for writability 
+</DD>
+<DT>fd_set *except-fds</DT>
+<DD>An optional pointer to a set of sockets to be checked for exceptional conditions. 
+</DD>
+<DT>struct timeval *timeout</DT>
+<DD>The maximum time for select to wait, or NULL for blocking operation. 
+</DD>
+<P>
+<DT>Return Values</DT>
+<DD>
+1 or greater -- The total number of sockets that are ready.<BR>
+zero -- The time limit expired; ie, none of the sockets are ready.<BR>
+-1 -- An error occurred.  In Winsock, this return value will be SOCKET_ERROR.  
+Use the applicable function to identify the actual error (eg, in Winsock, call WSAGetLastError()).
+</DD>
+</DL>
+</BLOCKQUOTE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+I guess the first thing we should talk about is, what's an "fd"?
+The really simple answer is that it's a UNIX thing -- sockets programming was developed under UNIX, after all -- and Winsock just adopted it for compatibility.
+The more detailed answer is that it stands for "file descriptor."
+You see, in UNIX almost everything is a file, including sockets.
+So the value that the <CODE>socket</CODE> function returns is actually a file descriptor, an index into an OS table containing all the information on that file and which uniquely identifies that file.  
+In UNIX, that is; in Winsock it's a handle to an object, which is different from a file descriptor, even though it serves the same basic function.
+So even though Winsock uses some of the same sockets nomenclature as UNIX does, 
+a Winsock socket is a bit of a different critter than a UNIX socket, from the perspective of C and of the OS,
+which causes there to be a few minor differences between UNIX and Winsock.  
+For example, you've already seen that in UNIX to close a socket with the <CODE>close</CODE> function,
+which is a generic I/O function that closes any file.
+But because a Winsock socket is not a file, you can't use <CODE>close</CODE> to close a socket, 
+but rather you must use a special function, 
+<A HREF="sockets.html#CLOSE_SOCKET">
+<CODE>closesocket</CODE></A>, which only works with sockets.
+I'll point out more such instances as we proceed through this section.
+<P>
+In order to keep the discussion simple and since we're only talking about the application of
+<CODE>select</CODE> to testing sockets, I will use the term "socket" instead of "file descriptor".
+That way, what I say in general will apply to both UNIX and Winsock environments.
+<P>
+Next we have a new datatype called a <B>fd_set</B>.
+As the name implies, it's a set of file descriptors, which in our usage means a set of sockets.
+This is what we use to create a list of sockets and pass it to <CODE>select</CODE> in order to let <CODE>select</CODE> know which sockets to test.
+It is also the way that <CODE>select</CODE> comes back and tells us which sockets are ready.
+Please note that the same variables are used for both purposes.  
+This means that <CODE>select</CODE> will change our fd_sets every time we call it, 
+therefore <B>we must re-initialize our fd_sets <I>each and every time</I> we call <CODE>select</CODE></B>.
+<P>
+What does a fd_set look like?  
+You don't need to know, because everything you do with one is through pre-defined macros (see below).
+Which is a good thing, because UNIX and Winsock implement them differently.
+In UNIX, they're binary arrays, whereas in Winsock they're struct's that contain an array of SOCKET's and a count of the number of SOCKET's in the array.
+That count value is the reason why Winsock ignores the first parameter of <CODE>select</CODE>, because it already has that information stored in the fd_set.
+<P>
+These are the macros that are used to work with fd_sets.
+Please note that these are the UNIX declarations as copied from MinGW gcc documentation; 
+for Winsock you would substitute <B>int filedes</B> with <B>SOCKET s</B>:
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<DL>
+<DT>int FD_SETSIZE</DT>
+<DD>
+The value of this macro is the maximum number of file descriptors that a fd_set object can hold information about.  On systems with a fixed maximum number, FD_SETSIZE is at least that number.  On some systems, including GNU, there is no absolute limit on the number of descriptors open, but this macro still has a constant value which controls the number of bits in an fd_set; if you get a file descriptor with a value as high as FD_SETSIZE, you cannot put that descriptor into an fd_set.
+</DD>
+<P>
+<DT>void FD_ZERO (fd_set *set)</DT>
+<DD>
+This macro initializes the file descriptor set set to be the empty set.
+</DD>
+<P>
+<DT>void FD_SET (int filedes, fd_set *set)</DT>
+<DD>
+This macro adds filedes to the file descriptor set set.
+</DD>
+<P>
+<DT>void FD_CLR (int filedes, fd_set *set)</DT>
+<DD>
+This macro removes filedes from the file descriptor set set.
+</DD>
+<P>
+<DT>int FD_ISSET (int filedes, fd_set *set)</DT>
+<DD>
+This macro returns a nonzero value (true) if filedes is a member of the file descriptor set set, and zero (false) otherwise.
+</DD>
+</DL>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+So normal procedure will be to FD_ZERO the fd_set, then add each socket individually with FD_SET.
+Then you call <CODE>select</CODE> and if it returns a 1 or greater, then you will compare each socket
+with the returned set through the FD_ISSET macro.
+I'll illustrate all that later with a code example.
+<P>
+Next, what are the three sets about?
+<BLOCKQUOTE>
+<DL>
+<DT>fd_set *read-fds -- An optional pointer to a set of sockets to be checked for readability.</DT>
+<DD> 
+This is the set that we're most interested in, the one that tests whether we can read from a given socket.
+The conditions that this indicates are:
+<OL>
+<LI>For a normal socket, queued data is available for reading such that a reading call (eg, <CODE>recv</CODE>, <CODE>recvfrom</CODE>) is guaranteed not to block.
+<LI>For a listening socket, it means that an incoming connection request has been received 
+such that an <CODE>accept</CODE> is guaranteed to complete without blocking.
+<LI>For connection-oriented sockets, it indicates that a request to close the socket has been received from the peer. 
+If the virtual circuit was closed gracefully, and all data was received, then a <CODE>recv</CODE> will return immediately with zero bytes read.
+<LI>If the virtual circuit was reset, then a <CODE>recv</CODE> will complete immediately with an error code.
+</OL>
+</DD>
+<P>
+<DT>fd_set *write-fds -- An optional pointer to a set of sockets to be checked for writability.</DT>
+<DD> 
+While the principal problem we're trying to solve is being blocked by a read call, a write call 
+(eg, <CODE>send</CODE>, <CODE>sendto</CODE>) could also block if the length of the message being sent
+exceeds the amount of outgoing system buffer space available.
+I am not certain what conditions would cause a write call to block nor how common such conditions are.
+<P>
+I would not anticipate this parameter getting used much, but I could simply be too inexperienced.
+If you experience such problems, then you should look into testing these conditions too.
+</DD>
+<P>
+<DT>fd_set *except-fds -- An optional pointer to a set of sockets to be checked for exceptional conditions.</DT>
+<DD> 
+"Exceptional conditions" does not mean errors--errors are reported immediately when an erroneous system call is executed, and do not constitute a state of the descriptor.  
+Rather, they include conditions such as the presence of an urgent message on a socket.  
+So exceptfds identifies the sockets that are to be checked for the presence of out-of-band data or any exceptional error conditions. 
+<P>
+This is a more advanced capability that I've not learned yet.  
+So if you need to use this feature, then that means that you have advanced beyond my expertise and beyond the level of this article.
+<P>
+I would not anticipate this parameter getting used much.
+</DD>
+<DL>
+</BLOCKQUOTE>
+As the descriptions say, each pointer is optional; in order to leave a particular set out, set that argument to NULL.
+However, while any two of the parameters, readfds, writefds, or exceptfds, can be given as NULL, 
+at least one must be non-NULL, and any non-NULL descriptor set must contain at least one socket.
+<P>
+Under UNIX, you pass to <CODE>select</CODE> the highest-numbered file descriptor in any of the three sets, plus 1. 
+This limits how far into each bit array <CODE>select</CODE> will search for a socket to test, however it also makes your calling routine a bit more complicated.
+It's questionable that you take too bad of a performance hit by checking the entire range of the set,
+so the usual practice is to pass FD_SETSIZE as the value of this argument.
+<P>
+As already stated, in Winsock this argument is ignored, so you can pass any value to it.
+<P>
+<CODE>select</CODE>'s final argument is a timeout.
+<CODE>select</CODE> will wait the specified amount of time for data to arrive and then it will finally give up and return with the sockets' status.
+Please note that <CODE>select</CODE> could return before the timeout time is up if there is data; 
+it's only if there is no data that it will wait for the entire timeout before returning.
+<OL>
+<LI>If you set that timeout to zero, then <CODE>select</CODE> will return immediately with the status.
+<LI>If you set the timeout parameter to a NULL, then <CODE>select</CODE> will wait indefinitely until
+data arrives, thus blocking.  
+Even though that would seem to defeat the purpose of using <CODE>select</CODE>, this feature could still
+be useful if you have multiple sockets to process and nothing else to do while waiting for data to arrive.
+This would keep you from sitting there blocked by one socket and unable to test whether another socket has data to read.
+<LI>If you set the timeout to any non-zero time value, then <CODE>select</CODE> will block until data has
+arrived or until the timeout counter counts down to zero.
+</OL>
+Like the fd_set's, the timeout counter is modified by <CODE>select</CODE>.
+This means that <B>you will need to reinitialize the timeout counter each and every time you call <CODE>select</CODE>.</B>
+<P>
+This is the declaration for the timeval struct:
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+struct timeval 
+{
+        long    tv_sec;         /* seconds */
+        long    tv_usec;        /* and microseconds */
+};</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<P>
+Now the return value from <CODE>select</CODE> should make more sense.
+Basically, if it encounters an error, it will return a -1 (or SOCKET_ERROR in Winsock).
+Otherwise, it will return the number of sockets that are ready to be processed.
+If that number is zero, then that means that <CODE>select</CODE> returned because it had timed out and there are no sockets ready to process.
+<P>
+<HR WIDTH=60%>
+<P>
+<B><FONT SIZE=+1>OK, we've gone through the declarations and concepts, so it's time to put them to use and see how it's done.</FONT></B>
+<P>
+The general approach is that your program will be executing a loop and part of that loop will be to periodically call <CODE>select</CODE>.
+When you call <CODE>select</CODE>, you will give it a list of sockets to test (this leads directly to a design question; see below) and, upon returning from <CODE>select</CODE>, you will then go through your list of sockets (same design question) and test each one for whether it's ready to be processed.
+For each socket that's ready, you process it, then you test the next socket in the list.
+<P>
+Which begs the question of how you're going to handle that list of sockets.
+When you prep the sets before the call to <CODE>select</CODE>, you need to know what all the sockets are.
+And when you test the sets that <CODE>select</CODE> returns to you, you again need to know what all those sockets are.
+In a simple application which has a fixed number of sockets, the solution can be a trivial one of hard-coding those socket operations.
+<P>
+Rather than waste our time with a contrived example, let's go straight to a situation that's more real-world: a multi-client tcp server.
+You have one listening socket plus any number of client sockets, ranging from zero to the maximum number allowed -- 
+in real life, servers impose a limit on the maximum number of clients they will suffer at one time; 
+this value can sometimes be set in the server's config file.
+The problem this presents is that when we're writing the program, we cannot know how many sockets will be in use at any give time, so we have to handle that on-the-fly when it's running.
+<P>
+A common design I've seen to handle this in others' examples is to store the client sockets in an array and maintain a count of how many sockets are in that array.
+When a client connects, its socket goes into that array.
+And when a client disconnects, its socket is removed from the array.
+Then you just iterate through that array to initialize the read set and 
+after having called <CODE>select</CODE> you iterate through it again to test the resultant set.
+Keep in mind that the listening socket will always be the same, so you hard-code its handling and then 
+it's just the client sockets that would go into the array.
+You can start with this model and develop it into a more useful form.
+<P>
+For example, to maintain the status and state of each client's connection to the server, you would need an entire struct for each client.
+Hence your list of sockets would actually be a data structure of these client records, only one field of which would be the socket.
+So, instead of iterating through an array of sockets, you'd be traversing through this data structure of client records.<BR>
+Or.<BR>
+Before preparing for the call to <CODE>select</CODE>, you traverse the client records and <I>construct</I> that socket array on the fly.
+One advantage of this would be that you could, if you want, take into account certain conditions in order to decide whether or not you want this socket to be tested 
+(I can't off-hand think of what those conditions might be, but this requirement could conceivably exist).
+So you create this array and use it to both initialize the read set and to test the resultant set.
+Two advantages come to mind:  
+1) it should be simpler and more efficient to iterate through an array than to traverse through a data structure, 
+and 2) you would have to do this twice, so you'd effectively double your savings.
+<P>
+Here's my attempt at that code.  It's written as a function into which we pass the listening socket and the array of client sockets and within which we call functions to process the sockets.
+In other words, it's stubbed out like crazy, but it is a working example.
+And I will use this function later to show how it would fit into an actual application:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+
+
+void PerformSelect(SOCKET listeningSock, SOCKET clients[], int iNumClients)
+{
+    fd_set sockSet;                  /* Set of socket descriptors for select() */
+    struct timeval selTimeout;       /* Timeout for select() */
+    int    i;
+    int    iResult;
+
+    /* Zero socket descriptor vector and set for server sockets */
+    /* This must be reset every time select() is called */
+    FD_ZERO(&sockSet);
+    FD_SET(listeningSock, &sockSet);
+    for (i=0; i < iNumClients; i++)
+        FD_SET(clients[i], &sockSet);
+
+    /* Timeout specification */
+    /* This must be reset every time select() is called */
+    selTimeout.tv_sec = TIMEOUT_SEC;       /* timeout (secs.) */
+    selTimeout.tv_usec = 0;            /* 0 microseconds */
+
+    iResult = select(0, &sockSet, NULL, NULL, &selTimeout);
+
+    if (iResult == -1)
+    {
+        /* an error occurred; process it (eg, display error message) */
+    }
+    else (if iResult > 0) /* ie, if a socket is ready */
+    {
+        // test this specific socket to see if it was one of the ones that was set
+        if (FD_ISSET(listeningSock, &sockSet))
+        {
+            AcceptNewClient(listeningSock);
+        }
+        
+        /* Now test the client sockets */
+        for (i=0; i < iNumClients; i++)
+            if (FD_ISSET(clients[i], &sockSet))
+            {
+                /* do whatever it takes to read the socket and handle the client */
+                /* Please note that this will involve reassociating the socket   */
+                /*     with the client record                                    */
+                HandleClient(clients[i]);
+            }
+    }
+    
+    /* else iResult == 0, no socket is ready to be read, */
+    /*    so ignore them and move on.                    */
+
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+And there you have it.
+To use <CODE>select</CODE>, you initialize the read set with the sockets you want it to test, 
+initialize the timer with the timeout time, call <CODE>select</CODE>, 
+then test all of your sockets one-by-ine to see whether <CODE>select</CODE> says that they're ready to be processed.
+Pretty simple and straight forward.
+<P>
+Now let's see where this function would fit within an application.  
+I've stubbed off most of the working code into aptly named functions and it's slightly fragmentary.
+This one also uses conio.h (only useful in Windows/DOS, that I know of) to demonstrate one way to handle user input in a console app.
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+
+
+void PerformSelect(SOCKET listeningSock, SOCKET clients[], int iNumClients);
+
+SOCKET m_ServerSock;            /* server's listening socket */
+SOCKET m_client_list[MAX_CLIENTS];
+int    m_iNumclients;
+
+int main(int argc, char *argv[])
+{
+    int     running = 1;  /* 1 if server should be running; 0 otherwise */
+    char    ch;
+
+    /* process command-line arguments and initialize all variables  */
+    /* also do sockets initialization (eg, WSAStartup for Winsock)  */
+    /* and create and start up the listening socket                 */
+    Initialize(argc, argv);    
+
+    while (running)
+    {
+        if (kbhit())
+        {
+            ch = getch();
+            switch (tolower(ch))
+            {
+                /* quit on either the "q" command or the escape key  */
+                case 'q':
+                case 27:
+                    running = 0;
+                    break;
+            }
+        }
+        else
+            PerformSelect(m_ServerSock, m_client_list, m_client_list, m_iNumclients);
+
+    } // end while running
+        
+ 
+    /* close all open connections gracefully, WSACleanup if Winsock */
+    /*    plus whatever other cleanup is needed.                    */
+    Clean_up();   
+}
+
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+So you see, even though there seemed to be a lot of theory and new concepts to learn, 
+the actual approach and implementation is fairly simple.
+</BLOCKQUOTE>
+<HR>
+<A NAME="NONBLOCK"><H3>Using non-blocking sockets.</H3>
+<BLOCKQUOTE>
+Using non-blocking sockets is another easy non-trivial methods for a beginner. The only tricky part is understanding about socket options, but after you've done it once then you've got it.
+<P>
+Each socket has a number of options and settings associated with it.
+After you create a socket, there is a function call you may use to change any of that socket's options or settings -- the function call is different in UNIX/Linux than it is in Winsock.
+<P>
+The option we're interested in here is changing the socket into a non-blocking socket.
+That means that for any function that we call with that socket, if that function would normally block, then in this case it won't.
+Instead of blocking, the function will return immediately, either with data or with an error.
+Not having data is now considered an error and is indicated with an error number of EWOULDBLOCK (defined in Winsock as WSAEWOULDBLOCK).
+So, you must check the error code (errno or WSAGetLastError(), for UNIX and Winsock respectively) 
+and if the error is EWOULDBLOCK (or, in Winsock, WSAEWOULDBLOCK) then that means that it would have normally blocked since there's no data for you yet.
+When that happens, then you can just carry on and come back later.
+But if it's any other error, then an actual error occurred and you need to handle it.
+<P>
+In his article on the Winsock Programmer's FAQ site, <CITE>
+<A HREF="http://tangentsoft.net/wskfaq/articles/bsd-compatibility.html">BSD Sockets Compatibility</A></CITE>, Warren Young notes that UNIX might return a different error code which is equivalent to EWOULDBLOCK:
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<I><H4>EAGAIN</H4>
+Many Unix programs, especially those with System V roots, check for the EAGAIN value in the global errno variable when a non-blocking call fails. This is the same thing as BSD's EWOULDBLOCK and Winsock's WSAEWOULDBLOCK errors. You'll have to check your system's header files, but all Unixes I've checked on this matter #define EAGAIN and EWOULDBLOCK to the same value, so you may want to get into the habit of using EWOULDBLOCK instead of EAGAIN under Unix, to make transitions to and from Winsock easier.</I>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=60%>
+<P>
+Now here's how you turn a socket into a non-blocking socket.
+For UNIX/Linux, you call the function, <CODE>fcntl</CODE>, 
+and for Winsock you call the function, <CODE>ioctlsocket</CODE>.
+As before, we see this difference because <CODE>fcntl</CODE> can work for any file, which in UNIX includes sockets, 
+whereas in Winsock a socket is not a file so we need to create a special function instead.
+<P>
+I'll let you research the formal definitions of <CODE>fcntl</CODE> and <CODE>ioctlsocket</CODE>.
+Suffice for me to say that both involve several possible commands with parameters to go with them.
+Instead, let's just keep our goal in mind and examine a couple sample calls which would make a socket non-blocking:
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<H4>fnctl</H4>
+int fcntl (int filedes, int command, ...)
+<P>
+The fcntl function performs the operation specified by command on the file descriptor filedes.  Some commands require additional arguments to be supplied.  These additional arguments and the return value and error conditions are given in the detailed descriptions of the individual commands.
+<P>
+Commands:<BR>
+Basically, we're only interested in these two:<BR>
+F_GETFD -- Get flags associated with the file descriptor. <BR>
+
+
+F_SETFD -- Set flags associated with the file descriptor. 
+
+
+<P>
+Return value:<BR>
+       For a successful call, the return value depends on the operation:<BR>
+
+       F_DUPFD -- The new descriptor.<BR>
+
+       F_GETFD -- Value of flags.<BR>
+
+       All other commands -- Zero.
+<P>       
+       On error, -1 is returned, and errno is set appropriately.
+       
+<P>       
+Obtained from an online FAQ:
+<BLOCKQUOTE>
+  Technically, fcntl(soc, F_SETFL, O_NONBLOCK) is incorrect since it
+  clobbers all other file flags. Generally one gets away with it since
+  the other flags (O_APPEND for example) don't really apply much to
+  sockets. In a similarly rough vein, you would use fcntl(soc, F_SETFL,
+  0) to go back to blocking mode.
+<P>
+  To do it right, use F_GETFL to get the current flags, set or clear the
+  O_NONBLOCK flag, then use F_SETFL to set the flags.
+<P>
+<PRE>
+/*----------------------------------------------------------------------
+ Portable function to set a socket into nonblocking mode.
+ Calling this on a socket causes all future read() and write() calls on
+ that socket to do only as much as they can immediately, and return 
+ without waiting.
+ If no data can be read or written, they return -1 and set errno
+ to EAGAIN (or EWOULDBLOCK).
+ Thanks to Bjorn Reese for this code.
+----------------------------------------------------------------------*/
+int setNonblocking(int fd)
+{
+    int flags;
+
+    /* If they have O_NONBLOCK, use the Posix way to do it */
+#if defined(O_NONBLOCK)
+    /* Fixme: O_NONBLOCK is defined but broken on SunOS 4.1.x and AIX 3.2.5. */
+    if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
+        flags = 0;
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+#else
+    /* Otherwise, use the old way of doing it */
+    flags = 1;
+    return ioctl(fd, FIOBIO, &flags);
+#endif
+}     
+</PRE>
+</BLOCKQUOTE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+So according to that, the old way in UNIX was to use the <CODE>ioctl()</CODE> function.
+As we will now see, this is what was adopted into Winsock.
+Though, as mentioned before, since Windows treats sockets differently than it does files,
+Winsock needed to create its own special sockets version of <CODE>ioctl()</CODE>.
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+From the Visual C++ 6.0 help file:
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<PRE>
+int ioctlsocket 
+(
+  SOCKET s,         
+  long cmd,         
+  u_long FAR* argp  
+);
+</PRE>
+ 
+Parameters<BR>
+s <BR>
+[in] A descriptor identifying a socket. <BR>
+cmd <BR>
+[in] The command to perform on the socket s. <BR>
+argp <BR>
+[in/out] A pointer to a parameter for cmd. <BR>
+
+Remarks<BR>
+The ioctlsocket function can be used on any socket in any state. It is used to set or retrieve operating parameters associated with the socket, independent of the protocol and communications subsystem. Here are the supported commands to use in the cmd parameter and their semantics: 
+<P>
+FIONBIO <BR>
+Use with a nonzero argp parameter to enable the nonblocking mode of socket s. The argp parameter is zero if nonblocking is to be disabled. The argp parameter points to an unsigned long value. When a socket is created, it operates in blocking mode by default (nonblocking mode is disabled). This is consistent with BSD sockets. 
+<P>
+Return Values<BR>
+Upon successful completion, the ioctlsocket returns zero. Otherwise, a value of SOCKET_ERROR is returned, and a specific error code can be retrieved by calling WSAGetLastError.
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+Code Sample.  Note that since the third parameter must be a pointer, it is necessary to create a variable, here named <CODE>nonblocking</CODE>:
+<PRE>
+    unsigned long nonblocking = 1;    /* Flag to make socket nonblocking */
+
+
+    /* Set the socket to nonblocking */
+    if (ioctlsocket(sock, FIONBIO, &nonblocking) != 0)
+        DieWithError("ioctlsocket() failed");
+</PRE>
+</BLOCKQUOTE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=60%>
+<P>
+Here are the pertinent code fragments in a Winsock application, a UDP client.
+You will observe that as soon as the socket is created, <CODE>ioctlsocket</CODE> is called to convert it to non-blocking; 
+because the third parameter needs to be a pointer to an int, an extra variable, <CODE>nonblocking</CODE> had to be declared and initialized to non-zero.
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+int nonblocking = 1;
+
+<B>. . . </B>
+
+    /* Create a best-effort datagram socket using UDP */
+    if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+        DieWithError("socket() failed");
+
+    /* Set the socket to nonblocking */
+    if (ioctlsocket(sock, FIONBIO, &nonblocking) != 0)
+        DieWithError("ioctlsocket() failed");
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+Now in the loop that reads the socket, you will observe what I've been telling you all along.
+You attempt to read the socket when there's no data ready and it returns immediately with an error of WSAEWOULDBLOCK.
+So you wait a while (or you could go off and do something else) and then try again.
+This goes on until you do read something, which in this example means you're done and you can terminate the program.
+<P>
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+
+    /* Receive a single datagram from the server */
+    for (;;)
+    {
+        if ((recvStringLen = recvfrom(sock, recvString, MAXRECVSTRING, 0, NULL, 0)) < 0)
+        {
+            if (WSAGetLastError() != WSAEWOULDBLOCK)
+                DieWithError("recvfrom() failed");
+            else
+            {
+                printf("Still have not received packet...Waiting and then trying again\n");
+                Sleep(2000);  /* Sleep for 2 milliseconds */
+            }
+        }
+        else
+            break;
+    }
+
+    recvString[recvStringLen] = '\0';
+    printf("Received: %s\n", recvString);    /* Print the received string */
+
+    closesocket(sock);
+    WSACleanup();   /* Cleanup Winsock */
+
+    exit(0);
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<P>
+The UNIX example that I saw is a bit more complex in that it used signal handling.
+The socket is also set for asynchronous communication and a handler is written for the SIGIO signal.
+It is in that handler that the socket is read.
+I don't know that that approach is required and would think that you should be able to use non-blocking
+the same way as in Winsock, though of course using <CODE>fcntl()</CODE> and <CODE>EWOULDBLOCK</CODE>.
+<P>
+For complete examples, go to the authors' source code pages for 
+<CITE>TCP/IP Sockets in C: Practical Guide for Programmers</CITE> 
+By Michael J. Donahoo and Kenneth L. Calvert (click on appropriate link below):
+<UL>
+<LI><A HREF="http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/textcode.html">For UNIX</A> -- 
+UDPEchoServer-SIGIO.c (handles the SIGIO signal)
+<P> 
+<LI><A HREF="http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/winsock.html">For Winsock</A> -- 
+BroadcastReceiverNonblockingWS.c (just a straight-forward non-blocking example, since Windows doesn't
+allow that kind of signal handling)
+</UL>
+<P>
+In simple examples, this approach looks easy enough, but remember that you will need to perform this test separately for each and every socket.
+When you have to deal with several sockets, this can increase the complexity of your code.
+The basic concepts of non-blocking sockets are easier to learn than the new concepts of <CODE>select</CODE>, but the implementation gets distributed throughout your code rather than just residing in one place as with <CODE>select</CODE>, so it's easy to forget something or to not catch every place you need to make a change.
+This is why I would say that non-blocking sockets would be the second easiest method for a beginner,
+though it is a close call.
+I'd say that you should try this one after you're comfortable with <CODE>select</CODE>.
+</BLOCKQUOTE>
+<HR>
+<A NAME="THREADS"><H3>Using multithreading or multitasking.</H3>
+<BLOCKQUOTE>
+While the previous two approaches, <A HREF="#SELECT"><CODE>select</CODE></A> and <A HREF="#NONBLOCK">non-blocking sockets</A>, 
+are fairly easy for any half-way competent programmer to use, this last approach demands much more skill and experience.
+This is one of those areas where if you don't know it already then I can't tell you how to do it
+and if you do know it already then there's not much more that I can tell you about it.
+<P>
+Since a thorough treatment is beyond the scope of this page, my treatment here will be very superficial.
+My objective will be to introduce to you the basic concepts of multithreading and multitasking, 
+some ideas of how to access them on Windows or UNIX/Linux, and some ideas of how you can apply these techniques to blocking sockets.
+<P>
+Be forewarned that I'm going to be doing a <I>lot</I> of hand-waving here, leaving further study to you.
+If you decide that you do want to learn this approach, then you will need to look elsewhere for instruction, but at least I will have hopefully given you some keywords to use as you seek out that instruction.
+And you will want to learn this material, not only because it's where a lot of the really interesting 
+server work is being done, but because it can be applied to just about every other kind of project.
+Plus, mastery of these techniques is a kind of coming-of-age for a programmer.
+<P>
+<HR WIDTH=60%>
+<P>
+</BLOCKQUOTE>
+<H4>Multitasking</H4>
+<BLOCKQUOTE>
+A process is a single instance of an executable program running on a computer.
+The operating system could be running several instances of the same program, 
+so that means that there are several processes running, one for each instance of the program.
+The operating system controls when each process runs and what its status is.
+One process can create another process and there are mechanisms by which processes can communicate with each other; 
+this is called Inter-Process Communication (IPC) and it's fairly well-known in UNIX and less well-known in Windows.
+And the actual techniques and function calls for process creation, control, and IPC are done differently
+in the different operating systems.
+<P>
+<HR WIDTH=40%>
+<P>
+In UNIX, process creation is most commonly done by combining two function calls:
+<UL>
+<LI><CODE>fork</CODE> creates a new process which is an exact copy, a clone, of the process that called it. 
+The process that <CODE>fork</CODE>s is the parent process and the clone is the child process, 
+and the two get each other's process IDs (PIDs) which they will use to communicate and control.
+<P>
+<LI><CODE>exec*</CODE> replaces the current process with a different process.  
+The asterix (*) indicates that this is a family of functions whose names have different endings and which differ in how they construct an argument list for passing command-line arguments to the new process being loaded.
+You will need to read exec*'s documentation for details (eg, Google on <i>man page exec</i>).
+</UL>
+<P>
+The way this is used is that immediately after a <CODE>fork</CODE> there's an if-statement which separates the code for the child and parent processes to run (since the child is a perfect clone of the parent, they both use the return value of the <CODE>fork</CODE> call to tell whether they're the parent or the child, kind of like the dots under the clone's eyelid in Arnold Schwarzenegger's <A HREF="http://www.imdb.com/title/tt0216216/"><CITE>The 6th Day</CITE></A>).
+The child calls <CODE>exec*</CODE> to replace itself with the actual program that the parent wanted to run.
+But before it calls its replacement, the child will usually perform some tasks to set up parent-child communication, commonly with pipes (see below).
+Also, any process can <CODE>fork</CODE> and create virtually any number of child processes 
+(there are real limits imposed by the capacity of the operating system, but conceptually there's no limit).
+And child processes can <CODE>fork</CODE> and create their own child processes.
+In fact, all processes running on UNIX and Linux are children, however many generations removed, of 
+<A HREF="http://en.wikipedia.org/wiki/Init">Process 1, <code>init</CODE></A> -- reportedly, in some versions of Linux <code>init</CODE> has been replaced by another Process 1, such as <code>Upstart</CODE>.
+To illustrate how quickly a multitude of processes can be <CODE>fork</CODE>ed, a common problem in writing your first <CODE>fork</CODE>ing experiments is for child processes to continue <CODE>fork</CODE>ing when they're not supposed to, thus creating a rash of processes that you never expected.
+Depending on the cirumstances and whether it's happening to you or somebody else, it can be either very frustrating or quite amusing.
+<P>
+UNIX manages <I>process groups</I> through which it ties child processes to their parents.
+When a parent process terminates, the operating system also terminates all its child processes.
+Therefore, when writing the parent you need to have it wait for all its child processes to terminate before
+it can itself terminate.
+This is supported by system signals and functions, such as <CODE>SIGCHLD</CODE> and <CODE>wait()</CODE> and <CODE>waitpid()</CODE>.
+<P>
+IPC under UNIX is strongly supported and widely known.
+A common method is for the parent to create a pair of pipes which the child then attaches to its standard input and output files (stdin and stdout -- if you're a C programmer, then you should know about these already) before it calls <CODE>exec*</CODE>.
+Other methods include named pipes, message queues, shared memory, and UNIX domain sockets.
+These methods and the techniques for using them are very well-documented and widely used by UNIX and Linux programmers.
+In many cases, the opportunity to do this kind of programming is what attracted the programmer to Linux in the first place.
+<P>
+This technique is widely used in sockets programming under UNIX.
+A lot of commercial servers use it to handle multiple clients and many UNIX-based books on network programming
+devote entire chapters to discussions of different design issues with <I>forking servers</I>.
+<P>
+<HR WIDTH=40%>
+<P>
+I have to admit that I have zero practical experience with process control under Windows.
+I will report what I have gleaned from reading and I hope that what I say here is accurate.
+<P>
+Windows (ie, Win32), on the other hand, does not support <CODE>fork</CODE> nor anything exactly like it.  
+Instead, it has a <CODE>CreateProcess</CODE> function that directly creates a new process based on the program named in the function call, basically combining <CODE>fork</CODE> and <CODE>exec*</CODE> in a single function call.
+After that, I'm afraid that it gets rather hazy for me.
+I know that a process can get another process' handle (equivalent to the PID in UNIX), 
+but I'm not sure how nor what all it can do with it.
+<P>
+Windows also does not have anything like process groups nor an actual parent-child relationship between 
+a process and the processes that it creates.
+Rather, it's up to the "parent" to establish that role.
+There isn't any <CODE>SIGCHLD</CODE> signal, but there are two functions, <CODE>WaitForSingleObject</CODE> and <CODE>WaitForMultipleObjects</CODE>, that are used to wait for
+"child" processes to terminate, as well as for other kinds of events.
+For example, they are also used later in multithreading for threads to synchronize in their use of common resources
+(a hint of nightmares to come).
+<P>
+I'm also rather hazy about IPC under Windows.
+I've seen mention of anonymous pipes, named pipes, and mailslots, but haven't played with them.
+<P>
+Compared to UNIX, this area is not widely known.
+I've only seen a few books on the subject.
+<P>
+As far as I know, process creation is not used when writing Windows servers.
+I believe that multithreading is the method of choice there.
+<P>
+<HR WIDTH=40%>
+<P>
+Despite the differences in the operating systems, there are some common concepts.
+When a process is started, it's given the resources it will need.
+Mainly that's an area of memory and environment.
+As a general concept, only that process can access its own memory space; 
+it cannot access the memory space of another process nor can any process access its memory space.
+This makes it more difficult for multiple process to share data.
+That is why IPC becomes important.
+<P>
+At the same time, the different processes operate asynchronously, which is to say that they run independently of other processes, such that no process can know where another process is in its execution; ie, it cannot know what exactly what another process is doing at a given time.
+When two processes attempt to access the same resource, such as shared memory (an IPC mechanism in UNIX), then they need to coordinate their activities.
+This is called <I>synchronization</I> and it gets really important when we move on to multithreading.
+<P>
+Most of these same issues also come up in multithreading, except that the different threads will be able to access the same global memory within their common process.
+Which simplifies matters significantly, but also complicates things greatly.
+<P>
+<HR WIDTH=60%>
+</BLOCKQUOTE>
+<H4>Multithreading</H4>
+<BLOCKQUOTE>
+One of the problems with spawning extra processes is that it's a drain on the operating system.  
+It takes a lot of work to create a process and to destroy it, plus each process gets resources (eg, memory, environment, files) for its very own and there are only so many resources to go around.
+When a server is busy creating and running and cleaning up after hundreds of processes, it can really slow that server down.
+As a result, a lot of research has gone into making this process more efficient.
+For example, there's <A HREF="#PREFORK">pre-forking</A> in which a large pool of processes are created upon start-up and never closed; 
+they just get allocated to handle a new connection and, upon the closing of that collection, they go back into the pool and wait for the next connection to handle.
+<P>
+Another solution was the development of threads, originally known as "light-weight processes" with traditional processes being considered "heavy-weight" due to the amount of OS support they require.
+They're kind of like sub-processes; processes within a process.
+They're light-weight because there's less involved in creating and running them, plus all the threads within a process share that process' memory, thus reducing the  demand on the system for resources.
+<P>
+OK, why "threads"?
+Well, we all know that computers execute programs one instruction at a time, strung one after the other as if on a thread.
+Let's call that a "thread of execution".
+The idea of multithreading is to enable a process to have <i>multiple threads of execution</i>.
+It almost seems like multitasking <I>except for the fact that all these multiple threads are executing in <b>the same process</b></i>.
+That means that that memory space that belongs to the process <I>is accessible to <B>all</B> the threads in that process</i>.
+Suddenly life has become a lot easier, and a lot harder, all at once.
+It's a lot easier to share data and resources, but it's a lot harder to keep those threads from stepping on each other's toes and corrupting those common resources.
+Freer access requires stronger discipline on the programmer's part.
+Remember when I said that it demands skill and experience of the programmer?
+You have to know what you are doing:  with great freedom comes great responsibility.
+<P>
+From what I've read, threads started out in UNIX as "light-weight processes".  
+In POSIX UNIX this developed into a library called "pthreads" which is commonly used in UNIX and in Linux.
+It has even been ported over to 32-bit Windows (Win32) in a package called 
+"<A HREF="http://sourceware.org/pthreads-win32/">pthreads-win32</A>".
+<P>
+In Windows, there's a different history.  MS-DOS was most definitely a single-threaded operating system.
+The 16-bit Windows versions 1.0 through 3.11 (AKA "Win16") just simply ran on top of MS-DOS.
+Win16 operated on the principle of 
+<A HREF="http://en.wikipedia.org/wiki/Computer_multitasking#Cooperative_multitasking.2Ftime-sharing">cooperative multitasking</A>, which meant that the only way you could switch between Windows tasks was if 
+the current task surrendered control to another task, which meant that programmers had to be disciplined
+in how they wrote their applications so that no part of their application would run for too long and block all other applications, including Windows.
+Win16 could not support multithreading.
+<P>
+One of the big features of OS/2, which Microsoft developed for IBM circa 1987, was that it supported 
+<A HREF="http://en.wikipedia.org/wiki/Preemptive_multitasking">preemptive multitasking</A>.
+Windows NT also supported it, from what I understand.
+UNIX had always used it.
+In preemptive multitasking, all processes are given a <i>time slice</i>, a very short slice of time in which to run, 
+and all processes take turn running and their time slice is up the OS interrupts the process and passes control to the next process, and so on, such that each process has a chance to run.  
+It wasn't until Windows went 32-bit with Windows 95, making that and subsequent versions known as "Win32", 
+that the mainstream Windows products could operate on 
+preemptive multitasking.
+This also allowed Win32 dows (Win32, starting with Windows 95) to finally support multithreading.
+<P>
+<HR WIDTH=60%>
+<P>
+As to be expected, Windows and UNIX do multithreading differently.
+However, despite the superficial differences, the concepts are the same and they perform a lot of the same functionalities.
+Also, the same inherent problems exist that are handled in very similar ways.
+<P>
+In both Windows and UNIX, you write the thread itself as a function whose function header format is predefined.
+You start the thread by passing its name (which in C is its address) to a system function:  <CODE>pthread_create</CODE> in UNIX and <CODE>CreateThread</CODE> in Windows.
+In Windows you could also use <CODE>beginthreadex</CODE>; in fact, it is recommended by 
+Johnson M. Hart in <CITE>Win32 System Programming</CITE> (2nd Ed, Addison-Wesley, 2001, page 214) where he advises:
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+Do not use CreateThread; rather, use a special C function, _beginthreadex, to start a thread and create thread-specific working storage for LIBCMT.LIB.  Use _endthreadex in place of ExitThread to terminate a thread.
+<P>
+<I>Note:</I> There is a _beginthread function, intended to be simpler to use, <i>but it should be avoided.</i>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<P>
+In both Windows and UNIX, the thread function takes a single argument, a <CODE>void</CODE> pointer.
+The thread creation function passes a pointer to the data being passed to the thread.
+The thread receives that data pointer as its single argument.
+A neat trick you can use with this pointer is to define a struct that you fill with all different kinds of data and then pass all that data to the thread through a single pointer.
+And of course, because you wrote the thread, the thread knows the struct's declaration and therefore will know how to access all that data.
+<P>
+Closing a thread is the easiest part: simply reach the end of the thread function.
+In addition, there are a number of functions for controlling threads and for getting their status.
+<P>
+<HR WIDTH=40%>
+<P>
+OK, now comes the trouble.
+<P>
+Just as each function call has its own block of memory on the stack for its local variables, etc,
+each thread has its own "thread local storage" (TLS).
+At the same time, like any other function, a thread has direct access to the program's global memory.
+So instead of going through some exotic IPC procedure, threads can communicate with each other through global variables.
+Very simple, very direct.
+Very dangerous.
+<P>
+Here are two principal problems that can arise, both based on the same basic fact that <I>threads run asynchronously</I>:
+<OL>
+<LI>Consider the situation where one thread needs a value provided by another thread.
+The second thread stores the result of its calculations in a global variable that the first thread reads.
+So how does the first thread know when the value in that global variable is valid?
+The first thread has no idea when the second thread has completed its task.
+<P>
+<LI>This problem is based also on the fact that a thread can be interrupted at any time. 
+At <I>any</I> time.
+Here's a scenario to illustrate the problem.
+One thread reads from a global variable to use the value that another thread has written to it.
+Let's say that it's an int.  
+In 32-bit systems an int is four bytes long; in 16-bit systems they're two bytes long, but who runs one of those anymore?
+But either way, this could happen:  in the middle of updating a multi-byte value, the thread is interrupted and the other thread reads that value.
+The other thread has read a bogus value.
+</OL>
+<P>
+
+Remember, despite all this multitasking and multithreading, as long as it's all running on a single hardware processor, the computer can only perform one instruction at a time.
+Two different threads aren't running at the exact same time.  They can't on a system with only one single hardware processor.
+Instead, each thread is given a finite amount of time to run, after which it is interrupted right in the middle of whatever it's doing for control to pass to another thread, 
+<A HREF="http://en.wikipedia.org/wiki/Preemptive_multitasking">preemptive multitasking</A>.
+It's even that way on a dual- or quad-core machine where you have 2 or 4 processors.
+Your software has to either be specially written or smart enough in order to take advantage of extra processors, 
+and most software is neither.
+The OS should be smart enough to, but preemption will still be used in the running of most of your code.
+<P>
+That's the crux of the problem.
+There are some sections of code, called <A HREF="http://en.wikipedia.org/wiki/Critical_section"><CITE>critical sections</CITE></A> (keyword alert!) within the code where an operation cannot afford to be interrupted until it has been completed.
+Like the writing of a multi-byte value.
+Or the updating of a data buffer.
+<P>
+This is where <i>synchronization</i> comes into play.
+<P>
+<HR WIDTH=40%>
+<P>
+These problems are what's called "<A HREF="http://en.wikipedia.org/wiki/Race_condition#Computing">race conditions</A>", because the different threads are competing against each other for the use of the same resources, effectively "racing" each other.
+We don't want them to race each other; we want them to synchronize with each other.
+Maybe not synchronize <i>all</I> the time, but at least at critical moments.  In <i>critical sections</i>.
+<P>
+Thus, the solution to race conditions is called "<CITE>synchronization</CITE>" (another keyword alert!).
+And, again, while the details will differ between operating systems and languages, a lot of the concepts and tools are very much the same:
+<UL>
+<LI>Thread control.  
+A given thread could be suspended (ie, be told to not run) until the conditions arise for it to resume.
+For example, in our first problem a thread has to wait until a second thread has performed a calculation, so the first thread would be suspended and then resume when the second thread has completed its task.
+In pthreads, this is done with the function, <CODE>pthread_join</CODE>.
+<P>
+<LI>A semaphore could be used to count how many threads are using a particular resource -- usually that number is only one.
+Only when that count is less than a given value would a new thread be allowed to access it.
+Both UNIX and Windows support semaphores.
+<P>
+Windows uses the data type, <CODE>CRITICAL_SECTION</CODE>, to implement semaphores.
+After having declared and initialized a <CODE>CRITICAL_SECTION</CODE>, a thread can then signal that it's entering that critical section and that it's leaving that critical section.  While one thread is in a critical section, all other threads are locked out <i>and will block</i> until the thread in the critical section signals that it's leaving, whereupon the next thread can enter, etc.
+<P>
+<LI>More commonly, you will want a thread to have <I>mutually exclusive</I> access to a resource, locking out all other threads until it's done.
+This is done with a <I>mutex</i> (obviously an abbreviate of "mutually exclusive").
+Both UNIX and Windows support mutexes, albeit differently.
+Also, in Windows a mutex can apply to multiple processes, whereas a <CODE>CRITICAL_SECTION</CODE> only applies <i>within</i> a single process.
+<P>
+The basic procedure is to create a mutex variable for each shared resource and then to surround all code that accesses that resource with mutex calls.
+Before a thread attempts to access a shared resource, it locks the mutex, which will deny access to any other thread.  And after it's finished with that resource, it unlocks the mutex, which will allow access to other threads.
+When a thread attempts to lock the mutex and it's already locked, then that thread will be suspended until the other thread unlocks the mutex, at which point the first thread's lock succeeds and that thread then accesses the resource and unlocks the mutex.
+</UL>
+<P>
+Both mutexes and <CODE>CRITICAL_SECTION</CODE>s share the same problems:
+<OL>
+<LI>They are based on the honor system.
+A mutex or semaphore blocks a thread's access <I>only if the thread goes through the mutex/semaphore</I>;
+if a thread bypasses the mutex/semaphore altogether then there's nothing to stop it.
+Therefore, the programmer must have the discipline to write all code that accesses a common resource so that it performs the necessary mutex/semaphore calls.
+Any code that breaks that discipline defeats the purpose of synchronization.
+<P>
+<LI>The programmer must write the critical section code so as to avoid a 
+<A HREF"http://en.wikipedia.org/wiki/Deadlock"><CITE>deadlock</CITE></A> (yet another keyword alert!).
+That is the condition where two threads or processes have locked resources that each other needs and must wait for.
+Since neither thread can release its resources until the other releases its, they're stuck there and that application is now dead in the water.
+</OL>
+<P>
+Of course, as you learn a specific multithreading system then you will learn that system's methods for synchronization.
+And some systems have even more methods than I've mentioned here.
+<P>
+<HR WIDTH=70%>
+<P>
+<B>Applying Multithreading to Network Applications:</B>
+<P>
+OK, so now we may ask how we would apply multitasking or multithreading to network apps.
+Let's start by reviewing why we started down this long path to begin with.
+In a program with a single thread of execution (the normal situation), a blocking socket causes the entire program to come to an abrupt halt until it receives data to be read.
+We need the program to be able to continue to operate while waiting for that data to arrive.
+We need to be able to respond to user input from the keyboard, to receive data from other sockets, and to do whatever else needs to be done (eg, updating a time display on the monitor).
+This is especially necessary for a server that could be handling multiple clients simultaneously, plus checking for any new clients attempting to connect.
+Getting blocked by any single socket would be catastrophic for such a server.
+<P>
+The basic strategy of using multithreading in designing such an application is that you give each socket its own thread of execution; if the socket blocks that thread then it causes no problems, because none of the other threads will be affected by it.
+<P>
+<B>A Multithreading Server:</B>
+<P>
+Among <A HREF="samples.html#ECHO_SERVERS">my sample servers</A>, I developed a version of my multi-client tcp server, <CODE>echomtd</CODE>, that uses multithreading under Windows.  I will describe it in the following discussion to illustrate the general design ideas:
+<OL>
+<LI>When the program starts up, it's running the main thread.
+It is my understanding that that is the thread that should be running your user interface and performing the user I/O.
+It is my understanding that that is where the Windows WinMain loop needs to be running.
+This main thread then creates "worker threads" which do the non-user-interface work.
+Basically, just write the user interface as you normally would.
+<P>
+The basic design of the main thread would be initialization of the application based on the command-line arguments and/or a configuration file, followed by the creation of one or more worker threads, some of which could create more worker threads.
+Then the main thread settles into a loop where it processes user I/O and possibly interacts with some of the worker threads.
+<P>
+In <CODE>echomtd</CODE>, the main thread reads the command-line argument, which is the echo port to use.  Then it does the regular Winsock initialization and initializes the <CODE>CRITICAL_SECTION</CODE> variables for accessing the client list and the output string queue.
+Then it creates the server's listening socket and starts the AcceptThread, passing the listening socket to it.
+Finally, the main thread settles into its user I/O loop in which it looks for keyboard input and checks for output strings to be displayed.
+<P>
+Two possible alternatives would be:
+<OL TYPE=a>
+<LI>Let the AcceptThread create its own listening thread and possibly also have it perform all the Winsock setup and initialization. 
+<P>
+<LI>For a major project, have the main thread create a ManagerThread which will create and manage the thread hierarchy that forms the entire back-end of the application, leaving the main thread with nothing to do except run the user interface and communicate with the ManagerThread.  The user could then type in a command and the main thread would send the command to the ManagerThread who would execute it and send the results back to the main thread to display to the user.
+<P>
+Bear in mind that this ManagerThread idea is ambitious, but it makes sense for a large and major project.
+A lot of its complexity can be delegated to worker threads working under it; eg, a ThreadManager and a ApplicationManager.  
+</OL>
+<P>
+<LI>In simple designs, that first thread created by the main thread would simply be the AcceptThread, which would block on a call to <CODE>accept</CODE> and then, upon receiving an incoming connection, would create a new thread to handle the new client.
+<P>
+This is the approach I took in <CODE>echomtd</CODE>.  When the AcceptThread accepts a new connection, it adds the new client socket to a client list and then starts a new ClientThread and passes the new client socket to it.
+Then it returns to block on <CODE>accept</CODE>.
+<P>
+<LI>The idea behind the ClientThread is that we can have several of them at the same time, each one running the echo session with its own client.
+Then when the client disconnects, the thread performs a <A HREF="tcp_ip.html#SHUTDOWN">graceful shutdown</A> and close, terminating itself.
+<P>
+Again, this is the way that it's done in <CODE>echomtd</CODE>.  
+In addition, the thread reports what's happening by sending output strings to the output string queue, a critical section that all threads would be attempting to access, so that the main thread can actually output them.
+<P>
+<LI>When the server is commanded to shut down, it will need to perform the following operations (though the exact details may vary widely):
+<OL TYPE=a>
+<LI>Tell the AcceptThread to stop accepting new clients, whereupon it will close its listening socket.
+<P>
+<LI>Tell each ClientThread to terminate its session, whereupon it will shut down its connection, close its socket, and then finally close.
+<P>
+<LI>When all ClientThreads have closed, then the AcceptThread will signal that fact to the main thread and then close itself.
+<P>
+<LI>Finally, the main thread can exit, terminating the application.
+</OL>
+<P>
+Sadly, <CODE>echomtd</CODE> does none of that, but rather simply exits.
+Mainly, there's the problem that none of the threads can respond to a command to shut down because they're all blocked.
+We can have the main thread command the threads to terminate, but that would not be a graceful shutdown.
+<P>
+The only solution that comes to my mind at the moment is that we combine techniques; eg, make the threads' sockets non-blocking -- <CODE>select</CODE> could be an option, but since we're only dealing with one socket per thread, <CODE>select</CODE> would be a bit of overkill, but would still be an option if the thread deals with more than one socket.
+That way, the threads would be able to periodically pull their heads out of their sockets and check for an incoming command (eg, via a global variable guarded by a <CODE>CRITICAL_SECTION</CODE>) that they'd need to act upon.
+Nor would it necessarily defeat the purpose of multithreading, since the program can benefit in other ways by being multithreaded; it all depends on your needs and on your design.
+</OL>
+<P>
+<B>A Multithreading Client:</B>
+<P>
+In my echo examples, there wasn't any need for more than a simple echo client.  I really couldn't think of a meaningful way to add multithreading to it.
+But there are a multitude of possible projects where we would want the client to remain free to perform a variety of tasks in addition to communicating with a server.
+<P>
+Let's consider how we might use multithreading in the design of a game client.
+For sake of the example, let's assume that the players will each run their own copy of the client and that they will connect to a server via TCP.  Among other things, the server will maintain the game state, including the condition of all the players and their locations within the game space.  
+Players can also communicate directly with the other players, either individually, to a small group, or broadcasting to all, via UDP datagrams,
+though some forms of inter-player communication which affect the game state would need to either be routed through the server or be reported to the server after the fact.
+In addition, the client could use UDP datagrams to periodically communicate certain information to the server, such as a "heartbeat" message that indicates that the client is still running and is connected; 
+TCP is a robust protocol that is supposed to be able to maintain a connection despite momentary disconnects, which means that it can be difficult to detect when the connection is actually lost (eg, the client computer's network cable is unplugged, the client suddenly crashes).
+Another possibility would be to borrow an idea from FTP and have two TCP connections to the server, one for commands and the other for the transfer of data.
+The point here is that the client can have several sockets to manage.
+<P>
+The client will also have a lot of different tasks to perform; eg (by no means exhaustively):
+<OL TYPE=1>
+<LI>User interface to accept and process commands and display responses.
+<P>
+<LI>Updating of client's knowledge of the game state and game space.
+<P>
+<LI>Real-time updating of graphical display to reflect the updating of the client's knowledge of the game state and space.
+<P>
+<LI>Communications with the server.
+<P>
+<LI>Communications with the other players.
+</OL>
+Of course, the final design will have defined many more functions that all need to proceed unimpeded by the others.
+Multithreading would serve the design well, will separate threads each performing their own individual functions and
+exchanging information with each other through global variables and flags to signal when particular data has been updated.
+Of course synchronizing all that would be the challenge, but that's all part of learning to work with multithreading.
+<P>
+<HR WIDTH=40%>
+<P>
+<B>Multithread/Multiprocess Server Designs</B>
+<P>
+Reiterating the operation of my simple multithreaded server, <CODE>echomtd</CODE>, as a typical example:
+<OL TYPE=1>
+<LI>The main thread initializes the server and then creates and starts the AcceptThread. 
+<P>
+<LI>The AcceptThread handles the listening thread.  
+When a client connects, it accepts the connection, creates a new client socket for that client and creates a new ClientThread to service that client through its client socket.
+There will be one ClientThread for each and every client.
+<P>
+<LI>The ClientThread waits for the client to send it a request, which it services (in the echo service, that means that it echoes the request string back to the client) and then returns to waiting for a request from the client.
+When the client shuts down the connection, the ClientThread performs its part of the shutdown, closes the socket, and ends itself.
+</OL>
+<P>
+A simple multiprocess server would function in a similar manner, only instead of creating a thread for each client it would create a process that would use some inter-process communication (IPC) technique to communicate with its parent and with other processes in the server.
+Again, this would most likely be done under UNIX/Linux, so <CODE>fork</CODE>/<CODE>exec</CODE>* and pipes would most likely be used.
+<P>
+While these simple servers can perform satisfactorily under light and moderate loads, real-life and commercial applications can easily overtax and overwhelm them.
+There is overhead to be paid in creating and destroying threads and much more overhead in creating and destroying processes.  And even some overhead in creating and closing sockets.
+So some different design approaches have been devised to address these problems and to speed up server response while reducing the work load on the system.
+<P>
+Some of those design approaches are examined in Lincoln Stein's book, <CITE>Network Programming with Perl</CITE> (Addison-Wesley, 2001).  
+The following discussions are based primarily on his examples in that source.
+<P>
+<HR WIDTH=40%>
+<P><A NAME="#PREFORK">
+<B>Preforking and Prethreading</B>
+<P>
+One way to avoid loading down the server by creating new processes and threads on the fly is to create them all when the server starts up.
+This is called either <i>preforking</i> or <i>prethreading</i>, depending on whether you're using multitasking or multithreading.
+The basic idea is to create upon start-up a pool of threads or processes from which you draw to handle a new client and back to which you return the threads and processes that the clients have disconnected from.
+That way, you keep reusing the threads and processes instead of constantly creating new ones and destroying them.
+<P>
+Stein's presentation first looks at simple preforking and prethreading using a web server as an example and then discussing their problems and suggesting an improved "adaptive" method.  
+His approach involved much analysis which you can read in his book; I'm just going to give a brief presentation for you get a general idea.  
+Also, the general approachs, problems, and solutions are very similar between forking and threading; it's mainly just the specific techniques that differ:
+<P>
+<DL>
+<DT><B><LI>Simple Forking ("Accept-and-fork"):</B></DT>
+<DD>
+The simple baseline forking server spends most of its time blocking on <CODE>accept</CODE>.
+When a new connection comes in, it spawns a new child, via <CODE>fork</CODE> and <CODE>exec</CODE>, to process that new connection and goes back to blocking on <CODE>accept</CODE>.  
+The child exists long enough to service the client and then terminates when the client disconnects.
+<P>
+While this works well enough under light to moderate loads, it cannot handle heavier demand for new incoming connections.  
+Since Stein's example application is a web server, in which it is typical for a server to be hit with a rapid succession of short requests, his example would routinely be overtaxed.
+Spawning and destroying a new process takes time and resources away from the entire system, not just the server itself, because the entire system normally has only one processor that can only do one thing at a time.
+These bursts of sudden spawning and destroying activity will dog everything down and make that web page very slow to load.
+</DD>
+<P>
+<DT><B><LI>Simple Preforking:</B></DT>
+<DD>
+Stein iterates through a few versions of this.
+The basic idea is that when the server starts up, it spawns a predetermined number of child processes.
+This time, each child process includes the <CODE>accept</CODE>, such that the child process runs an infinite loop 
+that blocks on <CODE>accept</CODE> until a client connects to it, services that client, closes the client socket and
+goes back to blocking on <CODE>accept</CODE> until the next client connects.
+This eliminates the system overhead of child process spawning while trying to service clients.
+And it eliminates the system overhead of destroying the child processes because they never get destroyed, but rather they repeatedly get recycled.
+<P>
+In his first iteration, Stein had the parent process terminate after it had created all the child processes; after all, there was nothing else that it had to do, having handed everything off to the child processes.
+However, problems arose:
+<OL TYPE=1>
+<LI>If more connections started coming in than there are preforked child processes, they cannot be handled, which slows down the server response.
+But there is also a performance and resource cost to the system for each process running, so there is a practical limit to the arbitrarily large number of processes we could prefork.
+<P>
+<LI>If a child process crashes or is terminated, there's no way to replace it.
+<P>
+<LI>There's no easy way to terminate the server:  each child's PID would need to be discovered and each individual child would need to be explicitly terminated.
+<P>
+<LI>With all those children blocking on <CODE>accept</CODE> on the same listening socket, when a new client tries to connect then <i>all</i> of those children will compete for that connection at the same time, straining the system
+as several processes all wake up at the same time and compete for the same resource.
+Stein calls this phenomenon "the thundering herd."
+<P>
+<LI>Some OSes will not allow multiple processes to call <CODE>accept</CODE> on the same socket at the same time.
+</OL>
+<P>
+Stein addresses these problems (except for the first) with his second iteration:
+<OL TYPE=1>
+<LI>By installing signal handlers and keeping the parent process alive, it can respond to the killing of a child by spawning its replacement.
+It can also terminate the server by signalling all the children to terminate, detect when they have all terminated, and then exit.
+<P>
+<LI>By "serializing the <CODE>accept</CODE> call", it solves both the "thundering herd" and multiple <CODE>accept</CODE>s problems.
+Set up a low-system-overhead synchronization mechanism, such as a file-lock on an open file, and the child that is able to gain access will then be allowed to call <CODE>accept</CODE>.
+As soon as that child accepts a connection, it will release that file-lock allowing another free child to call <CODE>accept</CODE> and so on.
+</OL>
+However, this still does not solve the first problem, that of not having enough preforked children available to meet the user demand on the server.
+That is addressed in the <i>adaptive preforking server</i>.
+</DD>
+<P>
+<DT><B><LI>Adaptive Preforking:</B></DT>
+<DD>
+This is where it gets ambitious and more like a real-world server.
+We want to have enough children to service all the clients currently connected, plus a few more to immediately handle new clients coming in, but at the same time we don't want to have too many children sitting idle wasting system resources.
+A lot of supply-and-demand scenarios could illustrate this, but one analogy would be a "just in time" approach to a factory inventory system.
+You want to have enough parts on hand to keep the assembly line running smoothly, but every extra unused part in inventory is wasted capital.  
+You want to minimize the cost of maintaining your inventory while maximizing its ability to feed production.
+How to do that is a complete field of study in itself.
+To really simplify it, ou work with many factors -- eg, how long it takes to get the part from the moment you order it (lead time),
+how many parts get used in a period of time (consumption rate) -- and come up with two important figures:
+the "high water mark" and the "low water mark" (also the terms Stein uses).
+If the number of parts in inventory drops to the "low water mark", then you run the risk of running out of parts (which would completely halt production) so it's time to increase the number of parts normally ordered.
+But if it rises to the "high water mark", then you run the risk of having too many parts in inventory whereupon you need to reduce the number of parts ordered.
+As mentioned before, a lot of supply-and-demand systems have high and low water marks to keep the system within an optimal operating range.
+<P>
+In the case of the adaptive preforking server, in addition to the simple preforking server's solutions, the parent process keeps track of the status of its children.
+If the "high water mark" of too many children being busy is reached, then the parent spawns more children to handle the increased work load; while the system is busy creating those new processes, there are still a few idle children to immediately handle incoming new connections.
+Then when the work load drops off and the number of idle children reaches the "low water mark", the parent kills the excess children to reduce wasted system overhead.
+<P>
+The increased complexity of the adaptive preforking server (ie, "where it gets ambitious") lies in its need to make more extensive use of inter-process communication (IPC).
+The parent needs to be kept appraised of each child's current status so that it can detect the high and low water marks.
+It also needs to be able to command a child to terminate, both when the "high water mark" has been reached and when the server is shutting down.
+<P>
+There are several possible IPC methods that an adaptive preforking server could use. 
+Stein investigates two, pipes and shared memory.
+</DD>
+</DL>
+&nbsp;
+<BR>
+A lot of the approaches and problems in the preceding forking and preforking schemes also apply in general to multithreading.
+<P>
+<DL>
+<DT><B><LI>Simple Multithreading:</B></DT>
+<DD>
+As with the simple "accept-and-fork" server, the simple threading server's main thread spends most of its time blocking on <CODE>accept</CODE>.
+When a new connection comes in, it creates a worker thread to service that client and goes back to blocking on <CODE>accept</CODE>.  
+The new thread exists long enough to service the client and then terminates when the client disconnects.
+<P>
+Again, as with the simple "accept-and-fork" server, this constant creation and destruction of worker threads puts an
+extra load on the system when the server experiences heavy demand.
+The overhead is not as bad as with spawning and destroying processes (multithreading started out being called "light weight processes"), but it is still there and it does still have an impact on performance.
+</DD>
+<P>
+<DT><B><LI>Simple Prethreading:</B></DT>
+<DD>
+As with the simple preforking server, upon start-up the main thread creates the listening socket and then creates all the threads, passing the listening socket to each thread.
+Each thread will then block on <CODE>accept</CODE>, service the client that connects to it, and then after that session ends will clean up and go back to blocking on <CODE>accept</CODE>, waiting for the next client.
+In the meantime, the main thread sits idle with nothing to do, but it cannot exit as in the first simple preforking example, because with multithreading that would close all the threads.
+<P>
+The same problems of the "thundering herd" and multiple <CODE>accept</CODE>s exist as in simple preforking and they are solved in the same manner.
+<P>
+The approach I thought of differs from Stein's in that I would prethread the ClientThread working threads and then have a separate AcceptThread that would pass the new client socket on to an idle thread.
+<A HREF="samples.html#ECHO_SERVERS">My multithreading server</A> anticipates this prethreading approach, though without actually implementing the prethreading itself.
+My approach would require communication with the threads to keep track of their status, which presages the next approach, adaptive prethreading.
+</DD>
+<P>
+<DT><B><LI>Adaptive Prethreading:</B></DT>
+<DD>
+Again, this method mirrors that of adaptive preforking, except that the actual implementation is specific to threading.
+</DD>
+<P>
+<DT><B><LI>Pthreads Thread Pools:</B></DT>
+<DD>
+Another source, <CITE>Pthreads Programming</CITE> by Nichols, Buttlar, & Farrell (O'Reilly, 1998, the "silkworm book"),
+includes some sample applications, including an ATM server.
+In developing the design of the ATM server they discuss <i>Thread Pools</i> (pages 98 to 107).
+It's a prethreading example that they examine in detail with C code (as opposed to Stein's Perl listings).
+<P>
+This scheme prethreads a predetermined number of worker threads whose information structs are kept in an array (dynamically created on start-up).
+The work to be performed arrives on a request queue and is accepted by one of the idle threads. 
+When the task is completed, the thread returns to an idle state.
+When the request queue is empty, then all worker threads will be idle.
+When all threads are busy, then new requests cannot be honored and the system will be notified depending on what operational options were selected.
+<P>
+Note that this is not an adaptive pool, which would require a more dynamic data structure to hold the thread pool, but that could be done.
+</DD>
+</DL>
+These are just a few possibilities.
+How you design your server is completely up to you.
+<P>
+</BLOCKQUOTE>
+<HR>
+<A NAME="KYBD"><H3>Some Possible Ways to Detect Keyboard Input</H3>
+<BLOCKQUOTE>
+<P>
+Yeah, let's finish this section by talking briefly about keyboard input, which also blocks.
+<P>
+If you're writing a Windows GUI application, then the solution is trivial.
+You'll just handle the WM_CHAR messages, just as you would for any Windows app.
+And you would also most likely be using the WSA* functions, since they tie into the Windows
+messaging system so much better, though the standard sockets functions that I've been using
+also work fine under Windows.
+<P>
+Rather, it's when you're writing a console app (AKA, "a DOS program") that keyboard input becomes a problem.  
+This is because, until the ENTER key is pressed, the keyboard routines in the standard C library block.
+The bad news is that there is no standard way to detect a key press or to even read in just a single character when that key is pressed 
+(ie, you can read in a single character, but only after the entire line has been typed and the ENTER key has been pressed).
+The [kind of] good news is that there are ways to do it, but they're not standard and they're not the same across platforms -- ie, the ones for UNIX/Linux don't work for Windows/DOS and vice versa.
+<P>
+A further complication here is that I have only heard of most of these methods, but I've only done one of them myself.
+So this section is only to point you in some possible directions that you can research for yourself.
+I'm really going out on the limb here, so if you know something that I don't, please email me and share.
+OK?
+<P>
+<HR WIDTH=70%>
+<P>
+In Windows console apps (remember, in Windows GUI apps just handle the WM_CHAR messages),
+possible methods for detecting keyboard input without blocking are:
+<BLOCKQUOTE>
+<DL>
+<DT>The <CODE>conio</CODE> library</DT>
+<DD>
+The Console I/O (conio) Library has been around for many years and is closely associated with MS-DOS.
+I first encountered it with Borland's first Turbo C compiler in 1987.
+<P>
+The functions of interest to us here are:
+<UL>
+<LI><CODE>int kbhit(void)</CODE> -- Determines if a keyboard key was pressed. 
+<LI><CODE>int getch(void)</CODE> -- Reads a character directly from the console without buffer, and without echo. 
+<LI><CODE>int getche(void)</CODE> -- Reads a character directly from the console without buffer, but with echo. 
+</UL>
+<P>
+Now, <CODE>getch</CODE> will still block until a key is pressed, so you need to use <CODE>kbhit</CODE> ("keyboard hit") to test whether a key has been pressed.  
+Basically, it's testing whether there's any data in the keyboard buffer.
+Here's some sample code to illustrate the use of these functions, from my example earlier on this page:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+    while (running)
+    {
+        if (kbhit())
+        {
+            ch = getch();
+            switch (tolower(ch))
+            {
+                /* quit on either the "q" command or the escape key  */
+                case 'q':
+                case 27:
+                    running = 0;
+                    break;
+            }
+        }
+        else
+            PerformSelect(m_ServerSock, m_client_list, m_client_list, m_iNumclients);
+
+    } // end while running
+
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+<P>
+<A HREF="http://en.wikipedia.org/wiki/Conio.h">Here</A> is the link to Wikipedia's article on conio.h.
+<P>
+Remember, conio.h only exists in DOS and does not exist on Linux.
+However, some Linux programmers have implemented their own version of some of the conio.h functions; eg, <CODE>kbhit</CODE> (see below).
+</DD>
+<P>
+<HR WIDTH=40%>
+<DT>Console API</DT>
+<DD>AKA "<A HREF="http://msdn2.microsoft.com/en-us/library/ms682010.aspx">
+Character-Mode Applications</A>".
+These functions allow you to control the position of the cursor within the console (AKA "DOS window"),
+etc.
+They also allow you to detect keyboard events, which I believe can then be used to allow you to read in individual keys as they are pressed.
+<P>
+DISCLAIMER:  I haven't played with this yet, so I'm just making an educated guess.
+</DD>
+<P>
+<HR WIDTH=40%>
+<DT><A HREF="http://pdcurses.sourceforge.net/">pdcurses</A></DT>
+<DD>This is a public domain (hence "pd") version of the curses library which has been ported to several systems, including DOS.
+<P>
+This method is slightly portable, since the curses libary (or ncurses) is very common on Linux systems.
+I would assume that the same techniques that work on Linux would work on pdcurses.
+<P>
+A few years ago, I did download this library and run their example programs successfully on Win98SE.
+I haven't played with it since, nor tried writing any of my own code.
+</DD>
+</DL>
+</BLOCKQUOTE>
+<P>
+<HR WIDTH=70%>
+In UNIX/Linux, possible methods for detecting keyboard input without blocking are:
+<BLOCKQUOTE>
+<DL>
+<DT><CODE>select</CODE></DT>
+<DD>As I have already said, you can add file descriptor zero (0), the standard input file <CODE>stdin</CODE>, to the read set and <CODE>select</CODE> 
+will tell you whether there's input waiting to be read.  
+Even though it's not single-key entry, at least it won't block.
+<P>
+I have heard that curses will interfere with this method.
+<P>
+Remember, <CODE>select</CODE> will not do this for you in Windows.
+The reason is because in UNIX sockets are files, so <CODE>select</CODE> works for files, whereas in 
+Windows sockets are <I>not</I> files, so <CODE>select</CODE> only works for sockets.
+</DD>
+<P>
+<HR WIDTH=40%>
+<DT>Low-level terminal commands (stty)</DT>
+<DD>There's a family of C system functions that set up the terminals.
+I just remember it being discussed in a class I took that it can change how the terminal handles the keyboard such that you could have single-key entry.
+There's also the stty shell command that should do much the same.
+<P>
+There's sample code in the <CODE>kbhit</CODE> function listing posted below.
+</DD>
+<P>
+<HR WIDTH=40%>
+<DT>curses and ncurses</DT>
+<DD>These are cursor-display libraries that encapsulate the low-level terminal I/O and ANSI display codes.
+crmode is supposed to allow single-key input and processing, but I don't know if curses will block while waiting for that single key.
+<P>
+This method is slightly portable, since the curses libary has been ported to Windows; eg, pdcurses.
+<P>
+I have heard that curses will interfere with the select method.  I don't know the particulars.
+<P>
+Here's come code that was posted 
+<A HREF="http://forums.devshed.com/c-programming-42/nightmare-with-non-blocking-getchar-438758.html">on a forum</A> which illustrates the calls that should work.
+I have not tested this myself:
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+#include <curses.h>
+
+int main(void) 
+{
+    enum { WAIT, RECEIVE } state = WAIT;
+
+    initscr();
+    raw();
+    noecho();
+
+    addstr("Press keys (control-d when finished)\n");
+
+    nodelay(stdscr, FALSE);
+
+    while(1) 
+    {
+        int c = getch();
+
+        switch (state) 
+        {
+        case WAIT:
+            state = RECEIVE;
+            nodelay(stdscr, TRUE);
+
+            erase();
+
+            printw("(0x%02x)", c);
+            refresh();
+            break;
+        case RECEIVE:
+            if (c == ERR) 
+            {
+                state = WAIT;
+                nodelay(stdscr, FALSE);
+            } 
+            else 
+            {
+                printw("(0x%02x)", c);
+                refresh();
+            }
+            break;
+        }
+        if (c == 0x04) break;
+    }
+
+    echo();
+    noraw();
+
+    endwin();
+    return 0;
+}
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</DD>
+<P>
+<HR WIDTH=40%>
+<DT><CODE>kbhit</CODE></DT>
+<DD>
+This is a port of the conio.h function, <CODE>kbhit</CODE>.
+Source code and write-up is at 
+<A HREF="http://www.pwilson.net/kbhit.html">http://www.pwilson.net/kbhit.html</A>.
+This listing should serve as an example of what terminal attribute commands to use.
+<BLOCKQUOTE>
+<TABLE CELLPADDING=4 BGCOLOR="#dadAa0">
+<TR><TD>
+<PRE>
+/* filename: kbhit.c */
+
+/* ***************************************************************************
+ *
+ *          Copyright 1992-2006 by Pete Wilson All Rights Reserved
+ *           50 Staples Street : Lowell Massachusetts 01851 : USA
+ *        http://www.pwilson.net/   pete at pwilson dot net   +1 978-454-4547
+ *
+ * This item is free software: you can redistribute it and/or modify it as 
+ * long as you preserve this copyright notice. Pete Wilson prepared this item 
+ * hoping it might be useful, but it has NO WARRANTY WHATEVER, not even any 
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *
+ *************************************************************************** */
+
+/* ***************************************************************************
+ *
+ *                          KBHIT.C
+ *
+ * Based on the work of W. Richard Stevens in "Advanced Programming in
+ *   the Unix Environment," Addison-Wesley; and of Floyd Davidson. 
+ *
+ * Contains these functions:
+ *
+ *  To set the TTY mode:
+ *     tty_set_raw() Unix setup to read a character at a time.
+ *     tty_set_cooked() Unix setup to reverse tty_set_raw()
+ *
+ *  To read keyboard input:
+ *     kb_getc()      keyboard get character, NON-BLOCKING. If a char
+ *                      has been typed, return it. Else return 0.
+ *     kb_getc_w()    kb get char with wait: BLOCKING. Wait for a char
+ *                      to be typed and return it.
+ *
+ *  How to use:
+ *     tty_set_raw()  set the TTY mode to read one char at a time.
+ *     kb_getc()      read chars one by one.
+ *     tty_set_cooked() VERY IMPORTANT: restore cooked mode when done.
+ *
+ * Revision History:
+ *
+ *     DATE                  DESCRIPTION
+ * -----------    --------------------------------------------
+ * 12-jan-2002     new
+ * 20-aug-2002     cleanup
+ * 24-nov-2003     Fixed kb_getc() so that it really is non blocking(JH)
+ * 10-sep-2006     Let kb_getc() work right under certain Unix/Linux flavors
+ *
+ *************************************************************************** */
+
+#ifdef __cplusplus
+  extern "C" {
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
+#include <errno.h>
+
+#ifndef STDIN_FILENO
+  #define STDIN_FILENO 0
+#endif
+
+extern int errno;                 
+
+static struct termios termattr, save_termattr;
+static int ttysavefd = -1;
+static enum 
+{ 
+  RESET, RAW, CBREAK 
+} ttystate = RESET;
+
+/* ***************************************************************************
+ *
+ * set_tty_raw(), put the user's TTY in one-character-at-a-time mode.
+ * returns 0 on success, -1 on failure.
+ *
+ *************************************************************************** */
+int
+set_tty_raw(void) 
+{
+  int i;
+
+  i = tcgetattr (STDIN_FILENO, &termattr);
+  if (i < 0) 
+  {
+    printf("tcgetattr() returned %d for fildes=%d\n",i,STDIN_FILENO); 
+    perror ("");
+    return -1;
+  }
+  save_termattr = termattr;
+
+  termattr.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+  termattr.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+  termattr.c_cflag &= ~(CSIZE | PARENB);
+  termattr.c_cflag |= CS8;
+  termattr.c_oflag &= ~(OPOST);
+   
+  termattr.c_cc[VMIN] = 1;  /* or 0 for some Unices;  see note 1 */
+  termattr.c_cc[VTIME] = 0;
+
+  i = tcsetattr (STDIN_FILENO, TCSANOW, &termattr);
+  if (i < 0) 
+  {
+    printf("tcsetattr() returned %d for fildes=%d\n",i,STDIN_FILENO); 
+    perror("");
+    return -1;
+  }
+   
+  ttystate = RAW;
+  ttysavefd = STDIN_FILENO;
+
+  return 0;
+}
+
+/* ***************************************************************************
+ *
+ * set_tty_cbreak(), put the user's TTY in cbreak mode.
+ * returns 0 on success, -1 on failure.
+ *
+ *************************************************************************** */
+int 
+set_tty_cbreak() 
+{
+  int i;
+
+  i = tcgetattr (STDIN_FILENO, &termattr);
+  if (i < 0) 
+  {
+    printf("tcgetattr() returned %d for fildes=%d\n",i,STDIN_FILENO); 
+    perror ("");
+    return -1;
+  }
+
+  save_termattr = termattr;
+
+  termattr.c_lflag &= ~(ECHO | ICANON);
+  termattr.c_cc[VMIN] = 1;
+  termattr.c_cc[VTIME] = 0;
+      
+  i = tcsetattr (STDIN_FILENO, TCSANOW, &termattr);
+  if (i < 0) 
+  {
+    printf("tcsetattr() returned %d for fildes=%d\n",i,STDIN_FILENO); 
+    perror ("");
+    return -1;
+  }
+  ttystate = CBREAK;
+  ttysavefd = STDIN_FILENO;
+
+  return 0;
+}
+
+/* ***************************************************************************
+ *
+ * set_tty_cooked(), restore normal TTY mode. Very important to call
+ *   the function before exiting else the TTY won't be too usable.
+ * returns 0 on success, -1 on failure.
+ *
+ *************************************************************************** */
+int
+set_tty_cooked() 
+{
+  int i;
+  if (ttystate != CBREAK && ttystate != RAW) 
+  {
+    return 0;
+  }
+  i = tcsetattr (STDIN_FILENO, TCSAFLUSH, &save_termattr);
+  if (i < 0) 
+  {
+    return -1;
+  }
+  ttystate = RESET;
+  return 0;
+}
+
+/* ***************************************************************************
+ *
+ * kb_getc(), if there's a typed character waiting to be read,
+ *   return it; else return 0.
+ * 10-sep-2006: kb_getc() fails (it hangs on the read() and never returns
+ * until a char is typed) under some Unix/Linux versions: ubuntu, suse, and
+ * maybe others. To make it work, please uncomment two source lines below.
+ *
+ *************************************************************************** */
+unsigned char
+kb_getc(void) 
+{
+  int i;
+  unsigned char ch;
+  ssize_t size;
+/*  termattr.c_cc[VMIN] = 0; */ /* uncomment if needed */
+  i = tcsetattr (STDIN_FILENO, TCSANOW, &termattr);
+  size = read (STDIN_FILENO, &ch, 1);
+/*  termattr.c_cc[VMIN] = 1; */ /* uncomment if needed */
+  i = tcsetattr (STDIN_FILENO, TCSANOW, &termattr);
+  if (size == 0)
+  {
+    return 0;
+  }
+  else
+  {
+    return ch;
+  }
+}
+
+/* ***************************************************************************
+ *
+ * kb_getc_w(), wait for a character to be typed and return it.
+ *
+ *************************************************************************** */
+unsigned char
+kb_getc_w(void) 
+{
+  unsigned char ch;
+  size_t size;
+
+  while (1)
+  {
+
+    usleep(20000);        /* 1/50th second: thanks, Floyd! */
+
+    size = read (STDIN_FILENO, &ch, 1);
+    if (size > 0)
+    {
+      break;
+    }
+  }
+  return ch;
+}
+
+
+#define TEST
+#ifdef TEST
+
+void echo(unsigned char ch);
+
+static enum 
+{ 
+  CH_ONLY, CH_HEX 
+} how_echo = CH_ONLY;
+
+int 
+main(int argc, char * argv[])
+{
+  unsigned char ch;
+
+  printf("Test Unix single-character input.\n");
+
+  set_tty_raw();         /* set up character-at-a-time */
+  
+  while (1)              /* wait here for a typed char */
+  {
+    usleep(20000);       /* 1/50th second: thanks, Floyd! */
+    ch = kb_getc();      /* char typed by user? */
+    if (0x03 == ch)      /* might be control-C */
+    {
+      set_tty_cooked();  /* control-C, restore normal TTY mode */
+      return 1;          /* and get out */
+    }
+    echo(ch);            /* not control-C, echo it */
+  }
+}
+
+void
+echo(unsigned char ch)
+{
+  switch (how_echo)
+  {
+  case CH_HEX:
+    printf("%c,0x%x  ",ch,ch);
+    break;
+  default:
+  case CH_ONLY:
+    printf("%c", ch);
+    break;
+  }
+
+  fflush(stdout);      /* push it out */
+}
+
+#endif /* test */
+
+
+#ifdef __cplusplus
+}
+#endif
+
+/* ----- Notes -----
+ 
+1. Some flavors of Unix need termattr.c_cc[VMIN] = 0 here else
+the read() in kb_getc() blocks:
+ -- MPC7400 G4 MAC running Yellowdog Linux with a 2.4.18 Kernel.
+       Thanks to Jon Harrison.
+ -- ubuntu and suse linux, it seems.
+----- */
+</PRE>
+</TD></TR>
+</TABLE>
+</BLOCKQUOTE>
+</DD>
+</DL>
+</BLOCKQUOTE>
+<P>
+</BLOCKQUOTE>
+<HR>
+<BLOCKQUOTE>
+<A HREF="#TopOfPage">Return to Top of Page</A><br>
+<A HREF="index.html">Return to DWise1's Sockets Programming Page</A><BR>
+<A HREF="../index.html">Return to DWise1's Programming Page</A><BR>
+<P>
+<A HREF="../index.html#CONTACTME">Contact me.</A>
+</BLOCKQUOTE>
+<HR>
+<P>
+<B><I>Share and enjoy!</I></B>
+<P>
+<i>First uploaded on 2007 May 01.<br>
+Updated 2011 September 10.</i>
+<P>
+</BODY>
+</HTML>

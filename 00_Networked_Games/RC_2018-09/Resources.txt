@@ -1,0 +1,7 @@
+
+
+
+https://www.binarytides.com/socket-programming-c-linux-tutorial/
+https://www.binarytides.com/server-client-example-c-sockets-linux/
+
+

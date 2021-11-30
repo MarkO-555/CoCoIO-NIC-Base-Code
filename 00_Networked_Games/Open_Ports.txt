@@ -1,0 +1,12 @@
+
+
+Port OPEN in the FireWall on play-classics.net/play-classics.online
+
+
+ICMP 
+
+TCP: 21, 22, 23, 80, 443, 8443, 8447
+
+TCP/UDP: 6800-6999, 65500-65535
+
+
