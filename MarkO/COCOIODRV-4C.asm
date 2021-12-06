@@ -1,5 +1,5 @@
 ;*********************************************************************
-;* Title: COCOIODRV-4B.asm
+;* Title: COCOIODRV-4C.asm
 ;*********************************************************************
 ;* Author: R. Allen Murphey, & MarkO
 ;*
@@ -46,21 +46,105 @@ DISPSN:     jmp   DISP_SUBNET       ;$7E1B
 DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
 DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
 
+;                 |12345678901234567890123456789012|
+LABEL01:    fcc   "COCOIO NIC DRIVER v0.00.04c"
+            fcb   $0D,$0A,$00
+;            fcb   $00
+LABEL02:    fcc   "R. Allen Murphey, MarkO"
+            fcb   $0D,$0A,$00
+;            fcb   $00
+LABEL03:    fcc   " & Rick Ulland"
+            fcb   $0D,$0A,$00
+;            fcb   $00
+LABEL04:    fcc   "Copyleft 2021, The CoCoIO Group"
+            fcb   $0D,$0A,$0D,$0A,$00
+;            fcb   $00
+LABEL10:    fcc   "WizNet5100: "
+;            fcb   $0D,$0A,$00
+            fcb   $00
+LABEL11:    fcc   "Located @FF68"
+            fcb   $0D,$0A,$00
+;            fcb   $00
+LABEL12:    fcc   "Located @FF78"
+            fcb   $0D,$0A,$00
+;            fcb   $00
+LABEL13:    fcc   "NOT Located"
+            fcb   $0D,$0A,$00
+;            fcb   $00
 
-W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
+
+COCOIOPORT: fdb   $0000
+
+
+
+W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S and Determine the I/O Port location
             jsr   MPISLOT1
 ;            jsr   DALLY
-            lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
+            ldd   #LABEL01    ; Driver Banner 01, Hello World Message 
+            jsr   DISPSTR0    ; Display the Label
+            ldd   #LABEL02    ; Driver Banner 02
+            jsr   DISPSTR0    ; Display the Label
+            ldd   #LABEL03    ; Driver Banner 03
+            jsr   DISPSTR0    ; Display the Label
+            ldd   #LABEL04    ; Driver Banner 04
+            jsr   DISPSTR0    ; Display the Label
+
+
+                              ; Find the CoCoIO Port, or Not..
+            ldd   #LABEL10    ; Driver Banner 10, WizNet5100 Status
+            jsr   DISPSTR0    ; Display the Label
+
+            jsr   TRYCIO0
+            ldd   COCOIOPORT
+            bne   INITEXIT
+
+            ldd   #LABEL13    ; Driver Banner 13, WizNet5100 NOT Located
+            jsr   DISPSTR0    ; Display the Label
+INITEXIT:   rts            
+                              ; Try the First Address
+TRYCIO0:    lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
             ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
             sta   CIO0CMND    ; Trigger the reset
-RSTDONE:    lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-            bmi   RSTDONE     ; if bit 7, then A was negative, keep checking bit
-SETMODE:    ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
+RST0DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
+            bmi   RST0DONE    ; if bit 7, then A was negative, keep checking bit
+            ldb   #3          ; Time Out Loop
+SET0MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
             sta   CIO0CMND    ; configure the chip and done
             lda   CIO0CMND    ; readback mode
             cmpa  #3          ; is it what we want?
-            bne   SETMODE     ; no, try again
+            beq   DISLAB0     ; Branch to Display Label
+            decb
+            bne   SET0MODE    ; no, try again
+            jmp   TRYCIO1
+
+DISLAB0:    ldd   $FF68
+            std   COCOIOPORT
+            ldd   #LABEL11    ; Driver Banner 11, WizNet5100 @FF68
+            jsr   DISPSTR0    ; Display the Label
             rts
+
+TRYCIO1:    lda   CIO1CMND    ; Read the current value of MR from CoCoIO Command
+            ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+            sta   CIO1CMND    ; Trigger the reset
+RST1DONE:   lda   CIO1CMND    ; Now read command register to check bit 7 clears when reset is done
+            bmi   RST1DONE    ; if bit 7, then A was negative, keep checking bit
+            ldb   #3          ; Time Out Loop
+SET1MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
+            sta   CIO1CMND    ; configure the chip and done
+            lda   CIO1CMND    ; readback mode
+            cmpa  #3          ; is it what we want?
+            beq   DISLAB1     ; Branch to Display Label
+            decb
+            bne   SET1MODE    ; no, try again
+            jmp   TRY1EXIT
+
+DISLAB1:    ldd   $FF78
+            std   COCOIOPORT
+            ldd   #LABEL12    ; Driver Banner 12, WizNet5100 @FF78
+            jsr   DISPSTR0    ; Display the Label
+TRY1EXIT:   rts
+
+
 
 W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
             jsr   MPISLOT1
@@ -115,7 +199,7 @@ W5100_IPADDR:                 ; Next the Source IP Address
 
             rts
 
-DISP_GATEWAY: 
+DISP_GATEWAY:                  ; D for Start, Y for length
             ldd   #GWLABEL
             jsr   DISPSTR0     ; Display the Label
             ldd   #GAR0        ; W5100S Gateway Address Register 0
