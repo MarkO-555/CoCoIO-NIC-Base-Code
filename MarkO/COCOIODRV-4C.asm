@@ -72,8 +72,38 @@ LABEL13:    fcc   "NOT Located"
             fcb   $0D,$0A,$00
 ;            fcb   $00
 
-
 COCOIOPORT: fdb   $0000
+
+GWLABEL:    fcc   "GATEWAY:     "
+;            fcb   $0D,$0A,$00
+            fcb   $00
+MYGATEWAY:                    ; My Gateway IP Address
+            fcb   192,168,254,254
+
+SNLABEL:    fcc   "SUBNET:      "
+;            fcb   $0D,$0A,$00
+            fcb   $00
+MYSUBNET:                     ; My Subnet Mask
+            fcb   255,255,255,0 
+
+MALABEL:    fcc   "MAC ADDRESS: "
+;            fcb   $0D,$0A,$00
+            fcb   $00
+MYMAC:                        ; My Source Hardware Address
+            fcb   $00,$08,$DC,$00,$00,$01
+
+IPLABEL:    fcc   "IP ADDRESS:  "
+;            fcb   $0D,$0A,$00
+            fcb   $00
+MYIP:                         ; My Source IP Address
+            fcb   192,168,254,10
+                              ; End of My CoCoIO configuration
+
+
+
+
+
+
 
 
 
@@ -331,18 +361,6 @@ DISPSTRX:
 
             rts
 
-GWLABEL:    fcc   "GATEWAY:     "
-;            fcb   $0D,$0A,$00
-            fcb   $00
-SNLABEL:    fcc   "SUBNET:      "
-;            fcb   $0D,$0A,$00
-            fcb   $00
-MALABEL:    fcc   "MAC ADDRESS: "
-;            fcb   $0D,$0A,$00
-            fcb   $00
-IPLABEL:    fcc   "IP ADDRESS:  "
-;            fcb   $0D,$0A,$00
-            fcb   $00
 
 BUFRSOC0:   ; This sets up Socket 0, with 8KB RX and TX Buffers
             ldd   #RMSR       ; RX Memory Size Register
@@ -412,6 +430,6 @@ FORGNP:                        ; My Source IP Address
             fcb   192,168,254,10
 
 
-            include "COCOIOCFG.asm"
+;            include "COCOIOCFG.asm"
 
             end   RESET       ; End of driver
