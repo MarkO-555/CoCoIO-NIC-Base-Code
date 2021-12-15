@@ -131,27 +131,27 @@ W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S and Determine the 
             ldd   #LABEL13    ; Driver Banner 13, WizNet5100 NOT Located
             jsr   DISPSTR0    ; Display the Label
 INITEXIT:   rts            
-                              ; Try the First Address
+                              ;  Lets Check $FF68
 TRYCIO0:    lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
             ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-            ldb   #3          ; Time Out Loop
+            ldb   #3          ; Time Out Loop, Three Tries
             sta   CIO0CMND    ; Trigger the reset
 RST0DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-            anda  #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-            bmi   CONTCIO0
-            decb
+            anda  #%10000000  ; Mask bit 7 RST to 1
+            bmi   CONTCIO0	  ; Loop, Timed-Out, Move to Next Section
+            decb			  ; Loop Count-Down
             bne   RST0DONE    ; if bit 7, then A was negative, keep checking bit
-CONTCIO0:   ldb   #3          ; Time Out Loop
+CONTCIO0:   ldb   #3          ; Time Out Loop, Three Tries
 SET0MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
             sta   CIO0CMND    ; configure the chip and done
             lda   CIO0CMND    ; readback mode
-            cmpa  #3          ; is it what we want?
+            cmpa  #%00000011  ; is it what we want?
             beq   DISLAB0     ; Branch to Display Label
-            decb
+            decb			  ; Loop Count-Down
             bne   SET0MODE    ; no, try again
-            jmp   TRYCIO1
+            jmp   TRYCIO1	  ; OK, lets Check $FF78
 
-DISLAB0:    ldd   $FF68
+DISLAB0:    ldd   $FF68		  ; We Found the WizNet, save the I/O Location
             std   COCOIOPORT
             ldd   #LABEL11    ; Driver Banner 11, WizNet5100 @FF68
             jsr   DISPSTR0    ; Display the Label
@@ -162,22 +162,22 @@ TRYCIO1:    lda   CIO1CMND    ; Read the current value of MR from CoCoIO Command
             ldb   #3          ; Time Out Loop
             sta   CIO1CMND    ; Trigger the reset
 RST1DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-            anda  #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-            bmi   CONTCIO1
-            decb
+            anda  #%10000000  ; Mask bit 7 RST to 1
+            bmi   CONTCIO1	  ; Loop, Timed-Out, Move to Next Section
+            decb			  ; Loop Count-Down
             bne   RST1DONE    ; if bit 7, then A was negative, keep checking bit
 
 CONTCIO1:   ldb   #3          ; Time Out Loop
 SET1MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
             sta   CIO1CMND    ; configure the chip and done
             lda   CIO1CMND    ; readback mode
-            cmpa  #3          ; is it what we want?
+            cmpa  #%00000011  ; is it what we want?
             beq   DISLAB1     ; Branch to Display Label
-            decb
+            decb			  ; Loop Count-Down
             bne   SET1MODE    ; no, try again
-            jmp   TRY1EXIT
+            jmp   TRY1EXIT	  ; Nope, CoCoIO is Not Here
 
-DISLAB1:    ldd   $FF78
+DISLAB1:    ldd   $FF78		  ; We Found the WizNet, save the I/O Location
             std   COCOIOPORT
             ldd   #LABEL12    ; Driver Banner 12, WizNet5100 @FF78
             jsr   DISPSTR0    ; Display the Label

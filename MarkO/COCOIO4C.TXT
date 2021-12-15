@@ -723,27 +723,27 @@
 7F41 CC7EBE           ( COCOIODRV-4C.asm):00131                     ldd   #LABEL13    ; Driver Banner 13, WizNet5100 NOT Located
 7F44 BD80B1           ( COCOIODRV-4C.asm):00132                     jsr   DISPSTR0    ; Display the Label
 7F47 39               ( COCOIODRV-4C.asm):00133         INITEXIT:   rts            
-                      ( COCOIODRV-4C.asm):00134                                       ; Try the First Address
+                      ( COCOIODRV-4C.asm):00134                                       ;  Lets Check $FF68
 7F48 B6FF68           ( COCOIODRV-4C.asm):00135         TRYCIO0:    lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
 7F4B 8A80             ( COCOIODRV-4C.asm):00136                     ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-7F4D C603             ( COCOIODRV-4C.asm):00137                     ldb   #3          ; Time Out Loop
+7F4D C603             ( COCOIODRV-4C.asm):00137                     ldb   #3          ; Time Out Loop, Three Tries
 7F4F B7FF68           ( COCOIODRV-4C.asm):00138                     sta   CIO0CMND    ; Trigger the reset
 7F52 B6FF68           ( COCOIODRV-4C.asm):00139         RST0DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-7F55 8480             ( COCOIODRV-4C.asm):00140                     anda  #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-7F57 2B03             ( COCOIODRV-4C.asm):00141                     bmi   CONTCIO0
-7F59 5A               ( COCOIODRV-4C.asm):00142                     decb
+7F55 8480             ( COCOIODRV-4C.asm):00140                     anda  #%10000000  ; Mask bit 7 RST to 1
+7F57 2B03             ( COCOIODRV-4C.asm):00141                     bmi   CONTCIO0        ; Loop, Timed-Out, Move to Next Section
+7F59 5A               ( COCOIODRV-4C.asm):00142                     decb                          ; Loop Count-Down
 7F5A 26F6             ( COCOIODRV-4C.asm):00143                     bne   RST0DONE    ; if bit 7, then A was negative, keep checking bit
-7F5C C603             ( COCOIODRV-4C.asm):00144         CONTCIO0:   ldb   #3          ; Time Out Loop
+7F5C C603             ( COCOIODRV-4C.asm):00144         CONTCIO0:   ldb   #3          ; Time Out Loop, Three Tries
 7F5E 8A03             ( COCOIODRV-4C.asm):00145         SET0MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
 7F60 B7FF68           ( COCOIODRV-4C.asm):00146                     sta   CIO0CMND    ; configure the chip and done
 7F63 B6FF68           ( COCOIODRV-4C.asm):00147                     lda   CIO0CMND    ; readback mode
-7F66 8103             ( COCOIODRV-4C.asm):00148                     cmpa  #3          ; is it what we want?
+7F66 8103             ( COCOIODRV-4C.asm):00148                     cmpa  #%00000011  ; is it what we want?
 7F68 2706             ( COCOIODRV-4C.asm):00149                     beq   DISLAB0     ; Branch to Display Label
-7F6A 5A               ( COCOIODRV-4C.asm):00150                     decb
+7F6A 5A               ( COCOIODRV-4C.asm):00150                     decb                          ; Loop Count-Down
 7F6B 26F1             ( COCOIODRV-4C.asm):00151                     bne   SET0MODE    ; no, try again
-7F6D 7E7F7D           ( COCOIODRV-4C.asm):00152                     jmp   TRYCIO1
+7F6D 7E7F7D           ( COCOIODRV-4C.asm):00152                     jmp   TRYCIO1         ; OK, lets Check $FF78
                       ( COCOIODRV-4C.asm):00153         
-7F70 FCFF68           ( COCOIODRV-4C.asm):00154         DISLAB0:    ldd   $FF68
+7F70 FCFF68           ( COCOIODRV-4C.asm):00154         DISLAB0:    ldd   $FF68           ; We Found the WizNet, save the I/O Location
 7F73 FD7ECC           ( COCOIODRV-4C.asm):00155                     std   COCOIOPORT
 7F76 CC7E9E           ( COCOIODRV-4C.asm):00156                     ldd   #LABEL11    ; Driver Banner 11, WizNet5100 @FF68
 7F79 BD80B1           ( COCOIODRV-4C.asm):00157                     jsr   DISPSTR0    ; Display the Label
@@ -754,22 +754,22 @@
 7F82 C603             ( COCOIODRV-4C.asm):00162                     ldb   #3          ; Time Out Loop
 7F84 B7FF78           ( COCOIODRV-4C.asm):00163                     sta   CIO1CMND    ; Trigger the reset
 7F87 B6FF68           ( COCOIODRV-4C.asm):00164         RST1DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-7F8A 8480             ( COCOIODRV-4C.asm):00165                     anda  #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-7F8C 2B03             ( COCOIODRV-4C.asm):00166                     bmi   CONTCIO1
-7F8E 5A               ( COCOIODRV-4C.asm):00167                     decb
+7F8A 8480             ( COCOIODRV-4C.asm):00165                     anda  #%10000000  ; Mask bit 7 RST to 1
+7F8C 2B03             ( COCOIODRV-4C.asm):00166                     bmi   CONTCIO1        ; Loop, Timed-Out, Move to Next Section
+7F8E 5A               ( COCOIODRV-4C.asm):00167                     decb                          ; Loop Count-Down
 7F8F 26F6             ( COCOIODRV-4C.asm):00168                     bne   RST1DONE    ; if bit 7, then A was negative, keep checking bit
                       ( COCOIODRV-4C.asm):00169         
 7F91 C603             ( COCOIODRV-4C.asm):00170         CONTCIO1:   ldb   #3          ; Time Out Loop
 7F93 8A03             ( COCOIODRV-4C.asm):00171         SET1MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
 7F95 B7FF78           ( COCOIODRV-4C.asm):00172                     sta   CIO1CMND    ; configure the chip and done
 7F98 B6FF78           ( COCOIODRV-4C.asm):00173                     lda   CIO1CMND    ; readback mode
-7F9B 8103             ( COCOIODRV-4C.asm):00174                     cmpa  #3          ; is it what we want?
+7F9B 8103             ( COCOIODRV-4C.asm):00174                     cmpa  #%00000011  ; is it what we want?
 7F9D 2706             ( COCOIODRV-4C.asm):00175                     beq   DISLAB1     ; Branch to Display Label
-7F9F 5A               ( COCOIODRV-4C.asm):00176                     decb
+7F9F 5A               ( COCOIODRV-4C.asm):00176                     decb                          ; Loop Count-Down
 7FA0 26F1             ( COCOIODRV-4C.asm):00177                     bne   SET1MODE    ; no, try again
-7FA2 7E7FB1           ( COCOIODRV-4C.asm):00178                     jmp   TRY1EXIT
+7FA2 7E7FB1           ( COCOIODRV-4C.asm):00178                     jmp   TRY1EXIT        ; Nope, CoCoIO is Not Here
                       ( COCOIODRV-4C.asm):00179         
-7FA5 FCFF78           ( COCOIODRV-4C.asm):00180         DISLAB1:    ldd   $FF78
+7FA5 FCFF78           ( COCOIODRV-4C.asm):00180         DISLAB1:    ldd   $FF78           ; We Found the WizNet, save the I/O Location
 7FA8 FD7ECC           ( COCOIODRV-4C.asm):00181                     std   COCOIOPORT
 7FAB CC7EAE           ( COCOIODRV-4C.asm):00182                     ldd   #LABEL12    ; Driver Banner 12, WizNet5100 @FF78
 7FAE BD80B1           ( COCOIODRV-4C.asm):00183                     jsr   DISPSTR0    ; Display the Label
