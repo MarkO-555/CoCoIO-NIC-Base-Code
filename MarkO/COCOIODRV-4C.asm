@@ -214,8 +214,11 @@ W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
             rts
 
 W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Length, X for Data
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+            pshs  x           ; Save Data Address
+            ldx   COCOIOPORT  
+            sta   ,x+         ; CoCoIO Address Register MSB
+            stb   ,x+         ; CoCoIO Address Register LSB
+            puls  x           ; Restore Data Address
 ;            jsr   DALLY
             tfr   y,d         ; Setup B for loop counting
 SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
@@ -274,8 +277,11 @@ W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
 ;            ldd   #GWLABEL
 ;            jsr   DISPSTR0    ; Display the Label
 ;            ldd   #GAR0       ; W5100S Gateway Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+            pshs  x           ; Save X
+            ldx   COCOIOPORT  
+            sta   ,x+         ; CoCoIO Address Register MSB
+            stb   ,x+         ; CoCoIO Address Register LSB
+            puls  x           ; Restore X
             tfr   y,d         ; Setup B for loop counting
 DISLOOP:   
             jsr   BIN2HEX
