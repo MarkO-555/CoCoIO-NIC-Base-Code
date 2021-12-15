@@ -134,10 +134,14 @@ INITEXIT:   rts
                               ; Try the First Address
 TRYCIO0:    lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
             ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+            ldb   #3          ; Time Out Loop
             sta   CIO0CMND    ; Trigger the reset
 RST0DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-            bmi   RST0DONE    ; if bit 7, then A was negative, keep checking bit
-            ldb   #3          ; Time Out Loop
+            anda  #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+            bmi   CONTCIO0
+            decb
+            bne   RST0DONE    ; if bit 7, then A was negative, keep checking bit
+CONTCIO0:   ldb   #3          ; Time Out Loop
 SET0MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
             sta   CIO0CMND    ; configure the chip and done
             lda   CIO0CMND    ; readback mode
@@ -155,10 +159,15 @@ DISLAB0:    ldd   $FF68
 
 TRYCIO1:    lda   CIO1CMND    ; Read the current value of MR from CoCoIO Command
             ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-            sta   CIO1CMND    ; Trigger the reset
-RST1DONE:   lda   CIO1CMND    ; Now read command register to check bit 7 clears when reset is done
-            bmi   RST1DONE    ; if bit 7, then A was negative, keep checking bit
             ldb   #3          ; Time Out Loop
+            sta   CIO1CMND    ; Trigger the reset
+RST1DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
+            anda  #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+            bmi   CONTCIO1
+            decb
+            bne   RST1DONE    ; if bit 7, then A was negative, keep checking bit
+
+CONTCIO1:   ldb   #3          ; Time Out Loop
 SET1MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
             sta   CIO1CMND    ; configure the chip and done
             lda   CIO1CMND    ; readback mode
