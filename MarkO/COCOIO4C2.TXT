@@ -616,16 +616,16 @@
 7E00 7E7F18     RESETP:     jmp   W5100_RST         ;$7E00
 7E03 7E7FAF     CONFIG:     jmp   W5100_CFG         ;$7E03
 7E06 7E7FE4     SETREG:     jmp   W5100_SETREG      ;$7E06
-7E09 7E7FFA     GATEWAY:    jmp   W5100_GATEWAY     ;$7E09
-7E0C 7E7FFA     SUBNET:     jmp   W5100_SUBNET      ;$7E0C
-7E0F 7E7FFA     HARDWARE:   jmp   W5100_HARDWARE    ;$7E0F
-7E12 7E7FFA     IPADDR:     jmp   W5100_IPADDR      ;$7E12
-7E15 7E8052     MPISLOT:    jmp   MPISLOT1          ;$7E15
+7E09 7E7FFB     GATEWAY:    jmp   W5100_GATEWAY     ;$7E09
+7E0C 7E7FFB     SUBNET:     jmp   W5100_SUBNET      ;$7E0C
+7E0F 7E7FFB     HARDWARE:   jmp   W5100_HARDWARE    ;$7E0F
+7E12 7E7FFB     IPADDR:     jmp   W5100_IPADDR      ;$7E12
+7E15 7E8054     MPISLOT:    jmp   MPISLOT1          ;$7E15
                 
-7E18 7E7FFB     DISPGW:     jmp   DISP_GATEWAY      ;$7E18
-7E1B 7E800B     DISPSN:     jmp   DISP_SUBNET       ;$7E1B
-7E1E 7E801B     DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
-7E21 7E802B     DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
+7E18 7E7FFC     DISPGW:     jmp   DISP_GATEWAY      ;$7E18
+7E1B 7E800C     DISPSN:     jmp   DISP_SUBNET       ;$7E1B
+7E1E 7E801C     DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
+7E21 7E802C     DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
                 
                 ;                 |12345678901234567890123456789012|
 7E24 434F434F49 LABEL01:    fcc   "COCOIO NIC DRIVER v0.00.04c"
@@ -709,25 +709,25 @@
                 ;            jsr   MPISLOT1
                 ;            jsr   DALLY
 7F18 CC7E24                 ldd   #LABEL01    ; Driver Banner 01, Hello World Message 
-7F1B BD80AB                 jsr   DISPSTR0    ; Display the Label
+7F1B BD80AD                 jsr   DISPSTR0    ; Display the Label
 7F1E CC7E42                 ldd   #LABEL02    ; Driver Banner 02
-7F21 BD80AB                 jsr   DISPSTR0    ; Display the Label
+7F21 BD80AD                 jsr   DISPSTR0    ; Display the Label
 7F24 CC7E5C                 ldd   #LABEL03    ; Driver Banner 03
-7F27 BD80AB                 jsr   DISPSTR0    ; Display the Label
+7F27 BD80AD                 jsr   DISPSTR0    ; Display the Label
 7F2A CC7E6D                 ldd   #LABEL04    ; Driver Banner 04
-7F2D BD80AB                 jsr   DISPSTR0    ; Display the Label
+7F2D BD80AD                 jsr   DISPSTR0    ; Display the Label
                 
                 
                                               ; Find the CoCoIO Port, or Not..
 7F30 CC7E91                 ldd   #LABEL10    ; Driver Banner 10, WizNet5100 Status
-7F33 BD80AB                 jsr   DISPSTR0    ; Display the Label
+7F33 BD80AD                 jsr   DISPSTR0    ; Display the Label
                 
 7F36 BD7F45                 jsr   TRYCIO0
 7F39 FC7ECC                 ldd   COCOIOPORT
 7F3C 2606                   bne   INITEXIT
                 
 7F3E CC7EBE                 ldd   #LABEL13    ; Driver Banner 13, WizNet5100 NOT Located
-7F41 BD80AB                 jsr   DISPSTR0    ; Display the Label
+7F41 BD80AD                 jsr   DISPSTR0    ; Display the Label
 7F44 39         INITEXIT:   rts            
                                               ;  Lets Check $FF68
 7F45 B6FF68     TRYCIO0:    lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
@@ -752,7 +752,7 @@
 7F6D FCFF68     DISLAB0:    ldd   $FF68           ; We Found the WizNet, save the I/O Location
 7F70 FD7ECC                 std   COCOIOPORT
 7F73 CC7E9E                 ldd   #LABEL11    ; Driver Banner 11, WizNet5100 @FF68
-7F76 BD80AB                 jsr   DISPSTR0    ; Display the Label
+7F76 BD80AD                 jsr   DISPSTR0    ; Display the Label
 7F79 39                     rts
                 
 7F7A B6FF78     TRYCIO1:    lda   CIO1CMND    ; Read the current value of MR from CoCoIO Command
@@ -778,7 +778,7 @@
 7FA2 FCFF78     DISLAB1:    ldd   $FF78           ; We Found the WizNet, save the I/O Location
 7FA5 FD7ECC                 std   COCOIOPORT
 7FA8 CC7EAE                 ldd   #LABEL12    ; Driver Banner 12, WizNet5100 @FF78
-7FAB BD80AB                 jsr   DISPSTR0    ; Display the Label
+7FAB BD80AD                 jsr   DISPSTR0    ; Display the Label
 7FAE 39         TRY1EXIT:   rts
                 
                 
@@ -813,176 +813,176 @@
                 
 7FE4            W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Length, X for Data
 7FE4 3410                   pshs  x           ; Save Data Address
-7FE6 BE7ECC                 ldx   COCOIOPORT  
-7FE9 A701                   sta   CIOADDR,x   ; CoCoIO Address Register MSB
-7FEB E702                   stb   CIOADDR+1,x ; CoCoIO Address Register LSB
-7FED 3510                   puls  x           ; Restore Data Address
+7FE6 AE9F7ECC               ldx   [COCOIOPORT]  
+7FEA A701                   sta   CIOADDR,x   ; CoCoIO Address Register MSB
+7FEC E702                   stb   CIOADDR+1,x ; CoCoIO Address Register LSB
+7FEE 3510                   puls  x           ; Restore Data Address
                 ;            jsr   DALLY
-7FEF 1F20                   tfr   y,d         ; Setup B for loop counting
-7FF1 A680       SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
-7FF3 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+7FF0 1F20                   tfr   y,d         ; Setup B for loop counting
+7FF2 A680       SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
+7FF4 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
-7FF6 5A                     decb              ; Decrement loop counter
-7FF7 26F8                   bne   SETLOOP     ; No, go back and do more
+7FF7 5A                     decb              ; Decrement loop counter
+7FF8 26F8                   bne   SETLOOP     ; No, go back and do more
                 ;            jsr   DALLY
-7FF9 39                     rts
-                
-                
-                
-7FFA            W5100_GATEWAY:                ; Configure the Gateway address
-                
-7FFA            W5100_SUBNET:                 ; Next the Subnet Mask
-                
-7FFA            W5100_HARDWARE:               ; Next the Source Hardware Address
-                
-7FFA            W5100_IPADDR:                 ; Next the Source IP Address
-                
 7FFA 39                     rts
                 
-7FFB            DISP_GATEWAY:                  ; D for Start, Y for length
-7FFB CC7ECE                 ldd   #GWLABEL
-7FFE BD80AB                 jsr   DISPSTR0     ; Display the Label
-8001 CC0001                 ldd   #GAR0        ; W5100S Gateway Address Register 0
-8004 108E0004               ldy   #4           ; Setup for loop counting
-8008 7E803B                 jmp   W5100_DISREG ; Read the Registers
                 
                 
-800B            DISP_SUBNET:
-800B CC7EE0                 ldd   #SNLABEL
-800E BD80AB                 jsr   DISPSTR0    ; Display the Label            
-8011 CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-8014 108E0004               ldy   #4           ; Setup for loop counting
-8018 7E803B                 jmp   W5100_DISREG ; Read the Registers
+7FFB            W5100_GATEWAY:                ; Configure the Gateway address
+                
+7FFB            W5100_SUBNET:                 ; Next the Subnet Mask
+                
+7FFB            W5100_HARDWARE:               ; Next the Source Hardware Address
+                
+7FFB            W5100_IPADDR:                 ; Next the Source IP Address
+                
+7FFB 39                     rts
+                
+7FFC            DISP_GATEWAY:                  ; D for Start, Y for length
+7FFC CC7ECE                 ldd   #GWLABEL
+7FFF BD80AD                 jsr   DISPSTR0     ; Display the Label
+8002 CC0001                 ldd   #GAR0        ; W5100S Gateway Address Register 0
+8005 108E0004               ldy   #4           ; Setup for loop counting
+8009 7E803C                 jmp   W5100_DISREG ; Read the Registers
                 
                 
-801B            DISP_HARDWARE:
-801B CC7EF2                 ldd   #MALABEL
-801E BD80AB                 jsr   DISPSTR0     ; Display the Label
-8021 CC0009                 ldd   #SHAR0       ; W5100S Source Hardware Address Register 0
-8024 108E0006               ldy   #6           ; Setup for loop counting
-8028 7E803B                 jmp   W5100_DISREG ; Read the Registers
+800C            DISP_SUBNET:
+800C CC7EE0                 ldd   #SNLABEL
+800F BD80AD                 jsr   DISPSTR0    ; Display the Label            
+8012 CC0005                 ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+8015 108E0004               ldy   #4           ; Setup for loop counting
+8019 7E803C                 jmp   W5100_DISREG ; Read the Registers
                 
                 
-802B            DISP_IPADDR:
-802B CC7F06                 ldd   #IPLABEL
-802E BD80AB                 jsr   DISPSTR0    ; Display the Label
-8031 CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
-8034 108E0004               ldy   #4           ; Setup for loop counting
-8038 7E803B                 jmp   W5100_DISREG ; Read the Registers
+801C            DISP_HARDWARE:
+801C CC7EF2                 ldd   #MALABEL
+801F BD80AD                 jsr   DISPSTR0     ; Display the Label
+8022 CC0009                 ldd   #SHAR0       ; W5100S Source Hardware Address Register 0
+8025 108E0006               ldy   #6           ; Setup for loop counting
+8029 7E803C                 jmp   W5100_DISREG ; Read the Registers
                 
                 
-803B            W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
+802C            DISP_IPADDR:
+802C CC7F06                 ldd   #IPLABEL
+802F BD80AD                 jsr   DISPSTR0    ; Display the Label
+8032 CC000F                 ldd   #SIPR0      ; W5100S Source IP Register 0
+8035 108E0004               ldy   #4           ; Setup for loop counting
+8039 7E803C                 jmp   W5100_DISREG ; Read the Registers
+                
+                
+803C            W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
                 ;            ldd   #GWLABEL
                 ;            jsr   DISPSTR0    ; Display the Label
                 ;            ldd   #GAR0       ; W5100S Gateway Address Register 0
-803B 3410                   pshs  x           ; Save X
-803D BE7ECC                 ldx   COCOIOPORT  
-8040 A701                   sta   CIOADDR,x   ; CoCoIO Address Register MSB
-8042 E702                   stb   CIOADDR+1,x ; CoCoIO Address Register LSB
-8044 3510                   puls  x           ; Restore X
-8046 1F20                   tfr   y,d         ; Setup B for loop counting
-8048            DISLOOP:   
-8048 BD8073                 jsr   BIN2HEX
-804B BD8099                 jsr   DISPB2H
-804E 5A                     decb              ; Decrement loop counter
-804F 26F7                   bne   DISLOOP     ; No, go back and do more
+803C 3410                   pshs  x           ; Save X
+803E AE9F7ECC               ldx   [COCOIOPORT]  
+8042 A701                   sta   CIOADDR,x   ; CoCoIO Address Register MSB
+8044 E702                   stb   CIOADDR+1,x ; CoCoIO Address Register LSB
+8046 3510                   puls  x           ; Restore X
+8048 1F20                   tfr   y,d         ; Setup B for loop counting
+804A            DISLOOP:   
+804A BD8075                 jsr   BIN2HEX
+804D BD809B                 jsr   DISPB2H
+8050 5A                     decb              ; Decrement loop counter
+8051 26F7                   bne   DISLOOP     ; No, go back and do more
                 
-8051 39                     rts
-                
-                
-                
-8052            MPISLOT1:                     ; Configure Multipack SCS to slot 1
-8052 B6FF7F                 lda   $FF7F       ; Read the MPI slot control
-8055 84F0                   anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
-8057 B7FF7F                 sta   $FF7F       ; Write the updated SCS
-805A 39                     rts
-                
-805B B6FF02     DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
-805E B6FF03     DILLY1:     lda   PIA0BC      ; load up the current flags
-8061 2AFB                   bpl   DILLY1      ; if bit 7 not set, keep checking flags
-8063 B6FF02                 lda   PIA0BD      ; clear the interrupt that just happened
-8066 39                     rts
-                
-8067 3410       DALLY:      pshs  x
-8069 8E1000                 ldx   #$1000      ; A maximum delay loop 
-806C 301F       DALLY1:     leax  -1,x        ; Decrement X
-806E 26FC                   bne   DALLY1      ; if X>0 not done yet
-8070 3510                   puls  x
-8072 39                     rts
+8053 39                     rts
                 
                 
                 
+8054            MPISLOT1:                     ; Configure Multipack SCS to slot 1
+8054 B6FF7F                 lda   $FF7F       ; Read the MPI slot control
+8057 84F0                   anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+8059 B7FF7F                 sta   $FF7F       ; Write the updated SCS
+805C 39                     rts
                 
-8073            BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
+805D B6FF02     DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
+8060 B6FF03     DILLY1:     lda   PIA0BC      ; load up the current flags
+8063 2AFB                   bpl   DILLY1      ; if bit 7 not set, keep checking flags
+8065 B6FF02                 lda   PIA0BD      ; clear the interrupt that just happened
+8068 39                     rts
                 
-8073 3406                   pshs  d           ; Save D ( A&B ) for later
+8069 3410       DALLY:      pshs  x
+806B 8E1000                 ldx   #$1000      ; A maximum delay loop 
+806E 301F       DALLY1:     leax  -1,x        ; Decrement X
+8070 26FC                   bne   DALLY1      ; if X>0 not done yet
+8072 3510                   puls  x
+8074 39                     rts
                 
-8075 B6FF6B                 lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
+                
+                
+                
+8075            BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
+                
+8075 3406                   pshs  d           ; Save D ( A&B ) for later
+                
+8077 B6FF6B                 lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
                             ;
                             ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
                             ;
-8078 1F89                   tfr   a,b         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
-807A 44                     lsra
-807B 44                     lsra
+807A 1F89                   tfr   a,b         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
 807C 44                     lsra
 807D 44                     lsra
-807E 8109                   cmpa  #9          ; BRANCH IF HIGH DIGIT IS DECIMAL
-8080 2302                   bls   B2H30       ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
-8082 8B07                   adda  #7          ; CHARACTER WILL BE IN 'A'..'F'
-8084 8B30       B2H30:      adda  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-8086 B780A9                 sta HEX1VAL       ; STORE ASCII DATA
+807E 44                     lsra
+807F 44                     lsra
+8080 8109                   cmpa  #9          ; BRANCH IF HIGH DIGIT IS DECIMAL
+8082 2302                   bls   B2H30       ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
+8084 8B07                   adda  #7          ; CHARACTER WILL BE IN 'A'..'F'
+8086 8B30       B2H30:      adda  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+8088 B780AB                 sta HEX1VAL       ; STORE ASCII DATA
                 
                             ;
                             ; CONVERT LESS SIGNIFICANT DIGIT TO ASCII
                             ; 
-8089 C40F                   andb  #$0f        ; MASK OFF LOW DIGIT    
-808B C109                   cmpb  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
-808D 2302                   bls   B2H30LD     ; ELSE ADD 7 SO AFTER ADDING '0' THE
-808F CB07                   addb  #7          ; CHARACTER WILL BE IN 'A'..'F'
-8091 CB30       B2H30LD:    addb  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-8093 F780AA                 stb   HEX2VAL     ; STORE ASCII DATA
+808B C40F                   andb  #$0f        ; MASK OFF LOW DIGIT    
+808D C109                   cmpb  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
+808F 2302                   bls   B2H30LD     ; ELSE ADD 7 SO AFTER ADDING '0' THE
+8091 CB07                   addb  #7          ; CHARACTER WILL BE IN 'A'..'F'
+8093 CB30       B2H30LD:    addb  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+8095 F780AC                 stb   HEX2VAL     ; STORE ASCII DATA
                 
-8096 3506                   puls  d           ; Restore D ( A&B )
+8098 3506                   puls  d           ; Restore D ( A&B )
                 
-8098 39                     rts  
+809A 39                     rts  
                 
-8099 B680A9     DISPB2H:    lda   HEX1VAL
-809C AD9FA002               jsr   [CHROUT]
-80A0 B680AA                 lda   HEX2VAL
-80A3 AD9FA002               jsr   [CHROUT]
-80A7 39                     rts
+809B B680AB     DISPB2H:    lda   HEX1VAL
+809E AD9FA002               jsr   [CHROUT]
+80A2 B680AC                 lda   HEX2VAL
+80A5 AD9FA002               jsr   [CHROUT]
+80A9 39                     rts
                 
-80A8 00         BINVAL:     fcb   $00
-80A9 00         HEX1VAL:    fcb   $00
-80AA 00         HEX2VAL:    fcb   $00
-                
-                
-                
-80AB            DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
-80AB 3436                   pshs  d,x,y       ; Save D ( A&B ), X & Y for later
-                
-80AD 1F01                   tfr   d,x         ; Copy D to X, for Head of StringZ
-80AF C600                   ldb   #0          ; Setup B for MAX loop, 256
-80B1 A680       DISPSTRLP:  lda   ,x+         ; Load A with the byte of the String
-80B3 2707                   beq   DISPSTRX    ; End of String Reached   
-80B5 AD9FA002               jsr   [CHROUT]    ; Output Character on Screen
-80B9 5A                     decb              ; Decrement loop counter
-80BA 26F5                   bne   DISPSTRLP   ; No, go back and do more
-                
-80BC            DISPSTRX:
-80BC 3536                   puls  d,x,y       ; Restore D ( A&B ), X & Y
-                
-80BE 39                     rts
+80AA 00         BINVAL:     fcb   $00
+80AB 00         HEX1VAL:    fcb   $00
+80AC 00         HEX2VAL:    fcb   $00
                 
                 
-80BF            BUFRSOC0:   ; This sets up Socket 0, with 8KB RX and TX Buffers
-80BF CC001A                 ldd   #RMSR       ; RX Memory Size Register
-80C2 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-80C5 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+                
+80AD            DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
+80AD 3436                   pshs  d,x,y       ; Save D ( A&B ), X & Y for later
+                
+80AF 1F01                   tfr   d,x         ; Copy D to X, for Head of StringZ
+80B1 C600                   ldb   #0          ; Setup B for MAX loop, 256
+80B3 A680       DISPSTRLP:  lda   ,x+         ; Load A with the byte of the String
+80B5 2707                   beq   DISPSTRX    ; End of String Reached   
+80B7 AD9FA002               jsr   [CHROUT]    ; Output Character on Screen
+80BB 5A                     decb              ; Decrement loop counter
+80BC 26F5                   bne   DISPSTRLP   ; No, go back and do more
+                
+80BE            DISPSTRX:
+80BE 3536                   puls  d,x,y       ; Restore D ( A&B ), X & Y
+                
+80C0 39                     rts
+                
+                
+80C1            BUFRSOC0:   ; This sets up Socket 0, with 8KB RX and TX Buffers
+80C1 CC001A                 ldd   #RMSR       ; RX Memory Size Register
+80C4 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+80C7 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
                 
-80C8 8603                   lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
-80CA B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+80CA 8603                   lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+80CC B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
                 
                 ;            ldd   #TMSR       ; TX Memory Size Register
@@ -990,35 +990,35 @@
                 ;            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
                 
-80CD 8603                   lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
-80CF B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+80CF 8603                   lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+80D1 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
-80D2 39                     rts
+80D4 39                     rts
                 
                 
-80D3            INITSOC0:
+80D5            INITSOC0:
                             ; The Local Port.         
-80D3 CC0404                 ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
-80D6 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-80D9 F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+80D5 CC0404                 ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
+80D8 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+80DB F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
                 
-80DC CCC000                 ldd   #$C000      ; Port $C000
-80DF B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
-80E2 F7FF6B                 stb   CIO0DATA    ; Store it to W5100S
+80DE CCC000                 ldd   #$C000      ; Port $C000
+80E1 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+80E4 F7FF6B                 stb   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
                 
                 
                 
-80E5 CC0400                 ldd   #S0_MR      ; Socket 0 Mode Register
-80E8 B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
-80EB F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+80E7 CC0400                 ldd   #S0_MR      ; Socket 0 Mode Register
+80EA B7FF69                 sta   CIO0ADDR    ; CoCoIO Address Register MSB
+80ED F7FF6A                 stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                 ;            jsr   DALLY
                 
-80EE 8601                   lda   #S_CR_OPEN  ; Open Command
-80F0 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
+80F0 8601                   lda   #S_CR_OPEN  ; Open Command
+80F2 B7FF6B                 sta   CIO0DATA    ; Store it to W5100S
                 ;            jsr   DALLY
-80F3 39                     rts
+80F5 39                     rts
                 
                 
                 
@@ -1030,17 +1030,17 @@
                 
                 
                 
-80F4            FORGNIP:                      ; Foreign IP Address
-80F4 C0A8FE64               fcb   192,168,254,100
+80F6            FORGNIP:                      ; Foreign IP Address
+80F6 C0A8FE64               fcb   192,168,254,100
                 
-80F8            FORGNPORT:                    ; Foreign Port
-80F8 4E20                   fdb   20000       
+80FA            FORGNPORT:                    ; Foreign Port
+80FA 4E20                   fdb   20000       
                 
-80FA            FORGNC:                       ; My Source Hardware Address
-80FA 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
+80FC            FORGNC:                       ; My Source Hardware Address
+80FC 0008DC0000             fcb   $00,$08,$DC,$00,$00,$01
                 
-8100            FORGNP:                        ; My Source IP Address
-8100 C0A8FE0A               fcb   192,168,254,10
+8102            FORGNP:                        ; My Source IP Address
+8102 C0A8FE0A               fcb   192,168,254,10
                 
                 
                 ;            include "COCOIOCFG.asm"

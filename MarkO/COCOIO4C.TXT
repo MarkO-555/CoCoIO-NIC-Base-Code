@@ -616,16 +616,16 @@
 7E00 7E7F18           ( COCOIODRV-4C.asm):00035         RESETP:     jmp   W5100_RST         ;$7E00
 7E03 7E7FAF           ( COCOIODRV-4C.asm):00036         CONFIG:     jmp   W5100_CFG         ;$7E03
 7E06 7E7FE4           ( COCOIODRV-4C.asm):00037         SETREG:     jmp   W5100_SETREG      ;$7E06
-7E09 7E7FFA           ( COCOIODRV-4C.asm):00038         GATEWAY:    jmp   W5100_GATEWAY     ;$7E09
-7E0C 7E7FFA           ( COCOIODRV-4C.asm):00039         SUBNET:     jmp   W5100_SUBNET      ;$7E0C
-7E0F 7E7FFA           ( COCOIODRV-4C.asm):00040         HARDWARE:   jmp   W5100_HARDWARE    ;$7E0F
-7E12 7E7FFA           ( COCOIODRV-4C.asm):00041         IPADDR:     jmp   W5100_IPADDR      ;$7E12
-7E15 7E8052           ( COCOIODRV-4C.asm):00042         MPISLOT:    jmp   MPISLOT1          ;$7E15
+7E09 7E7FFB           ( COCOIODRV-4C.asm):00038         GATEWAY:    jmp   W5100_GATEWAY     ;$7E09
+7E0C 7E7FFB           ( COCOIODRV-4C.asm):00039         SUBNET:     jmp   W5100_SUBNET      ;$7E0C
+7E0F 7E7FFB           ( COCOIODRV-4C.asm):00040         HARDWARE:   jmp   W5100_HARDWARE    ;$7E0F
+7E12 7E7FFB           ( COCOIODRV-4C.asm):00041         IPADDR:     jmp   W5100_IPADDR      ;$7E12
+7E15 7E8054           ( COCOIODRV-4C.asm):00042         MPISLOT:    jmp   MPISLOT1          ;$7E15
                       ( COCOIODRV-4C.asm):00043         
-7E18 7E7FFB           ( COCOIODRV-4C.asm):00044         DISPGW:     jmp   DISP_GATEWAY      ;$7E18
-7E1B 7E800B           ( COCOIODRV-4C.asm):00045         DISPSN:     jmp   DISP_SUBNET       ;$7E1B
-7E1E 7E801B           ( COCOIODRV-4C.asm):00046         DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
-7E21 7E802B           ( COCOIODRV-4C.asm):00047         DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
+7E18 7E7FFC           ( COCOIODRV-4C.asm):00044         DISPGW:     jmp   DISP_GATEWAY      ;$7E18
+7E1B 7E800C           ( COCOIODRV-4C.asm):00045         DISPSN:     jmp   DISP_SUBNET       ;$7E1B
+7E1E 7E801C           ( COCOIODRV-4C.asm):00046         DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
+7E21 7E802C           ( COCOIODRV-4C.asm):00047         DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
                       ( COCOIODRV-4C.asm):00048         
                       ( COCOIODRV-4C.asm):00049         ;                 |12345678901234567890123456789012|
 7E24 434F434F494F204E ( COCOIODRV-4C.asm):00050         LABEL01:    fcc   "COCOIO NIC DRIVER v0.00.04c"
@@ -709,25 +709,25 @@
                       ( COCOIODRV-4C.asm):00111         ;            jsr   MPISLOT1
                       ( COCOIODRV-4C.asm):00112         ;            jsr   DALLY
 7F18 CC7E24           ( COCOIODRV-4C.asm):00113                     ldd   #LABEL01    ; Driver Banner 01, Hello World Message 
-7F1B BD80AB           ( COCOIODRV-4C.asm):00114                     jsr   DISPSTR0    ; Display the Label
+7F1B BD80AD           ( COCOIODRV-4C.asm):00114                     jsr   DISPSTR0    ; Display the Label
 7F1E CC7E42           ( COCOIODRV-4C.asm):00115                     ldd   #LABEL02    ; Driver Banner 02
-7F21 BD80AB           ( COCOIODRV-4C.asm):00116                     jsr   DISPSTR0    ; Display the Label
+7F21 BD80AD           ( COCOIODRV-4C.asm):00116                     jsr   DISPSTR0    ; Display the Label
 7F24 CC7E5C           ( COCOIODRV-4C.asm):00117                     ldd   #LABEL03    ; Driver Banner 03
-7F27 BD80AB           ( COCOIODRV-4C.asm):00118                     jsr   DISPSTR0    ; Display the Label
+7F27 BD80AD           ( COCOIODRV-4C.asm):00118                     jsr   DISPSTR0    ; Display the Label
 7F2A CC7E6D           ( COCOIODRV-4C.asm):00119                     ldd   #LABEL04    ; Driver Banner 04
-7F2D BD80AB           ( COCOIODRV-4C.asm):00120                     jsr   DISPSTR0    ; Display the Label
+7F2D BD80AD           ( COCOIODRV-4C.asm):00120                     jsr   DISPSTR0    ; Display the Label
                       ( COCOIODRV-4C.asm):00121         
                       ( COCOIODRV-4C.asm):00122         
                       ( COCOIODRV-4C.asm):00123                                       ; Find the CoCoIO Port, or Not..
 7F30 CC7E91           ( COCOIODRV-4C.asm):00124                     ldd   #LABEL10    ; Driver Banner 10, WizNet5100 Status
-7F33 BD80AB           ( COCOIODRV-4C.asm):00125                     jsr   DISPSTR0    ; Display the Label
+7F33 BD80AD           ( COCOIODRV-4C.asm):00125                     jsr   DISPSTR0    ; Display the Label
                       ( COCOIODRV-4C.asm):00126         
 7F36 BD7F45           ( COCOIODRV-4C.asm):00127                     jsr   TRYCIO0
 7F39 FC7ECC           ( COCOIODRV-4C.asm):00128                     ldd   COCOIOPORT
 7F3C 2606             ( COCOIODRV-4C.asm):00129                     bne   INITEXIT
                       ( COCOIODRV-4C.asm):00130         
 7F3E CC7EBE           ( COCOIODRV-4C.asm):00131                     ldd   #LABEL13    ; Driver Banner 13, WizNet5100 NOT Located
-7F41 BD80AB           ( COCOIODRV-4C.asm):00132                     jsr   DISPSTR0    ; Display the Label
+7F41 BD80AD           ( COCOIODRV-4C.asm):00132                     jsr   DISPSTR0    ; Display the Label
 7F44 39               ( COCOIODRV-4C.asm):00133         INITEXIT:   rts            
                       ( COCOIODRV-4C.asm):00134                                       ;  Lets Check $FF68
 7F45 B6FF68           ( COCOIODRV-4C.asm):00135         TRYCIO0:    lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
@@ -752,7 +752,7 @@
 7F6D FCFF68           ( COCOIODRV-4C.asm):00154         DISLAB0:    ldd   $FF68           ; We Found the WizNet, save the I/O Location
 7F70 FD7ECC           ( COCOIODRV-4C.asm):00155                     std   COCOIOPORT
 7F73 CC7E9E           ( COCOIODRV-4C.asm):00156                     ldd   #LABEL11    ; Driver Banner 11, WizNet5100 @FF68
-7F76 BD80AB           ( COCOIODRV-4C.asm):00157                     jsr   DISPSTR0    ; Display the Label
+7F76 BD80AD           ( COCOIODRV-4C.asm):00157                     jsr   DISPSTR0    ; Display the Label
 7F79 39               ( COCOIODRV-4C.asm):00158                     rts
                       ( COCOIODRV-4C.asm):00159         
 7F7A B6FF78           ( COCOIODRV-4C.asm):00160         TRYCIO1:    lda   CIO1CMND    ; Read the current value of MR from CoCoIO Command
@@ -778,7 +778,7 @@
 7FA2 FCFF78           ( COCOIODRV-4C.asm):00180         DISLAB1:    ldd   $FF78           ; We Found the WizNet, save the I/O Location
 7FA5 FD7ECC           ( COCOIODRV-4C.asm):00181                     std   COCOIOPORT
 7FA8 CC7EAE           ( COCOIODRV-4C.asm):00182                     ldd   #LABEL12    ; Driver Banner 12, WizNet5100 @FF78
-7FAB BD80AB           ( COCOIODRV-4C.asm):00183                     jsr   DISPSTR0    ; Display the Label
+7FAB BD80AD           ( COCOIODRV-4C.asm):00183                     jsr   DISPSTR0    ; Display the Label
 7FAE 39               ( COCOIODRV-4C.asm):00184         TRY1EXIT:   rts
                       ( COCOIODRV-4C.asm):00185         
                       ( COCOIODRV-4C.asm):00186         
@@ -813,176 +813,176 @@
                       ( COCOIODRV-4C.asm):00215         
 7FE4                  ( COCOIODRV-4C.asm):00216         W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Length, X for Data
 7FE4 3410             ( COCOIODRV-4C.asm):00217                     pshs  x           ; Save Data Address
-7FE6 BE7ECC           ( COCOIODRV-4C.asm):00218                     ldx   COCOIOPORT  
-7FE9 A701             ( COCOIODRV-4C.asm):00219                     sta   CIOADDR,x   ; CoCoIO Address Register MSB
-7FEB E702             ( COCOIODRV-4C.asm):00220                     stb   CIOADDR+1,x ; CoCoIO Address Register LSB
-7FED 3510             ( COCOIODRV-4C.asm):00221                     puls  x           ; Restore Data Address
+7FE6 AE9F7ECC         ( COCOIODRV-4C.asm):00218                     ldx   [COCOIOPORT]  
+7FEA A701             ( COCOIODRV-4C.asm):00219                     sta   CIOADDR,x   ; CoCoIO Address Register MSB
+7FEC E702             ( COCOIODRV-4C.asm):00220                     stb   CIOADDR+1,x ; CoCoIO Address Register LSB
+7FEE 3510             ( COCOIODRV-4C.asm):00221                     puls  x           ; Restore Data Address
                       ( COCOIODRV-4C.asm):00222         ;            jsr   DALLY
-7FEF 1F20             ( COCOIODRV-4C.asm):00223                     tfr   y,d         ; Setup B for loop counting
-7FF1 A680             ( COCOIODRV-4C.asm):00224         SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
-7FF3 B7FF6B           ( COCOIODRV-4C.asm):00225                     sta   CIO0DATA    ; Store it to W5100S
+7FF0 1F20             ( COCOIODRV-4C.asm):00223                     tfr   y,d         ; Setup B for loop counting
+7FF2 A680             ( COCOIODRV-4C.asm):00224         SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
+7FF4 B7FF6B           ( COCOIODRV-4C.asm):00225                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-4C.asm):00226         ;            jsr   DALLY
-7FF6 5A               ( COCOIODRV-4C.asm):00227                     decb              ; Decrement loop counter
-7FF7 26F8             ( COCOIODRV-4C.asm):00228                     bne   SETLOOP     ; No, go back and do more
+7FF7 5A               ( COCOIODRV-4C.asm):00227                     decb              ; Decrement loop counter
+7FF8 26F8             ( COCOIODRV-4C.asm):00228                     bne   SETLOOP     ; No, go back and do more
                       ( COCOIODRV-4C.asm):00229         ;            jsr   DALLY
-7FF9 39               ( COCOIODRV-4C.asm):00230                     rts
+7FFA 39               ( COCOIODRV-4C.asm):00230                     rts
                       ( COCOIODRV-4C.asm):00231         
                       ( COCOIODRV-4C.asm):00232         
                       ( COCOIODRV-4C.asm):00233         
-7FFA                  ( COCOIODRV-4C.asm):00234         W5100_GATEWAY:                ; Configure the Gateway address
+7FFB                  ( COCOIODRV-4C.asm):00234         W5100_GATEWAY:                ; Configure the Gateway address
                       ( COCOIODRV-4C.asm):00235         
-7FFA                  ( COCOIODRV-4C.asm):00236         W5100_SUBNET:                 ; Next the Subnet Mask
+7FFB                  ( COCOIODRV-4C.asm):00236         W5100_SUBNET:                 ; Next the Subnet Mask
                       ( COCOIODRV-4C.asm):00237         
-7FFA                  ( COCOIODRV-4C.asm):00238         W5100_HARDWARE:               ; Next the Source Hardware Address
+7FFB                  ( COCOIODRV-4C.asm):00238         W5100_HARDWARE:               ; Next the Source Hardware Address
                       ( COCOIODRV-4C.asm):00239         
-7FFA                  ( COCOIODRV-4C.asm):00240         W5100_IPADDR:                 ; Next the Source IP Address
+7FFB                  ( COCOIODRV-4C.asm):00240         W5100_IPADDR:                 ; Next the Source IP Address
                       ( COCOIODRV-4C.asm):00241         
-7FFA 39               ( COCOIODRV-4C.asm):00242                     rts
+7FFB 39               ( COCOIODRV-4C.asm):00242                     rts
                       ( COCOIODRV-4C.asm):00243         
-7FFB                  ( COCOIODRV-4C.asm):00244         DISP_GATEWAY:                  ; D for Start, Y for length
-7FFB CC7ECE           ( COCOIODRV-4C.asm):00245                     ldd   #GWLABEL
-7FFE BD80AB           ( COCOIODRV-4C.asm):00246                     jsr   DISPSTR0     ; Display the Label
-8001 CC0001           ( COCOIODRV-4C.asm):00247                     ldd   #GAR0        ; W5100S Gateway Address Register 0
-8004 108E0004         ( COCOIODRV-4C.asm):00248                     ldy   #4           ; Setup for loop counting
-8008 7E803B           ( COCOIODRV-4C.asm):00249                     jmp   W5100_DISREG ; Read the Registers
+7FFC                  ( COCOIODRV-4C.asm):00244         DISP_GATEWAY:                  ; D for Start, Y for length
+7FFC CC7ECE           ( COCOIODRV-4C.asm):00245                     ldd   #GWLABEL
+7FFF BD80AD           ( COCOIODRV-4C.asm):00246                     jsr   DISPSTR0     ; Display the Label
+8002 CC0001           ( COCOIODRV-4C.asm):00247                     ldd   #GAR0        ; W5100S Gateway Address Register 0
+8005 108E0004         ( COCOIODRV-4C.asm):00248                     ldy   #4           ; Setup for loop counting
+8009 7E803C           ( COCOIODRV-4C.asm):00249                     jmp   W5100_DISREG ; Read the Registers
                       ( COCOIODRV-4C.asm):00250         
                       ( COCOIODRV-4C.asm):00251         
-800B                  ( COCOIODRV-4C.asm):00252         DISP_SUBNET:
-800B CC7EE0           ( COCOIODRV-4C.asm):00253                     ldd   #SNLABEL
-800E BD80AB           ( COCOIODRV-4C.asm):00254                     jsr   DISPSTR0    ; Display the Label            
-8011 CC0005           ( COCOIODRV-4C.asm):00255                     ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
-8014 108E0004         ( COCOIODRV-4C.asm):00256                     ldy   #4           ; Setup for loop counting
-8018 7E803B           ( COCOIODRV-4C.asm):00257                     jmp   W5100_DISREG ; Read the Registers
+800C                  ( COCOIODRV-4C.asm):00252         DISP_SUBNET:
+800C CC7EE0           ( COCOIODRV-4C.asm):00253                     ldd   #SNLABEL
+800F BD80AD           ( COCOIODRV-4C.asm):00254                     jsr   DISPSTR0    ; Display the Label            
+8012 CC0005           ( COCOIODRV-4C.asm):00255                     ldd   #SUBR0      ; W5100S Subnet Mask Address Register 0
+8015 108E0004         ( COCOIODRV-4C.asm):00256                     ldy   #4           ; Setup for loop counting
+8019 7E803C           ( COCOIODRV-4C.asm):00257                     jmp   W5100_DISREG ; Read the Registers
                       ( COCOIODRV-4C.asm):00258         
                       ( COCOIODRV-4C.asm):00259         
-801B                  ( COCOIODRV-4C.asm):00260         DISP_HARDWARE:
-801B CC7EF2           ( COCOIODRV-4C.asm):00261                     ldd   #MALABEL
-801E BD80AB           ( COCOIODRV-4C.asm):00262                     jsr   DISPSTR0     ; Display the Label
-8021 CC0009           ( COCOIODRV-4C.asm):00263                     ldd   #SHAR0       ; W5100S Source Hardware Address Register 0
-8024 108E0006         ( COCOIODRV-4C.asm):00264                     ldy   #6           ; Setup for loop counting
-8028 7E803B           ( COCOIODRV-4C.asm):00265                     jmp   W5100_DISREG ; Read the Registers
+801C                  ( COCOIODRV-4C.asm):00260         DISP_HARDWARE:
+801C CC7EF2           ( COCOIODRV-4C.asm):00261                     ldd   #MALABEL
+801F BD80AD           ( COCOIODRV-4C.asm):00262                     jsr   DISPSTR0     ; Display the Label
+8022 CC0009           ( COCOIODRV-4C.asm):00263                     ldd   #SHAR0       ; W5100S Source Hardware Address Register 0
+8025 108E0006         ( COCOIODRV-4C.asm):00264                     ldy   #6           ; Setup for loop counting
+8029 7E803C           ( COCOIODRV-4C.asm):00265                     jmp   W5100_DISREG ; Read the Registers
                       ( COCOIODRV-4C.asm):00266         
                       ( COCOIODRV-4C.asm):00267         
-802B                  ( COCOIODRV-4C.asm):00268         DISP_IPADDR:
-802B CC7F06           ( COCOIODRV-4C.asm):00269                     ldd   #IPLABEL
-802E BD80AB           ( COCOIODRV-4C.asm):00270                     jsr   DISPSTR0    ; Display the Label
-8031 CC000F           ( COCOIODRV-4C.asm):00271                     ldd   #SIPR0      ; W5100S Source IP Register 0
-8034 108E0004         ( COCOIODRV-4C.asm):00272                     ldy   #4           ; Setup for loop counting
-8038 7E803B           ( COCOIODRV-4C.asm):00273                     jmp   W5100_DISREG ; Read the Registers
+802C                  ( COCOIODRV-4C.asm):00268         DISP_IPADDR:
+802C CC7F06           ( COCOIODRV-4C.asm):00269                     ldd   #IPLABEL
+802F BD80AD           ( COCOIODRV-4C.asm):00270                     jsr   DISPSTR0    ; Display the Label
+8032 CC000F           ( COCOIODRV-4C.asm):00271                     ldd   #SIPR0      ; W5100S Source IP Register 0
+8035 108E0004         ( COCOIODRV-4C.asm):00272                     ldy   #4           ; Setup for loop counting
+8039 7E803C           ( COCOIODRV-4C.asm):00273                     jmp   W5100_DISREG ; Read the Registers
                       ( COCOIODRV-4C.asm):00274         
                       ( COCOIODRV-4C.asm):00275         
-803B                  ( COCOIODRV-4C.asm):00276         W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
+803C                  ( COCOIODRV-4C.asm):00276         W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
                       ( COCOIODRV-4C.asm):00277         ;            ldd   #GWLABEL
                       ( COCOIODRV-4C.asm):00278         ;            jsr   DISPSTR0    ; Display the Label
                       ( COCOIODRV-4C.asm):00279         ;            ldd   #GAR0       ; W5100S Gateway Address Register 0
-803B 3410             ( COCOIODRV-4C.asm):00280                     pshs  x           ; Save X
-803D BE7ECC           ( COCOIODRV-4C.asm):00281                     ldx   COCOIOPORT  
-8040 A701             ( COCOIODRV-4C.asm):00282                     sta   CIOADDR,x   ; CoCoIO Address Register MSB
-8042 E702             ( COCOIODRV-4C.asm):00283                     stb   CIOADDR+1,x ; CoCoIO Address Register LSB
-8044 3510             ( COCOIODRV-4C.asm):00284                     puls  x           ; Restore X
-8046 1F20             ( COCOIODRV-4C.asm):00285                     tfr   y,d         ; Setup B for loop counting
-8048                  ( COCOIODRV-4C.asm):00286         DISLOOP:   
-8048 BD8073           ( COCOIODRV-4C.asm):00287                     jsr   BIN2HEX
-804B BD8099           ( COCOIODRV-4C.asm):00288                     jsr   DISPB2H
-804E 5A               ( COCOIODRV-4C.asm):00289                     decb              ; Decrement loop counter
-804F 26F7             ( COCOIODRV-4C.asm):00290                     bne   DISLOOP     ; No, go back and do more
+803C 3410             ( COCOIODRV-4C.asm):00280                     pshs  x           ; Save X
+803E AE9F7ECC         ( COCOIODRV-4C.asm):00281                     ldx   [COCOIOPORT]  
+8042 A701             ( COCOIODRV-4C.asm):00282                     sta   CIOADDR,x   ; CoCoIO Address Register MSB
+8044 E702             ( COCOIODRV-4C.asm):00283                     stb   CIOADDR+1,x ; CoCoIO Address Register LSB
+8046 3510             ( COCOIODRV-4C.asm):00284                     puls  x           ; Restore X
+8048 1F20             ( COCOIODRV-4C.asm):00285                     tfr   y,d         ; Setup B for loop counting
+804A                  ( COCOIODRV-4C.asm):00286         DISLOOP:   
+804A BD8075           ( COCOIODRV-4C.asm):00287                     jsr   BIN2HEX
+804D BD809B           ( COCOIODRV-4C.asm):00288                     jsr   DISPB2H
+8050 5A               ( COCOIODRV-4C.asm):00289                     decb              ; Decrement loop counter
+8051 26F7             ( COCOIODRV-4C.asm):00290                     bne   DISLOOP     ; No, go back and do more
                       ( COCOIODRV-4C.asm):00291         
-8051 39               ( COCOIODRV-4C.asm):00292                     rts
+8053 39               ( COCOIODRV-4C.asm):00292                     rts
                       ( COCOIODRV-4C.asm):00293         
                       ( COCOIODRV-4C.asm):00294         
                       ( COCOIODRV-4C.asm):00295         
-8052                  ( COCOIODRV-4C.asm):00296         MPISLOT1:                     ; Configure Multipack SCS to slot 1
-8052 B6FF7F           ( COCOIODRV-4C.asm):00297                     lda   $FF7F       ; Read the MPI slot control
-8055 84F0             ( COCOIODRV-4C.asm):00298                     anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
-8057 B7FF7F           ( COCOIODRV-4C.asm):00299                     sta   $FF7F       ; Write the updated SCS
-805A 39               ( COCOIODRV-4C.asm):00300                     rts
+8054                  ( COCOIODRV-4C.asm):00296         MPISLOT1:                     ; Configure Multipack SCS to slot 1
+8054 B6FF7F           ( COCOIODRV-4C.asm):00297                     lda   $FF7F       ; Read the MPI slot control
+8057 84F0             ( COCOIODRV-4C.asm):00298                     anda  #%11110000  ; zero out the SCS nybble for MPI slot 1
+8059 B7FF7F           ( COCOIODRV-4C.asm):00299                     sta   $FF7F       ; Write the updated SCS
+805C 39               ( COCOIODRV-4C.asm):00300                     rts
                       ( COCOIODRV-4C.asm):00301         
-805B B6FF02           ( COCOIODRV-4C.asm):00302         DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
-805E B6FF03           ( COCOIODRV-4C.asm):00303         DILLY1:     lda   PIA0BC      ; load up the current flags
-8061 2AFB             ( COCOIODRV-4C.asm):00304                     bpl   DILLY1      ; if bit 7 not set, keep checking flags
-8063 B6FF02           ( COCOIODRV-4C.asm):00305                     lda   PIA0BD      ; clear the interrupt that just happened
-8066 39               ( COCOIODRV-4C.asm):00306                     rts
+805D B6FF02           ( COCOIODRV-4C.asm):00302         DILLY:      lda   PIA0BD      ; clear any pending VSYNC interrupt on PIA0
+8060 B6FF03           ( COCOIODRV-4C.asm):00303         DILLY1:     lda   PIA0BC      ; load up the current flags
+8063 2AFB             ( COCOIODRV-4C.asm):00304                     bpl   DILLY1      ; if bit 7 not set, keep checking flags
+8065 B6FF02           ( COCOIODRV-4C.asm):00305                     lda   PIA0BD      ; clear the interrupt that just happened
+8068 39               ( COCOIODRV-4C.asm):00306                     rts
                       ( COCOIODRV-4C.asm):00307         
-8067 3410             ( COCOIODRV-4C.asm):00308         DALLY:      pshs  x
-8069 8E1000           ( COCOIODRV-4C.asm):00309                     ldx   #$1000      ; A maximum delay loop 
-806C 301F             ( COCOIODRV-4C.asm):00310         DALLY1:     leax  -1,x        ; Decrement X
-806E 26FC             ( COCOIODRV-4C.asm):00311                     bne   DALLY1      ; if X>0 not done yet
-8070 3510             ( COCOIODRV-4C.asm):00312                     puls  x
-8072 39               ( COCOIODRV-4C.asm):00313                     rts
+8069 3410             ( COCOIODRV-4C.asm):00308         DALLY:      pshs  x
+806B 8E1000           ( COCOIODRV-4C.asm):00309                     ldx   #$1000      ; A maximum delay loop 
+806E 301F             ( COCOIODRV-4C.asm):00310         DALLY1:     leax  -1,x        ; Decrement X
+8070 26FC             ( COCOIODRV-4C.asm):00311                     bne   DALLY1      ; if X>0 not done yet
+8072 3510             ( COCOIODRV-4C.asm):00312                     puls  x
+8074 39               ( COCOIODRV-4C.asm):00313                     rts
                       ( COCOIODRV-4C.asm):00314         
                       ( COCOIODRV-4C.asm):00315         
                       ( COCOIODRV-4C.asm):00316         
                       ( COCOIODRV-4C.asm):00317         
-8073                  ( COCOIODRV-4C.asm):00318         BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
+8075                  ( COCOIODRV-4C.asm):00318         BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
                       ( COCOIODRV-4C.asm):00319         
-8073 3406             ( COCOIODRV-4C.asm):00320                     pshs  d           ; Save D ( A&B ) for later
+8075 3406             ( COCOIODRV-4C.asm):00320                     pshs  d           ; Save D ( A&B ) for later
                       ( COCOIODRV-4C.asm):00321         
-8075 B6FF6B           ( COCOIODRV-4C.asm):00322                     lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
+8077 B6FF6B           ( COCOIODRV-4C.asm):00322                     lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
                       ( COCOIODRV-4C.asm):00323                     ;
                       ( COCOIODRV-4C.asm):00324                     ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
                       ( COCOIODRV-4C.asm):00325                     ;
-8078 1F89             ( COCOIODRV-4C.asm):00326                     tfr   a,b         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
-807A 44               ( COCOIODRV-4C.asm):00327                     lsra
-807B 44               ( COCOIODRV-4C.asm):00328                     lsra
-807C 44               ( COCOIODRV-4C.asm):00329                     lsra
-807D 44               ( COCOIODRV-4C.asm):00330                     lsra
-807E 8109             ( COCOIODRV-4C.asm):00331                     cmpa  #9          ; BRANCH IF HIGH DIGIT IS DECIMAL
-8080 2302             ( COCOIODRV-4C.asm):00332                     bls   B2H30       ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
-8082 8B07             ( COCOIODRV-4C.asm):00333                     adda  #7          ; CHARACTER WILL BE IN 'A'..'F'
-8084 8B30             ( COCOIODRV-4C.asm):00334         B2H30:      adda  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-8086 B780A9           ( COCOIODRV-4C.asm):00335                     sta HEX1VAL       ; STORE ASCII DATA
+807A 1F89             ( COCOIODRV-4C.asm):00326                     tfr   a,b         ; SAVE ORIGINAL BINARY VALUE MOVE HIGH DIGIT TO LOW DIGIT
+807C 44               ( COCOIODRV-4C.asm):00327                     lsra
+807D 44               ( COCOIODRV-4C.asm):00328                     lsra
+807E 44               ( COCOIODRV-4C.asm):00329                     lsra
+807F 44               ( COCOIODRV-4C.asm):00330                     lsra
+8080 8109             ( COCOIODRV-4C.asm):00331                     cmpa  #9          ; BRANCH IF HIGH DIGIT IS DECIMAL
+8082 2302             ( COCOIODRV-4C.asm):00332                     bls   B2H30       ; ELSE ADD 7 S0 AFTER ADDING '0' THE 
+8084 8B07             ( COCOIODRV-4C.asm):00333                     adda  #7          ; CHARACTER WILL BE IN 'A'..'F'
+8086 8B30             ( COCOIODRV-4C.asm):00334         B2H30:      adda  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+8088 B780AB           ( COCOIODRV-4C.asm):00335                     sta HEX1VAL       ; STORE ASCII DATA
                       ( COCOIODRV-4C.asm):00336         
                       ( COCOIODRV-4C.asm):00337                     ;
                       ( COCOIODRV-4C.asm):00338                     ; CONVERT LESS SIGNIFICANT DIGIT TO ASCII
                       ( COCOIODRV-4C.asm):00339                     ; 
-8089 C40F             ( COCOIODRV-4C.asm):00340                     andb  #$0f        ; MASK OFF LOW DIGIT    
-808B C109             ( COCOIODRV-4C.asm):00341                     cmpb  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
-808D 2302             ( COCOIODRV-4C.asm):00342                     bls   B2H30LD     ; ELSE ADD 7 SO AFTER ADDING '0' THE
-808F CB07             ( COCOIODRV-4C.asm):00343                     addb  #7          ; CHARACTER WILL BE IN 'A'..'F'
-8091 CB30             ( COCOIODRV-4C.asm):00344         B2H30LD:    addb  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
-8093 F780AA           ( COCOIODRV-4C.asm):00345                     stb   HEX2VAL     ; STORE ASCII DATA
+808B C40F             ( COCOIODRV-4C.asm):00340                     andb  #$0f        ; MASK OFF LOW DIGIT    
+808D C109             ( COCOIODRV-4C.asm):00341                     cmpb  #9          ; BRANCH IF LOW DIGIT IS DECIMAL    
+808F 2302             ( COCOIODRV-4C.asm):00342                     bls   B2H30LD     ; ELSE ADD 7 SO AFTER ADDING '0' THE
+8091 CB07             ( COCOIODRV-4C.asm):00343                     addb  #7          ; CHARACTER WILL BE IN 'A'..'F'
+8093 CB30             ( COCOIODRV-4C.asm):00344         B2H30LD:    addb  #'0'        ; ADD ASCII 0 TO MAKE A CHARACTER
+8095 F780AC           ( COCOIODRV-4C.asm):00345                     stb   HEX2VAL     ; STORE ASCII DATA
                       ( COCOIODRV-4C.asm):00346         
-8096 3506             ( COCOIODRV-4C.asm):00347                     puls  d           ; Restore D ( A&B )
+8098 3506             ( COCOIODRV-4C.asm):00347                     puls  d           ; Restore D ( A&B )
                       ( COCOIODRV-4C.asm):00348         
-8098 39               ( COCOIODRV-4C.asm):00349                     rts  
+809A 39               ( COCOIODRV-4C.asm):00349                     rts  
                       ( COCOIODRV-4C.asm):00350         
-8099 B680A9           ( COCOIODRV-4C.asm):00351         DISPB2H:    lda   HEX1VAL
-809C AD9FA002         ( COCOIODRV-4C.asm):00352                     jsr   [CHROUT]
-80A0 B680AA           ( COCOIODRV-4C.asm):00353                     lda   HEX2VAL
-80A3 AD9FA002         ( COCOIODRV-4C.asm):00354                     jsr   [CHROUT]
-80A7 39               ( COCOIODRV-4C.asm):00355                     rts
+809B B680AB           ( COCOIODRV-4C.asm):00351         DISPB2H:    lda   HEX1VAL
+809E AD9FA002         ( COCOIODRV-4C.asm):00352                     jsr   [CHROUT]
+80A2 B680AC           ( COCOIODRV-4C.asm):00353                     lda   HEX2VAL
+80A5 AD9FA002         ( COCOIODRV-4C.asm):00354                     jsr   [CHROUT]
+80A9 39               ( COCOIODRV-4C.asm):00355                     rts
                       ( COCOIODRV-4C.asm):00356         
-80A8 00               ( COCOIODRV-4C.asm):00357         BINVAL:     fcb   $00
-80A9 00               ( COCOIODRV-4C.asm):00358         HEX1VAL:    fcb   $00
-80AA 00               ( COCOIODRV-4C.asm):00359         HEX2VAL:    fcb   $00
+80AA 00               ( COCOIODRV-4C.asm):00357         BINVAL:     fcb   $00
+80AB 00               ( COCOIODRV-4C.asm):00358         HEX1VAL:    fcb   $00
+80AC 00               ( COCOIODRV-4C.asm):00359         HEX2VAL:    fcb   $00
                       ( COCOIODRV-4C.asm):00360         
                       ( COCOIODRV-4C.asm):00361         
                       ( COCOIODRV-4C.asm):00362         
-80AB                  ( COCOIODRV-4C.asm):00363         DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
-80AB 3436             ( COCOIODRV-4C.asm):00364                     pshs  d,x,y       ; Save D ( A&B ), X & Y for later
+80AD                  ( COCOIODRV-4C.asm):00363         DISPSTR0:   ; This Sends a NULL Terminated String to CHROUT, MAX 256 Bytes
+80AD 3436             ( COCOIODRV-4C.asm):00364                     pshs  d,x,y       ; Save D ( A&B ), X & Y for later
                       ( COCOIODRV-4C.asm):00365         
-80AD 1F01             ( COCOIODRV-4C.asm):00366                     tfr   d,x         ; Copy D to X, for Head of StringZ
-80AF C600             ( COCOIODRV-4C.asm):00367                     ldb   #0          ; Setup B for MAX loop, 256
-80B1 A680             ( COCOIODRV-4C.asm):00368         DISPSTRLP:  lda   ,x+         ; Load A with the byte of the String
-80B3 2707             ( COCOIODRV-4C.asm):00369                     beq   DISPSTRX    ; End of String Reached   
-80B5 AD9FA002         ( COCOIODRV-4C.asm):00370                     jsr   [CHROUT]    ; Output Character on Screen
-80B9 5A               ( COCOIODRV-4C.asm):00371                     decb              ; Decrement loop counter
-80BA 26F5             ( COCOIODRV-4C.asm):00372                     bne   DISPSTRLP   ; No, go back and do more
+80AF 1F01             ( COCOIODRV-4C.asm):00366                     tfr   d,x         ; Copy D to X, for Head of StringZ
+80B1 C600             ( COCOIODRV-4C.asm):00367                     ldb   #0          ; Setup B for MAX loop, 256
+80B3 A680             ( COCOIODRV-4C.asm):00368         DISPSTRLP:  lda   ,x+         ; Load A with the byte of the String
+80B5 2707             ( COCOIODRV-4C.asm):00369                     beq   DISPSTRX    ; End of String Reached   
+80B7 AD9FA002         ( COCOIODRV-4C.asm):00370                     jsr   [CHROUT]    ; Output Character on Screen
+80BB 5A               ( COCOIODRV-4C.asm):00371                     decb              ; Decrement loop counter
+80BC 26F5             ( COCOIODRV-4C.asm):00372                     bne   DISPSTRLP   ; No, go back and do more
                       ( COCOIODRV-4C.asm):00373         
-80BC                  ( COCOIODRV-4C.asm):00374         DISPSTRX:
-80BC 3536             ( COCOIODRV-4C.asm):00375                     puls  d,x,y       ; Restore D ( A&B ), X & Y
+80BE                  ( COCOIODRV-4C.asm):00374         DISPSTRX:
+80BE 3536             ( COCOIODRV-4C.asm):00375                     puls  d,x,y       ; Restore D ( A&B ), X & Y
                       ( COCOIODRV-4C.asm):00376         
-80BE 39               ( COCOIODRV-4C.asm):00377                     rts
+80C0 39               ( COCOIODRV-4C.asm):00377                     rts
                       ( COCOIODRV-4C.asm):00378         
                       ( COCOIODRV-4C.asm):00379         
-80BF                  ( COCOIODRV-4C.asm):00380         BUFRSOC0:   ; This sets up Socket 0, with 8KB RX and TX Buffers
-80BF CC001A           ( COCOIODRV-4C.asm):00381                     ldd   #RMSR       ; RX Memory Size Register
-80C2 B7FF69           ( COCOIODRV-4C.asm):00382                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-80C5 F7FF6A           ( COCOIODRV-4C.asm):00383                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+80C1                  ( COCOIODRV-4C.asm):00380         BUFRSOC0:   ; This sets up Socket 0, with 8KB RX and TX Buffers
+80C1 CC001A           ( COCOIODRV-4C.asm):00381                     ldd   #RMSR       ; RX Memory Size Register
+80C4 B7FF69           ( COCOIODRV-4C.asm):00382                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+80C7 F7FF6A           ( COCOIODRV-4C.asm):00383                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-4C.asm):00384         ;            jsr   DALLY
                       ( COCOIODRV-4C.asm):00385         
-80C8 8603             ( COCOIODRV-4C.asm):00386                     lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
-80CA B7FF6B           ( COCOIODRV-4C.asm):00387                     sta   CIO0DATA    ; Store it to W5100S
+80CA 8603             ( COCOIODRV-4C.asm):00386                     lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+80CC B7FF6B           ( COCOIODRV-4C.asm):00387                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-4C.asm):00388         ;            jsr   DALLY
                       ( COCOIODRV-4C.asm):00389         
                       ( COCOIODRV-4C.asm):00390         ;            ldd   #TMSR       ; TX Memory Size Register
@@ -990,35 +990,35 @@
                       ( COCOIODRV-4C.asm):00392         ;            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-4C.asm):00393         ;            jsr   DALLY
                       ( COCOIODRV-4C.asm):00394         
-80CD 8603             ( COCOIODRV-4C.asm):00395                     lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
-80CF B7FF6B           ( COCOIODRV-4C.asm):00396                     sta   CIO0DATA    ; Store it to W5100S
+80CF 8603             ( COCOIODRV-4C.asm):00395                     lda   #MSR_8KB_S0 ; Memory Size, 8KB, Socket 0
+80D1 B7FF6B           ( COCOIODRV-4C.asm):00396                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-4C.asm):00397         ;            jsr   DALLY
-80D2 39               ( COCOIODRV-4C.asm):00398                     rts
+80D4 39               ( COCOIODRV-4C.asm):00398                     rts
                       ( COCOIODRV-4C.asm):00399         
                       ( COCOIODRV-4C.asm):00400         
-80D3                  ( COCOIODRV-4C.asm):00401         INITSOC0:
+80D5                  ( COCOIODRV-4C.asm):00401         INITSOC0:
                       ( COCOIODRV-4C.asm):00402                     ; The Local Port.         
-80D3 CC0404           ( COCOIODRV-4C.asm):00403                     ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
-80D6 B7FF69           ( COCOIODRV-4C.asm):00404                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-80D9 F7FF6A           ( COCOIODRV-4C.asm):00405                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+80D5 CC0404           ( COCOIODRV-4C.asm):00403                     ldd   #S0_PORTR0  ; Socket 0 Source Port Register 0
+80D8 B7FF69           ( COCOIODRV-4C.asm):00404                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+80DB F7FF6A           ( COCOIODRV-4C.asm):00405                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-4C.asm):00406         ;            jsr   DALLY
                       ( COCOIODRV-4C.asm):00407         
-80DC CCC000           ( COCOIODRV-4C.asm):00408                     ldd   #$C000      ; Port $C000
-80DF B7FF6B           ( COCOIODRV-4C.asm):00409                     sta   CIO0DATA    ; Store it to W5100S
-80E2 F7FF6B           ( COCOIODRV-4C.asm):00410                     stb   CIO0DATA    ; Store it to W5100S
+80DE CCC000           ( COCOIODRV-4C.asm):00408                     ldd   #$C000      ; Port $C000
+80E1 B7FF6B           ( COCOIODRV-4C.asm):00409                     sta   CIO0DATA    ; Store it to W5100S
+80E4 F7FF6B           ( COCOIODRV-4C.asm):00410                     stb   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-4C.asm):00411         ;            jsr   DALLY
                       ( COCOIODRV-4C.asm):00412         
                       ( COCOIODRV-4C.asm):00413         
                       ( COCOIODRV-4C.asm):00414         
-80E5 CC0400           ( COCOIODRV-4C.asm):00415                     ldd   #S0_MR      ; Socket 0 Mode Register
-80E8 B7FF69           ( COCOIODRV-4C.asm):00416                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
-80EB F7FF6A           ( COCOIODRV-4C.asm):00417                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+80E7 CC0400           ( COCOIODRV-4C.asm):00415                     ldd   #S0_MR      ; Socket 0 Mode Register
+80EA B7FF69           ( COCOIODRV-4C.asm):00416                     sta   CIO0ADDR    ; CoCoIO Address Register MSB
+80ED F7FF6A           ( COCOIODRV-4C.asm):00417                     stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
                       ( COCOIODRV-4C.asm):00418         ;            jsr   DALLY
                       ( COCOIODRV-4C.asm):00419         
-80EE 8601             ( COCOIODRV-4C.asm):00420                     lda   #S_CR_OPEN  ; Open Command
-80F0 B7FF6B           ( COCOIODRV-4C.asm):00421                     sta   CIO0DATA    ; Store it to W5100S
+80F0 8601             ( COCOIODRV-4C.asm):00420                     lda   #S_CR_OPEN  ; Open Command
+80F2 B7FF6B           ( COCOIODRV-4C.asm):00421                     sta   CIO0DATA    ; Store it to W5100S
                       ( COCOIODRV-4C.asm):00422         ;            jsr   DALLY
-80F3 39               ( COCOIODRV-4C.asm):00423                     rts
+80F5 39               ( COCOIODRV-4C.asm):00423                     rts
                       ( COCOIODRV-4C.asm):00424         
                       ( COCOIODRV-4C.asm):00425         
                       ( COCOIODRV-4C.asm):00426         
@@ -1030,17 +1030,17 @@
                       ( COCOIODRV-4C.asm):00432         
                       ( COCOIODRV-4C.asm):00433         
                       ( COCOIODRV-4C.asm):00434         
-80F4                  ( COCOIODRV-4C.asm):00435         FORGNIP:                      ; Foreign IP Address
-80F4 C0A8FE64         ( COCOIODRV-4C.asm):00436                     fcb   192,168,254,100
+80F6                  ( COCOIODRV-4C.asm):00435         FORGNIP:                      ; Foreign IP Address
+80F6 C0A8FE64         ( COCOIODRV-4C.asm):00436                     fcb   192,168,254,100
                       ( COCOIODRV-4C.asm):00437         
-80F8                  ( COCOIODRV-4C.asm):00438         FORGNPORT:                    ; Foreign Port
-80F8 4E20             ( COCOIODRV-4C.asm):00439                     fdb   20000       
+80FA                  ( COCOIODRV-4C.asm):00438         FORGNPORT:                    ; Foreign Port
+80FA 4E20             ( COCOIODRV-4C.asm):00439                     fdb   20000       
                       ( COCOIODRV-4C.asm):00440         
-80FA                  ( COCOIODRV-4C.asm):00441         FORGNC:                       ; My Source Hardware Address
-80FA 0008DC000001     ( COCOIODRV-4C.asm):00442                     fcb   $00,$08,$DC,$00,$00,$01
+80FC                  ( COCOIODRV-4C.asm):00441         FORGNC:                       ; My Source Hardware Address
+80FC 0008DC000001     ( COCOIODRV-4C.asm):00442                     fcb   $00,$08,$DC,$00,$00,$01
                       ( COCOIODRV-4C.asm):00443         
-8100                  ( COCOIODRV-4C.asm):00444         FORGNP:                        ; My Source IP Address
-8100 C0A8FE0A         ( COCOIODRV-4C.asm):00445                     fcb   192,168,254,10
+8102                  ( COCOIODRV-4C.asm):00444         FORGNP:                        ; My Source IP Address
+8102 C0A8FE0A         ( COCOIODRV-4C.asm):00445                     fcb   192,168,254,10
                       ( COCOIODRV-4C.asm):00446         
                       ( COCOIODRV-4C.asm):00447         
                       ( COCOIODRV-4C.asm):00448         ;            include "COCOIOCFG.asm"
@@ -1049,11 +1049,11 @@
 
 Symbol Table:
 [ G] AUTO_INCRE                       0002
-[ G] B2H30                            8084
-[ G] B2H30LD                          8091
-[ G] BIN2HEX                          8073
-[ G] BINVAL                           80A8
-[ G] BUFRSOC0                         80BF
+[ G] B2H30                            8086
+[ G] B2H30LD                          8093
+[ G] BIN2HEX                          8075
+[ G] BINVAL                           80AA
+[ G] BUFRSOC0                         80C1
 [ G] BUFSIZE0K                        0000
 [ G] BUFSIZE1K                        0001
 [ G] BUFSIZE2K                        0002
@@ -1074,29 +1074,29 @@ Symbol Table:
 [ G] CONFIG                           7E03
 [ G] CONTCIO0                         7F59
 [ G] CONTCIO1                         7F8E
-[ G] DALLY                            8067
-[ G] DALLY1                           806C
-[ G] DILLY                            805B
-[ G] DILLY1                           805E
+[ G] DALLY                            8069
+[ G] DALLY1                           806E
+[ G] DILLY                            805D
+[ G] DILLY1                           8060
 [ G] DISLAB0                          7F6D
 [ G] DISLAB1                          7FA2
-[ G] DISLOOP                          8048
-[ G] DISP_GATEWAY                     7FFB
-[ G] DISP_HARDWARE                    801B
-[ G] DISP_IPADDR                      802B
-[ G] DISP_SUBNET                      800B
-[ G] DISPB2H                          8099
+[ G] DISLOOP                          804A
+[ G] DISP_GATEWAY                     7FFC
+[ G] DISP_HARDWARE                    801C
+[ G] DISP_IPADDR                      802C
+[ G] DISP_SUBNET                      800C
+[ G] DISPB2H                          809B
 [ G] DISPGW                           7E18
 [ G] DISPHW                           7E1E
 [ G] DISPIPADD                        7E21
 [ G] DISPSN                           7E1B
-[ G] DISPSTR0                         80AB
-[ G] DISPSTRLP                        80B1
-[ G] DISPSTRX                         80BC
-[ G] FORGNC                           80FA
-[ G] FORGNIP                          80F4
-[ G] FORGNP                           8100
-[ G] FORGNPORT                        80F8
+[ G] DISPSTR0                         80AD
+[ G] DISPSTRLP                        80B3
+[ G] DISPSTRX                         80BE
+[ G] FORGNC                           80FC
+[ G] FORGNIP                          80F6
+[ G] FORGNP                           8102
+[ G] FORGNPORT                        80FA
 [ G] GAR0                             0001
 [ G] GAR1                             0002
 [ G] GAR2                             0003
@@ -1104,13 +1104,13 @@ Symbol Table:
 [ G] GATEWAY                          7E09
 [ G] GWLABEL                          7ECE
 [ G] HARDWARE                         7E0F
-[ G] HEX1VAL                          80A9
-[ G] HEX2VAL                          80AA
+[ G] HEX1VAL                          80AB
+[ G] HEX2VAL                          80AC
 [ G] IMR                              0016
 [ G] IMR2                             0021
 [ G] INDIRECT                         0001
 [ G] INITEXIT                         7F44
-[ G] INITSOC0                         80D3
+[ G] INITSOC0                         80D5
 [ G] INTPTMR0                         0013
 [ G] INTPTMR1                         0014
 [ G] IPADDR                           7E12
@@ -1152,7 +1152,7 @@ Symbol Table:
 [ G] MASK8KH                          001F
 [ G] MASK8KL                          00FF
 [ G] MPISLOT                          7E15
-[ G] MPISLOT1                         8052
+[ G] MPISLOT1                         8054
 [ G] MR                               0000
 [ G] MR2                              0030
 [ G] MR2_CLKSEL                       0080
@@ -1448,7 +1448,7 @@ Symbol Table:
 [ G] S_SR_WAIT                        001C
 [ G] SET0MODE                         7F5B
 [ G] SET1MODE                         7F90
-[ G] SETLOOP                          7FF1
+[ G] SETLOOP                          7FF2
 [ G] SETREG                           7E06
 [ G] SHAR0                            0009
 [ G] SHAR1                            000A
@@ -1524,10 +1524,10 @@ Symbol Table:
 [ G] UPORTR1                          002F
 [ G] VERR                             0080
 [ G] W5100_CFG                        7FAF
-[ G] W5100_DISREG                     803B
-[ G] W5100_GATEWAY                    7FFA
-[ G] W5100_HARDWARE                   7FFA
-[ G] W5100_IPADDR                     7FFA
+[ G] W5100_DISREG                     803C
+[ G] W5100_GATEWAY                    7FFB
+[ G] W5100_HARDWARE                   7FFB
+[ G] W5100_IPADDR                     7FFB
 [ G] W5100_RST                        7F18
 [ G] W5100_SETREG                     7FE4
-[ G] W5100_SUBNET                     7FFA
+[ G] W5100_SUBNET                     7FFB
