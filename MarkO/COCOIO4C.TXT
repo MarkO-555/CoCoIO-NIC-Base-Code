@@ -585,19 +585,25 @@
                       (    COCOIOEQU.asm):00019         ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
                       (    COCOIOEQU.asm):00020         ;*********************************************************************
                       (    COCOIOEQU.asm):00021         
-                      (    COCOIOEQU.asm):00022                                       ; CoCoIO with Jumper set to 0xFF6x Range
-     FF68             (    COCOIOEQU.asm):00023         CIO0CMND:   equ   $FF68       ; CoCoIO Command Register 
-     FF69             (    COCOIOEQU.asm):00024         CIO0ADDR:   equ   $FF69       ; CoCoIO Address Register MSB
-                      (    COCOIOEQU.asm):00025                          ;$FF6A       ; CoCoIO Address Register LSB
-     FF6B             (    COCOIOEQU.asm):00026         CIO0DATA:   equ   $FF6B       ; CoCoIO Read/Write Data Register
+                      (    COCOIOEQU.asm):00022         
+                      (    COCOIOEQU.asm):00023                    org   0
+0000                  (    COCOIOEQU.asm):00024         CIOCMND:   rmb   1           ; CoCoIO Command Register 
+0001                  (    COCOIOEQU.asm):00025         CIOADDR:   rmb   2           ; CoCoIO Address Register (MSB/LSB)
+0003                  (    COCOIOEQU.asm):00026         CIODATA:   rmb   1           ; CoCoIO Read/Write Data Register
                       (    COCOIOEQU.asm):00027         
-                      (    COCOIOEQU.asm):00028                                       ; CoCoIO with Jumper set to 0xFF7x Range
-     FF78             (    COCOIOEQU.asm):00029         CIO1CMND:   equ   $FF78       ; CoCoIO Command Register 
-     FF79             (    COCOIOEQU.asm):00030         CIO1ADDR:   equ   $FF79       ; CoCoIO Address Register MSB
-                      (    COCOIOEQU.asm):00031                          ;$FF7A       ; CoCoIO Address Register LSB
-     FF7B             (    COCOIOEQU.asm):00032         CIO1DATA:   equ   $FF7B       ; CoCoIO Read/Write Data Register
+                      (    COCOIOEQU.asm):00028                                       ; CoCoIO with Jumper set to 0xFF6x Range
+     FF68             (    COCOIOEQU.asm):00029         CIO0CMND:   equ   $FF68       ; CoCoIO Command Register 
+     FF69             (    COCOIOEQU.asm):00030         CIO0ADDR:   equ   $FF69       ; CoCoIO Address Register MSB
+                      (    COCOIOEQU.asm):00031                          ;$FF6A       ; CoCoIO Address Register LSB
+     FF6B             (    COCOIOEQU.asm):00032         CIO0DATA:   equ   $FF6B       ; CoCoIO Read/Write Data Register
                       (    COCOIOEQU.asm):00033         
-                      (    COCOIOEQU.asm):00034                                       ; End of CoCoIO equates
+                      (    COCOIOEQU.asm):00034                                       ; CoCoIO with Jumper set to 0xFF7x Range
+     FF78             (    COCOIOEQU.asm):00035         CIO1CMND:   equ   $FF78       ; CoCoIO Command Register 
+     FF79             (    COCOIOEQU.asm):00036         CIO1ADDR:   equ   $FF79       ; CoCoIO Address Register MSB
+                      (    COCOIOEQU.asm):00037                          ;$FF7A       ; CoCoIO Address Register LSB
+     FF7B             (    COCOIOEQU.asm):00038         CIO1DATA:   equ   $FF7B       ; CoCoIO Read/Write Data Register
+                      (    COCOIOEQU.asm):00039         
+                      (    COCOIOEQU.asm):00040                                       ; End of CoCoIO equates
                       ( COCOIODRV-4C.asm):00026         
      FF02             ( COCOIODRV-4C.asm):00027         PIA0BD:     equ   $FF02       ; PIA 0 PORT B DATA
      FF03             ( COCOIODRV-4C.asm):00028         PIA0BC:     equ   $FF03       ; PIA 0 PORT B CONTROL
@@ -808,8 +814,8 @@
 7FEA                  ( COCOIODRV-4C.asm):00216         W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Length, X for Data
 7FEA 3410             ( COCOIODRV-4C.asm):00217                     pshs  x           ; Save Data Address
 7FEC BE7ECC           ( COCOIODRV-4C.asm):00218                     ldx   COCOIOPORT  
-7FEF A780             ( COCOIODRV-4C.asm):00219                     sta   ,x+         ; CoCoIO Address Register MSB
-7FF1 E780             ( COCOIODRV-4C.asm):00220                     stb   ,x+         ; CoCoIO Address Register LSB
+7FEF A701             ( COCOIODRV-4C.asm):00219                     sta   CIOADDR,x   ; CoCoIO Address Register MSB
+7FF1 E702             ( COCOIODRV-4C.asm):00220                     stb   CIOADDR+1,x ; CoCoIO Address Register LSB
 7FF3 3510             ( COCOIODRV-4C.asm):00221                     puls  x           ; Restore Data Address
                       ( COCOIODRV-4C.asm):00222         ;            jsr   DALLY
 7FF5 1F20             ( COCOIODRV-4C.asm):00223                     tfr   y,d         ; Setup B for loop counting
@@ -871,8 +877,8 @@
                       ( COCOIODRV-4C.asm):00279         ;            ldd   #GAR0       ; W5100S Gateway Address Register 0
 8041 3410             ( COCOIODRV-4C.asm):00280                     pshs  x           ; Save X
 8043 BE7ECC           ( COCOIODRV-4C.asm):00281                     ldx   COCOIOPORT  
-8046 A780             ( COCOIODRV-4C.asm):00282                     sta   ,x+         ; CoCoIO Address Register MSB
-8048 E780             ( COCOIODRV-4C.asm):00283                     stb   ,x+         ; CoCoIO Address Register LSB
+8046 A701             ( COCOIODRV-4C.asm):00282                     sta   CIOADDR,x   ; CoCoIO Address Register MSB
+8048 E702             ( COCOIODRV-4C.asm):00283                     stb   CIOADDR+1,x ; CoCoIO Address Register LSB
 804A 3510             ( COCOIODRV-4C.asm):00284                     puls  x           ; Restore X
 804C 1F20             ( COCOIODRV-4C.asm):00285                     tfr   y,d         ; Setup B for loop counting
 804E                  ( COCOIODRV-4C.asm):00286         DISLOOP:   
@@ -1060,6 +1066,9 @@ Symbol Table:
 [ G] CIO1ADDR                         FF79
 [ G] CIO1CMND                         FF78
 [ G] CIO1DATA                         FF7B
+[ G] CIOADDR                          0001
+[ G] CIOCMND                          0000
+[ G] CIODATA                          0003
 [ G] CLKLCKR                          0070
 [ G] COCOIOPORT                       7ECC
 [ G] CONFIG                           7E03

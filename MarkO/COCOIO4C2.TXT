@@ -585,6 +585,12 @@
                 ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
                 ;*********************************************************************
                 
+                
+                           org   0
+0000            CIOCMND:   rmb   1           ; CoCoIO Command Register 
+0001            CIOADDR:   rmb   2           ; CoCoIO Address Register (MSB/LSB)
+0003            CIODATA:   rmb   1           ; CoCoIO Read/Write Data Register
+                
                                               ; CoCoIO with Jumper set to 0xFF6x Range
      FF68       CIO0CMND:   equ   $FF68       ; CoCoIO Command Register 
      FF69       CIO0ADDR:   equ   $FF69       ; CoCoIO Address Register MSB
@@ -808,8 +814,8 @@
 7FEA            W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Length, X for Data
 7FEA 3410                   pshs  x           ; Save Data Address
 7FEC BE7ECC                 ldx   COCOIOPORT  
-7FEF A780                   sta   ,x+         ; CoCoIO Address Register MSB
-7FF1 E780                   stb   ,x+         ; CoCoIO Address Register LSB
+7FEF A701                   sta   CIOADDR,x   ; CoCoIO Address Register MSB
+7FF1 E702                   stb   CIOADDR+1,x ; CoCoIO Address Register LSB
 7FF3 3510                   puls  x           ; Restore Data Address
                 ;            jsr   DALLY
 7FF5 1F20                   tfr   y,d         ; Setup B for loop counting
@@ -871,8 +877,8 @@
                 ;            ldd   #GAR0       ; W5100S Gateway Address Register 0
 8041 3410                   pshs  x           ; Save X
 8043 BE7ECC                 ldx   COCOIOPORT  
-8046 A780                   sta   ,x+         ; CoCoIO Address Register MSB
-8048 E780                   stb   ,x+         ; CoCoIO Address Register LSB
+8046 A701                   sta   CIOADDR,x   ; CoCoIO Address Register MSB
+8048 E702                   stb   CIOADDR+1,x ; CoCoIO Address Register LSB
 804A 3510                   puls  x           ; Restore X
 804C 1F20                   tfr   y,d         ; Setup B for loop counting
 804E            DISLOOP:   
@@ -1060,6 +1066,9 @@ Symbol Table:
 [ G] CIO1ADDR  
 [ G] CIO1CMND  
 [ G] CIO1DATA  
+[ G] CIOADDR   
+[ G] CIOCMND   
+[ G] CIODATA   
 [ G] CLKLCKR   
 [ G] COCOIOPORT
 [ G] CONFIG    
