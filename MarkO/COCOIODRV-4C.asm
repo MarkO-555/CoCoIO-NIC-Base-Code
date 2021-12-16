@@ -108,7 +108,7 @@ MYIP:                         ; My Source IP Address
 
 
 W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S and Determine the I/O Port location
-            jsr   MPISLOT1
+;            jsr   MPISLOT1
 ;            jsr   DALLY
             ldd   #LABEL01    ; Driver Banner 01, Hello World Message 
             jsr   DISPSTR0    ; Display the Label
@@ -186,7 +186,7 @@ TRY1EXIT:   rts
 
 
 W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-            jsr   MPISLOT1
+;            jsr   MPISLOT1
 ;            jsr   DALLY
                                   ; Bring up layer 3 default route
             ldd   #GAR0           ; W5100S Gateway Address Register 0
