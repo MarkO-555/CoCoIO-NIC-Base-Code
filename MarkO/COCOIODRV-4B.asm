@@ -48,7 +48,7 @@ DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
 
 
 W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S
-            jsr   MPISLOT1
+;            jsr   MPISLOT1
 ;            jsr   DALLY
             lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
             ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
@@ -63,7 +63,7 @@ SETMODE:    ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPP
             rts
 
 W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-            jsr   MPISLOT1
+;            jsr   MPISLOT1
 ;            jsr   DALLY
                                   ; Bring up layer 3 default route
             ldd   #GAR0           ; W5100S Gateway Address Register 0
