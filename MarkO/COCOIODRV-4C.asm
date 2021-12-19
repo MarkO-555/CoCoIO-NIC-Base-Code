@@ -100,6 +100,10 @@ MYIP:                         ; My Source IP Address
                               ; End of My CoCoIO configuration
 
 
+COCOIOTST1: fdb   $00
+COCOIOTST2: fdb   $00
+COCOIOTST3: fdb   $00
+COCOIOTST4: fdb   $00
 
 
 
@@ -151,7 +155,7 @@ SET0MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPP
             bne   SET0MODE    ; no, try again
             jmp   TRYCIO1	  ; OK, lets Check $FF78
 
-DISLAB0:    ldd   $FF68		  ; We Found the WizNet, save the I/O Location
+DISLAB0:    ldd   $7F18		  ; We Found the WizNet, save the I/O Location
             std   COCOIOPORT
             ldd   #LABEL11    ; Driver Banner 11, WizNet5100 @FF68
             jsr   DISPSTR0    ; Display the Label
@@ -177,7 +181,7 @@ SET1MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPP
             bne   SET1MODE    ; no, try again
             jmp   TRY1EXIT	  ; Nope, CoCoIO is Not Here
 
-DISLAB1:    ldd   $FF78		  ; We Found the WizNet, save the I/O Location
+DISLAB1:    ldd   $7F18		  ; We Found the WizNet, save the I/O Location
             std   COCOIOPORT
             ldd   #LABEL12    ; Driver Banner 12, WizNet5100 @FF78
             jsr   DISPSTR0    ; Display the Label
@@ -221,8 +225,9 @@ W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Leng
             puls  x           ; Restore Data Address
 ;            jsr   DALLY
             tfr   y,d         ; Setup B for loop counting
+            tfr   x,y         ; Copy COCOIOPORT to Y
 SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
-            sta   CIO0DATA    ; Store it to W5100S
+            sta   CIODATA,y    ; Store it to W5100S
 ;            jsr   DALLY
             decb              ; Decrement loop counter
             bne   SETLOOP     ; No, go back and do more
@@ -281,13 +286,14 @@ W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
             ldx   [COCOIOPORT]  
             sta   CIOADDR,x   ; CoCoIO Address Register MSB
             stb   CIOADDR+1,x ; CoCoIO Address Register LSB
-            puls  x           ; Restore X
             tfr   y,d         ; Setup B for loop counting
 DISLOOP:   
             jsr   BIN2HEX
             jsr   DISPB2H
             decb              ; Decrement loop counter
             bne   DISLOOP     ; No, go back and do more
+
+            puls  x           ; Restore X
 
             rts
 
@@ -318,8 +324,8 @@ DALLY1:     leax  -1,x        ; Decrement X
 BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
 
             pshs  d           ; Save D ( A&B ) for later
-
-            lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
+;            ldx   [COCOIOPORT]     ; X is already Loaded with 
+            lda   CIODATA,x    ; GET DATA from W5100, ( or BINVAL )
             ;
             ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
             ;

@@ -1,0 +1,1145 @@
+                      (   PSYMON120B.asm):00001                NAM   PSYMON
+                      (   PSYMON120B.asm):00002         
+                      (   PSYMON120B.asm):00003         
+                      (   PSYMON120B.asm):00004         *************************************************
+                      (   PSYMON120B.asm):00005         * PSYMON VERSION 1.20                           *
+                      (   PSYMON120B.asm):00006         * A 6809 ROM MONITOR                            *
+                      (   PSYMON120B.asm):00007         *                                               *
+                      (   PSYMON120B.asm):00008         * THE PERCOM SYSTEM MONITOR (PSYMON) WAS        *
+                      (   PSYMON120B.asm):00009         * WRITTEN BY A TEAM OF PROGRAMMERS USING        *
+                      (   PSYMON120B.asm):00010         * STRUCTURED TECHNIQUES.  THE TEAM MEMBERS      *
+                      (   PSYMON120B.asm):00011         * ARE AS FOLLOWS:                               *
+                      (   PSYMON120B.asm):00012         *     HAROLD A MAUCH - PRESIDENT, PERCOM DATA   *
+                      (   PSYMON120B.asm):00013         *     MIKE FOREMAN - 6809 PROJECT LEADER        *
+                      (   PSYMON120B.asm):00014         *     BYRON SEASTRUNK - DESIGN ENGINEER         *
+                      (   PSYMON120B.asm):00015         *     CLIFF RUSHING - PROGRAMMER                *
+                      (   PSYMON120B.asm):00016         *     JIM STUTSMAN - CHIEF PROGRAMMER           *
+                      (   PSYMON120B.asm):00017         *                                               *
+                      (   PSYMON120B.asm):00018         * COPYRIGHT (c) 1979 PERCOM DATA COMPANY, INC.  *
+                      (   PSYMON120B.asm):00019         * USE OF THIS SOFTWARE IS GRANTED ROYALTY-FREE  *
+                      (   PSYMON120B.asm):00020         * AS LONG AS THE USER CLEARLY ACKNOWLEDGES ITS  *
+                      (   PSYMON120B.asm):00021         * ORIGIN.                                       *
+                      (   PSYMON120B.asm):00022         *                                               *
+                      (   PSYMON120B.asm):00023         * WHILE THIS MONITOR IS VERY SIMPLE, ITS TRUE   *
+                      (   PSYMON120B.asm):00024         * POWER LIES IN ITS EXTENSIBILITY AND IN THE    *
+                      (   PSYMON120B.asm):00025         * TOOLS THAT IT PROVIDES FOR OTHER SOFTWARE     *
+                      (   PSYMON120B.asm):00026         * TO USE.  THIS OPERATING SYSTEM IS DEDICATED   *
+                      (   PSYMON120B.asm):00027         * TO HAROLD MAUCH AND HIS LEGENDARY 512 BYTE    *
+                      (   PSYMON120B.asm):00028         * OPERATING SYSTEM.                             *
+                      (   PSYMON120B.asm):00029         *                                               *
+                      (   PSYMON120B.asm):00030         * COMMANDS:                                     *
+                      (   PSYMON120B.asm):00031         *   M <ADDRESS> - MEMORY EXAMINE/CHANGE         *
+                      (   PSYMON120B.asm):00032         *   G <ADDRESS> - GO TO ADDRESS                 *
+                      (   PSYMON120B.asm):00033         *   R <REGISTER> - REGISTER EXAMINE/CHANGE      *
+                      (   PSYMON120B.asm):00034         *   L - LOAD PROGRAM FROM TAPE                  *
+                      (   PSYMON120B.asm):00035         *   S <START> <END> - SAVE PROGRAM TO TAPE      *
+                      (   PSYMON120B.asm):00036         *   B <ADDRESS> - SET/LIST BREAKPOINTS          *
+                      (   PSYMON120B.asm):00037         *   U <ADDRESS> - UNSET BREAKPOINTS             *
+                      (   PSYMON120B.asm):00038         *   Z - JUMP TO PROM AT ADDRESS C000 HEX        *
+                      (   PSYMON120B.asm):00039         *                                               *
+                      (   PSYMON120B.asm):00040         * CALLABLE SUBROUTINES:                         *
+                      (   PSYMON120B.asm):00041         *   INCHR - INPUT CHARACTER FROM CONSOLE        *
+                      (   PSYMON120B.asm):00042         *   OUTCHR - OUTPUT CHARACTER TO CONSOLE        *
+                      (   PSYMON120B.asm):00043         *   REQIO - PERFORM I/O TO PERIPHERAL           *
+                      (   PSYMON120B.asm):00044         *   GETHEX - INPUT HEX NUMBER FROM CONSOLE      *
+                      (   PSYMON120B.asm):00045         *   INHEX - INPUT HEX DIGIT FROM CONSOLE        *
+                      (   PSYMON120B.asm):00046         *   DSPSBY - DISPLAY SINGLE BYTE & SPACE        *
+                      (   PSYMON120B.asm):00047         *   DSPDBY - DISPLAY DOUBLE BYTE & SPACE        *
+                      (   PSYMON120B.asm):00048         *   OUTHEX - DISPLAY 2 HEX DIGIST               *
+                      (   PSYMON120B.asm):00049         *   PSTRNG - DIPLAY STRING ON CONSOLE           *
+                      (   PSYMON120B.asm):00050         *   LOAD - LOAD HEX PROGRAM FROM CONSOLE        *
+                      (   PSYMON120B.asm):00051         *   SAVE - SAVE HEX PROGRAM TO CONSOLE          *
+                      (   PSYMON120B.asm):00052         *   CRLF - BEGIN NEW LINE ON CONSOLE            *
+                      (   PSYMON120B.asm):00053         *   OUTS - OUTPUT SPACE TO CONSOLE              *
+                      (   PSYMON120B.asm):00054         *                                               *
+                      (   PSYMON120B.asm):00055         * ALL I/O WITHIN PSYMON IS DONE THROUGH THE     *
+                      (   PSYMON120B.asm):00056         * USE OF DEVICE CONTROL BLOCKS.  THIS ALLOWS    *
+                      (   PSYMON120B.asm):00057         * EASY MODIFICATION BY THE USER.  PSYMON HAS    *
+                      (   PSYMON120B.asm):00058         * FOUR DCB POINTERS INITIALIZED TO POINT TO THE *
+                      (   PSYMON120B.asm):00059         * CONSOLE (ACIA) DCB.  THEY ARE USED AS         *
+                      (   PSYMON120B.asm):00060         * FOLLOWS:                                      *
+                      (   PSYMON120B.asm):00061         *   CIDCB - POINTS TO DCB USED FOR CONSOLE      *
+                      (   PSYMON120B.asm):00062         *           INPUT (CHARACTER I/O).              *
+                      (   PSYMON120B.asm):00063         *   CEDCB - POINTS TO DCB USED FOR ECHO OF      *
+                      (   PSYMON120B.asm):00064         *           CHARACTERS RECEIVED USING CIDCB.    *
+                      (   PSYMON120B.asm):00065         *           ECHO MAY BE SUPPRESSED BY SETTING   *
+                      (   PSYMON120B.asm):00066         *           THIS POINTER TO ZERO.               *
+                      (   PSYMON120B.asm):00067         *   CODCB - POINTS TO DCB USED FOR CONSOLE      *
+                      (   PSYMON120B.asm):00068         *           OUTPUT (CHARACTER I/O).             *
+                      (   PSYMON120B.asm):00069         *   TPDCB - POINTS TO DCB USED FOR PSYMON       *
+                      (   PSYMON120B.asm):00070         *           TAPE LOAD & SAVE COMMANDS           *
+                      (   PSYMON120B.asm):00071         *                                               *
+                      (   PSYMON120B.asm):00072         * THE PSYMON COMMAND TABLE MAY BE EXTENDED      *
+                      (   PSYMON120B.asm):00073         * OR CHANGED BY SETTING THE POINTER 'USRTBL'    *
+                      (   PSYMON120B.asm):00074         * TO THE ADDRESS OF A USER COMMAND TABLE.  IT   *
+                      (   PSYMON120B.asm):00075         * IS INITIALIZED TO ZERO, INDICATING NO USER    *
+                      (   PSYMON120B.asm):00076         * TABLE EXISTS.                                 *
+                      (   PSYMON120B.asm):00077         *                                               *
+                      (   PSYMON120B.asm):00078         * ADDITIONAL INFORMATION REGARDING THE USE OF   *
+                      (   PSYMON120B.asm):00079         * 'PSYMON' MAY BE OBTAINED FROM:                *
+                      (   PSYMON120B.asm):00080         *     PERCOM DATA COMPANY, INC.                 *
+                      (   PSYMON120B.asm):00081         *     211 NORTH KIRBY                           *
+                      (   PSYMON120B.asm):00082         *     GARLAND, TEXAS  75042                     *
+                      (   PSYMON120B.asm):00083         *                                               *
+                      (   PSYMON120B.asm):00084         * REVISION A - 11/23/79                         *
+                      (   PSYMON120B.asm):00085         *   ADDITION OF A VECTOR FOR SCRATCHPAD RAM     *
+                      (   PSYMON120B.asm):00086         *                                               *
+                      (   PSYMON120B.asm):00087         * REVISION B - 02/08/80                         *
+                      (   PSYMON120B.asm):00088         *   ADDITIONAL OF A VECTOR FOR FREE RAM         *
+                      (   PSYMON120B.asm):00089         *                                               *
+                      (   PSYMON120B.asm):00090         *************************************************
+                      (   PSYMON120B.asm):00091         
+                      (   PSYMON120B.asm):00092         * SYSTEM ADDRESS CONSTANTS
+     FC00             (   PSYMON120B.asm):00093         ROM1   EQU   $FC00    BASE ADDRESS OF PSYMON ROM
+     F800             (   PSYMON120B.asm):00094         ROM2   EQU   $F800    BASE ADDRESS OF EXTENSION ROM
+     F380             (   PSYMON120B.asm):00095         RAM    EQU   $F380    BASE ADDRESS OF SCRATCHPAD RAM
+     F000             (   PSYMON120B.asm):00096         FREE   EQU   $F000    ADDRESS OF FREE RAM
+     F7FE             (   PSYMON120B.asm):00097         TERMNL EQU   $F7FE    SYSTEM TERMINAL ACIA
+                      (   PSYMON120B.asm):00098         
+                      (   PSYMON120B.asm):00099         * ASCII CHARACTER CONSTANTS
+     000D             (   PSYMON120B.asm):00100         CR     EQU   $0D      CARRIAGE RETURN
+     000A             (   PSYMON120B.asm):00101         LF     EQU   $0A      LINE FEED
+     0020             (   PSYMON120B.asm):00102         SP     EQU   $20      SPACE
+                      (   PSYMON120B.asm):00103         
+                      (   PSYMON120B.asm):00104         * ACIA CONTROL CONFIGURATIONS
+     0003             (   PSYMON120B.asm):00105         RESET  EQU   $03      RESET ACIA
+     0051             (   PSYMON120B.asm):00106         CONFIG EQU   $51      SET FOR 8 DATA, 2 STOP, NO PARITY
+     0011             (   PSYMON120B.asm):00107         RDRON  EQU   CONFIG-$40  READER ON (RTS ON)
+     0051             (   PSYMON120B.asm):00108         RDROFF EQU   CONFIG   READER OFF (RTS OFF)
+                      (   PSYMON120B.asm):00109         
+                      (   PSYMON120B.asm):00110         * PSYMON DCB OFFSETS
+     0000             (   PSYMON120B.asm):00111         DCBLNK EQU   0        POINTER TO NEXT DCB IN CHAIN
+     0002             (   PSYMON120B.asm):00112         DCBDID EQU   2        ASCII 2 CHARACTER DEVICE ID
+     0004             (   PSYMON120B.asm):00113         DCBDVR EQU   4        DEVICE DRIVER ADDRESS
+     0006             (   PSYMON120B.asm):00114         DCBIOA EQU   6        DEVICE I/O ADDRESS
+     0008             (   PSYMON120B.asm):00115         DCBERR EQU   8        ERROR STATUS CODE
+     0009             (   PSYMON120B.asm):00116         DCBEXT EQU   9        NUMBER OF EXTENSION BYTES IN DCB
+     000A             (   PSYMON120B.asm):00117         DCBAPP EQU   10       DCB APPENDAGE FOR DRIVER USE
+                      (   PSYMON120B.asm):00118         
+                      (   PSYMON120B.asm):00119         * PSYMON DCB FUNCTION CODES
+     0001             (   PSYMON120B.asm):00120         READFN EQU   $01      READ FUNCTION CODE
+     0002             (   PSYMON120B.asm):00121         WRITFN EQU   $02      WRITE FUNCTION CODE
+     0004             (   PSYMON120B.asm):00122         STATFN EQU   $04      STATUS FUNCTION CODE
+     0008             (   PSYMON120B.asm):00123         CNTLFN EQU   $08      DEVICE CONTROL FUNCTION CODE
+                      (   PSYMON120B.asm):00124         
+                      (   PSYMON120B.asm):00125         * PSYMON RAM DEFINITIONS
+                      (   PSYMON120B.asm):00126                ORG   RAM
+                      (   PSYMON120B.asm):00127         
+                      (   PSYMON120B.asm):00128         * PSYMON INTERNAL STACK & REGISTER SPACE
+                      (   PSYMON120B.asm):00129         *   OFFSETS TO RAM BASE IN PARENTHESES
+F380                  (   PSYMON120B.asm):00130                RMB   55       STACK SPACE
+     F3B7             (   PSYMON120B.asm):00131         STACK  EQU   *        (55) TOP OF STACK
+F3B7                  (   PSYMON120B.asm):00132         REGC   RMB   1        (55) CONDITION CODE REGISTER
+F3B8                  (   PSYMON120B.asm):00133         REGA   RMB   1        (56) A REGISTER
+F3B9                  (   PSYMON120B.asm):00134         REGB   RMB   1        (57) B REGISTER
+F3BA                  (   PSYMON120B.asm):00135         REGD   RMB   1        (58) DIRECT PAGE REGISTER
+F3BB                  (   PSYMON120B.asm):00136         REGX   RMB   2        (59) X REGISTER
+F3BD                  (   PSYMON120B.asm):00137         REGY   RMB   2        (61) Y REGISTER
+F3BF                  (   PSYMON120B.asm):00138         REGU   RMB   2        (63) U STACK POINTER
+F3C1                  (   PSYMON120B.asm):00139         REGP   RMB   2        (65) PROGRAM COUNTER
+                      (   PSYMON120B.asm):00140         
+                      (   PSYMON120B.asm):00141         * PSYMON BREAKPOINT TABLE
+F3C3                  (   PSYMON120B.asm):00142         BPTABL RMB   15       (67) SPACE FOR 5 BREAKPOINTS
+     F3D2             (   PSYMON120B.asm):00143         BPTEND EQU   *        (82) END OF BREAKPOINT TABLE
+                      (   PSYMON120B.asm):00144         
+                      (   PSYMON120B.asm):00145         * PSYMON WORK AREAS
+F3D2                  (   PSYMON120B.asm):00146         MEMPTR RMB   2        (82) MEMORY POINTER FOR 'M' COMMAND
+F3D4                  (   PSYMON120B.asm):00147         USRTBL RMB   2        (84) ADDRESS OF USER COMMAND TABLE
+F3D6                  (   PSYMON120B.asm):00148         COMAND RMB   1        (86) COMMAND CHARACTER STORAGE
+F3D7                  (   PSYMON120B.asm):00149         CKSUM  RMB   1        (87) CHECKSUM FOR LOAD AND SAVE
+F3D8                  (   PSYMON120B.asm):00150         BEGADD RMB   2        (88) BEGIN ADDRESS FOR SAVE
+F3DA                  (   PSYMON120B.asm):00151         ENDADD RMB   2        (90) END ADDRESS FOR SAVE
+F3DC                  (   PSYMON120B.asm):00152         STKPTR RMB   2        (92) CONTENTS OF STACK POINTER
+                      (   PSYMON120B.asm):00153         
+                      (   PSYMON120B.asm):00154         * THE PSYMON CONSOLE DCB
+F3DE                  (   PSYMON120B.asm):00155         CONDCB RMB   10       (94) STANDARD DCB
+                      (   PSYMON120B.asm):00156         
+                      (   PSYMON120B.asm):00157         * PSYMON DCB POINTERS
+F3E8                  (   PSYMON120B.asm):00158         DCBCHN RMB   2        (104) BASE OF DCB CHAIN
+F3EA                  (   PSYMON120B.asm):00159         CIDCB  RMB   2        (106) CONSOLE INPUT DCB
+F3EC                  (   PSYMON120B.asm):00160         CEDCB  RMB   2        (108) CONSOLE ECHO DCB
+F3EE                  (   PSYMON120B.asm):00161         CODCB  RMB   2        (110) CONSOLE OUTPUT DCB
+F3F0                  (   PSYMON120B.asm):00162         TPDCB  RMB   2        (112) CASSETTE TAPE DCB
+                      (   PSYMON120B.asm):00163         
+                      (   PSYMON120B.asm):00164         * PSYMON VECTORS
+F3F2                  (   PSYMON120B.asm):00165         SWI3V  RMB   2        (114) SOFTWARE INTERRUPT 3
+F3F4                  (   PSYMON120B.asm):00166         SWI2V  RMB   2        (116) SOFTWARE INTERRUPT 2
+F3F6                  (   PSYMON120B.asm):00167         FIRQV  RMB   2        (118) FAST INTERRUPT REQUEST
+F3F8                  (   PSYMON120B.asm):00168         IRQV   RMB   2        (120) INTERRUPT REQUEST
+F3FA                  (   PSYMON120B.asm):00169         SWIV   RMB   2        (122) SOFTWARE INTERRUPT
+F3FC                  (   PSYMON120B.asm):00170         NMIV   RMB   2        (124) NON-MASKABLE INTERRUPT
+F3FE                  (   PSYMON120B.asm):00171         FRERAM RMB   2        (126) ADDRESS OF FREE RAM
+                      (   PSYMON120B.asm):00172         
+                      (   PSYMON120B.asm):00173         * PSYMON ROM CODING
+                      (   PSYMON120B.asm):00174                ORG   ROM1
+                      (   PSYMON120B.asm):00175         *************************************************
+                      (   PSYMON120B.asm):00176         * PSYMON INITIALIZATION                         *
+                      (   PSYMON120B.asm):00177         *************************************************
+FC00 10CEF3B7         (   PSYMON120B.asm):00178         INIT   LDS   #STACK   SET UP STACK POINTER
+FC04 1F41             (   PSYMON120B.asm):00179                TFR   S,X      POINT X AT STACK
+FC06 6F80             (   PSYMON120B.asm):00180         INIT1  CLR   ,X+      CLEAR A BYTE
+FC08 8CF3E0           (   PSYMON120B.asm):00181                CMPX  #CONDCB+2  ALL FIELDS CLEAR?
+FC0B 26F9             (   PSYMON120B.asm):00182                BNE   INIT1    LOOP IF NOT
+FC0D 108EFFBA         (   PSYMON120B.asm):00183                LDY   #RAMINT  POINT TO RAM DATA
+FC11 ECA1             (   PSYMON120B.asm):00184         INIT2  LDD   ,Y++     MOVE 2 BYTES
+FC13 ED81             (   PSYMON120B.asm):00185                STD   ,X++
+FC15 8CF400           (   PSYMON120B.asm):00186                CMPX  #FRERAM+2  END OF RAM?
+FC18 26F7             (   PSYMON120B.asm):00187                BNE   INIT2    LOOP IF NOT
+FC1A 8EF3DE           (   PSYMON120B.asm):00188                LDX   #CONDCB  POINT TO DCB
+FC1D CC0308           (   PSYMON120B.asm):00189                LDD   #RESET*256+CNTLFN  A=RESET, B=CNTLFN
+FC20 BDFD63           (   PSYMON120B.asm):00190                JSR   REQIO    RESET ACIA
+FC23 8651             (   PSYMON120B.asm):00191                LDA   #CONFIG  CONFIGURE ACIA
+FC25 BDFD63           (   PSYMON120B.asm):00192                JSR   REQIO
+FC28 B6F800           (   PSYMON120B.asm):00193                LDA   ROM2     CHECK FOR SECOND ROM
+FC2B 817E             (   PSYMON120B.asm):00194                CMPA  #$7E     IS THERE A JUMP THERE?
+FC2D 2603             (   PSYMON120B.asm):00195                BNE   MONENT   GO IF NOT
+FC2F BDF800           (   PSYMON120B.asm):00196                JSR   ROM2     CALL SECOND ROM
+                      (   PSYMON120B.asm):00197         
+                      (   PSYMON120B.asm):00198         *************************************************
+                      (   PSYMON120B.asm):00199         * PSYMON USER ENTRY                             *
+                      (   PSYMON120B.asm):00200         *************************************************
+FC32 10FFF3DC         (   PSYMON120B.asm):00201         MONENT STS   STKPTR   SAVE STACK POINTER
+                      (   PSYMON120B.asm):00202         
+                      (   PSYMON120B.asm):00203         *************************************************
+                      (   PSYMON120B.asm):00204         * GET COMMAND                                   *
+                      (   PSYMON120B.asm):00205         *************************************************
+FC36 8EFC4A           (   PSYMON120B.asm):00206         GETCMD LDX   #PROMPT  DISPLAY PROMPT
+FC39 BDFD97           (   PSYMON120B.asm):00207                JSR   PSTRNG
+FC3C BDFD44           (   PSYMON120B.asm):00208                JSR   INCHR    INPUT COMMAND CHARACTER
+FC3F 8D0F             (   PSYMON120B.asm):00209                BSR   LOOKUP   LOOK IT UP
+FC41 26F3             (   PSYMON120B.asm):00210                BNE   GETCMD   LOOP IF NOT FOUND
+FC43 BDFD75           (   PSYMON120B.asm):00211                JSR   OUTSP    OUTPUT A SPACE
+FC46 AD94             (   PSYMON120B.asm):00212                JSR   [,X]     CALL COMMAND ROUTINE
+FC48 20EC             (   PSYMON120B.asm):00213                BRA   GETCMD   GO BACK FOR MORE
+                      (   PSYMON120B.asm):00214         
+FC4A 0D0A             (   PSYMON120B.asm):00215         PROMPT FCB   CR,LF
+FC4C 434D44           (   PSYMON120B.asm):00216                FCC   'CMD'
+FC4F BF               (   PSYMON120B.asm):00217                FCB   '?+$80   END OF STRING
+                      (   PSYMON120B.asm):00218         
+                      (   PSYMON120B.asm):00219         *************************************************
+                      (   PSYMON120B.asm):00220         * LOOK UP COMMAND IN TABLE                      *
+                      (   PSYMON120B.asm):00221         *************************************************
+FC50 108EF3D6         (   PSYMON120B.asm):00222         LOOKUP LDY   #COMAND  POINT Y TO COMMAND
+FC54 A7A4             (   PSYMON120B.asm):00223                STA   ,Y       SAVE COMMAND CHARACTER
+FC56 BEF3D4           (   PSYMON120B.asm):00224                LDX   USRTBL   GET USER TABLE ADDRESS
+FC59 2704             (   PSYMON120B.asm):00225                BEQ   LOOK1    GO IF NONE
+FC5B 8D05             (   PSYMON120B.asm):00226                BSR   SEARCH   SEARCH USER TABLE
+FC5D 2710             (   PSYMON120B.asm):00227                BEQ   SERCHX   GO IF FOUND
+FC5F 8EFFA3           (   PSYMON120B.asm):00228         LOOK1  LDX   #CMDTBL  SEARCH INTERNAL TABLE
+                      (   PSYMON120B.asm):00229         
+                      (   PSYMON120B.asm):00230         *************************************************
+                      (   PSYMON120B.asm):00231         * GENERAL TABLE SEARCH                          *
+                      (   PSYMON120B.asm):00232         *                                               *
+                      (   PSYMON120B.asm):00233         * ENTRY REQUIREMENTS:  X - POINTS TO TABLE      *
+                      (   PSYMON120B.asm):00234         *                      Y - POINTS TO ITEM       *
+                      (   PSYMON120B.asm):00235         *                      FIRST BYTE OF TABLE MUST *
+                      (   PSYMON120B.asm):00236         *                      CONTAIN ITEM LENGTH      *
+                      (   PSYMON120B.asm):00237         *                      LAST BYTE MUST BE FF     *
+                      (   PSYMON120B.asm):00238         *                                               *
+                      (   PSYMON120B.asm):00239         * EXIT CONDITIONS:  C - Z SET IF FOUND, CLEAR   *
+                      (   PSYMON120B.asm):00240         *                       IF NOT FOUND            *
+                      (   PSYMON120B.asm):00241         *                   X - POINTS TO ADDRESS OF    *
+                      (   PSYMON120B.asm):00242         *                       ROUTINE FOR MATCH       *
+                      (   PSYMON120B.asm):00243         *                   A,B - CHANGED               *
+                      (   PSYMON120B.asm):00244         *                                               *
+                      (   PSYMON120B.asm):00245         *************************************************
+FC62 E680             (   PSYMON120B.asm):00246         SEARCH LDB   ,X+      GET ITEM LENGTH
+FC64 8D0A             (   PSYMON120B.asm):00247         SERCH1 BSR   COMPAR   COMPARE CURRENT ITEM
+FC66 3A               (   PSYMON120B.asm):00248                ABX            ADVANCE TO NEXT ITEM
+FC67 2706             (   PSYMON120B.asm):00249                BEQ   SERCHX   EXIT IF MATCH
+FC69 3002             (   PSYMON120B.asm):00250                LEAX  2,X      STEP OVER ADDRESS
+FC6B 6D84             (   PSYMON120B.asm):00251                TST   ,X       END OF TABLE?
+FC6D 2AF5             (   PSYMON120B.asm):00252                BPL   SERCH1   LOOP IF NOT
+FC6F 39               (   PSYMON120B.asm):00253         SERCHX RTS
+                      (   PSYMON120B.asm):00254         
+                      (   PSYMON120B.asm):00255         *************************************************
+                      (   PSYMON120B.asm):00256         * GENERAL STRING COMPARE                        *
+                      (   PSYMON120B.asm):00257         *                                               *
+                      (   PSYMON120B.asm):00258         * ENTRY REQUIREMENTS:  X - ADDRESS OF STRING 1  *
+                      (   PSYMON120B.asm):00259         *                      Y - ADDRESS OF STRING 2  *
+                      (   PSYMON120B.asm):00260         *                      B - LENGTH OF STRINGS    *
+                      (   PSYMON120B.asm):00261         *                                               *
+                      (   PSYMON120B.asm):00262         * EXIT CONDITIONS:  C - SET PER COMPARE 1:2     *
+                      (   PSYMON120B.asm):00263         *                   B,X,Y - UNCHANGED           *
+                      (   PSYMON120B.asm):00264         *                   A - CHANGED                 *
+                      (   PSYMON120B.asm):00265         *                                               *
+                      (   PSYMON120B.asm):00266         *************************************************
+FC70 3434             (   PSYMON120B.asm):00267         COMPAR PSHS  B,X,Y    SAVE REGISTERS
+FC72 A680             (   PSYMON120B.asm):00268         COMP1  LDA   ,X+      GET NEXT CHARACTER
+FC74 A1A0             (   PSYMON120B.asm):00269                CMPA  ,Y+      COMPARE IT
+FC76 2603             (   PSYMON120B.asm):00270                BNE   COMP2    EXIT IF UNMATCHED
+FC78 5A               (   PSYMON120B.asm):00271                DECB           DECREMENT LOOP COUNT
+FC79 26F7             (   PSYMON120B.asm):00272                BNE   COMP1
+FC7B 35B4             (   PSYMON120B.asm):00273         COMP2  PULS  B,X,Y,PC RESTORE REGISTERS & EXIT
+                      (   PSYMON120B.asm):00274         
+                      (   PSYMON120B.asm):00275         *************************************************
+                      (   PSYMON120B.asm):00276         * LOAD PROGRAM FROM TAPE                        *
+                      (   PSYMON120B.asm):00277         *************************************************
+FC7D FCF3EA           (   PSYMON120B.asm):00278         TLOAD  LDD   CIDCB    SAVE CONSOLE DCBS
+FC80 BEF3EC           (   PSYMON120B.asm):00279                LDX   CEDCB
+FC83 3416             (   PSYMON120B.asm):00280                PSHS  A,B,X
+FC85 BEF3F0           (   PSYMON120B.asm):00281                LDX   TPDCB    POINT TO TAPE DCB
+FC88 4F               (   PSYMON120B.asm):00282                CLRA           SET D TO 0
+FC89 5F               (   PSYMON120B.asm):00283                CLRB
+FC8A BFF3EA           (   PSYMON120B.asm):00284                STX   CIDCB    SET TAPE IN, NO ECHO
+FC8D FDF3EC           (   PSYMON120B.asm):00285                STD   CEDCB
+FC90 CC1108           (   PSYMON120B.asm):00286                LDD   #RDRON*256+CNTLFN  RAISE READER CONTROL
+FC93 BDFD63           (   PSYMON120B.asm):00287                JSR   REQIO
+FC96 8D1B             (   PSYMON120B.asm):00288                BSR   LOAD     LOAD THE TAPE
+FC98 CC5108           (   PSYMON120B.asm):00289                LDD   #RDROFF*256+CNTLFN  DROP READ CONTROL
+FC9B BEF3F0           (   PSYMON120B.asm):00290                LDX   TPDCB
+FC9E BDFD63           (   PSYMON120B.asm):00291                JSR   REQIO
+FCA1 3516             (   PSYMON120B.asm):00292                PULS  A,B,X    RESTORE CONSOLE DCBS
+FCA3 FDF3EA           (   PSYMON120B.asm):00293                STD   CIDCB
+FCA6 BFF3EC           (   PSYMON120B.asm):00294                STX   CEDCB
+FCA9 7DF3D7           (   PSYMON120B.asm):00295                TST   CKSUM    ANY ERRORS?
+FCAC 2745             (   PSYMON120B.asm):00296                BEQ   LOADX    GO IF NOT
+                      (   PSYMON120B.asm):00297         
+                      (   PSYMON120B.asm):00298         *************************************************
+                      (   PSYMON120B.asm):00299         * DISPLAY ERROR INDICATOR OF '?'                *
+                      (   PSYMON120B.asm):00300         *************************************************
+FCAE 863F             (   PSYMON120B.asm):00301         ERROR  LDA   #'?      DISPLAY ERROR INDICATOR
+FCB0 7EFD58           (   PSYMON120B.asm):00302                JMP   OUTCHR
+                      (   PSYMON120B.asm):00303         
+                      (   PSYMON120B.asm):00304         *************************************************
+                      (   PSYMON120B.asm):00305         * LOAD PROGRAM IN HEX FORMAT                    *
+                      (   PSYMON120B.asm):00306         *                                               *
+                      (   PSYMON120B.asm):00307         * ENTRY REQUIREMENTS:  NONE                     *
+                      (   PSYMON120B.asm):00308         *                                               *
+                      (   PSYMON120B.asm):00309         * EXIT CONDITIONS:  ALL REGISTERS CHANGED       *
+                      (   PSYMON120B.asm):00310         *                   CKSUM NON-ZERO IF ERROR     *
+                      (   PSYMON120B.asm):00311         *                                               *
+                      (   PSYMON120B.asm):00312         *************************************************
+FCB3 1F42             (   PSYMON120B.asm):00313         LOAD   TFR   S,Y      MARK STACK FOR ERROR RECOVERY
+FCB5 BDFD44           (   PSYMON120B.asm):00314         LOAD1  JSR   INCHR    GET A CHARACTER
+FCB8 8153             (   PSYMON120B.asm):00315         LOAD2  CMPA  #'S      START OF RECORD?
+FCBA 26F9             (   PSYMON120B.asm):00316                BNE   LOAD1    LOOP IF NOT
+FCBC BDFD44           (   PSYMON120B.asm):00317                JSR   INCHR    GET ANOTHER CHARACTER
+FCBF 8139             (   PSYMON120B.asm):00318                CMPA  #'9      END OF LOAD?
+FCC1 2730             (   PSYMON120B.asm):00319                BEQ   LOADX    GO IF YES
+FCC3 8131             (   PSYMON120B.asm):00320                CMPA  #'1      START OF RECORD?
+FCC5 26F1             (   PSYMON120B.asm):00321                BNE   LOAD2    LOOP IF NOT
+FCC7 7FF3D7           (   PSYMON120B.asm):00322                CLR   CKSUM    INIT CHECKSUM
+FCCA 8D28             (   PSYMON120B.asm):00323                BSR   INBYTE   READ LENGTH
+FCCC 8002             (   PSYMON120B.asm):00324                SUBA  #2       ADJUST IT
+FCCE 1F89             (   PSYMON120B.asm):00325                TFR   A,B      SAVE IN B
+FCD0 8D22             (   PSYMON120B.asm):00326                BSR   INBYTE   GET ADDRESS HI
+FCD2 A7E3             (   PSYMON120B.asm):00327                STA   ,--S     SAVE ON STACK
+FCD4 8D1E             (   PSYMON120B.asm):00328                BSR   INBYTE   GET ADDRESS LO
+FCD6 A761             (   PSYMON120B.asm):00329                STA   1,S      PUT ON STACK
+FCD8 3510             (   PSYMON120B.asm):00330                PULS  X        ADDRESS NOW IN X
+FCDA 8D18             (   PSYMON120B.asm):00331         LOAD3  BSR   INBYTE   READ A BYTE 
+FCDC 5A               (   PSYMON120B.asm):00332                DECB           DECREMENT COUNT
+FCDD 2708             (   PSYMON120B.asm):00333                BEQ   LOAD4    GO IF DONE
+FCDF A784             (   PSYMON120B.asm):00334                STA   ,X       STORE BYTE
+FCE1 A180             (   PSYMON120B.asm):00335                CMPA  ,X+      VERIFY GOOD STORE
+FCE3 2607             (   PSYMON120B.asm):00336                BNE   LOAD5    GO IF ERROR
+FCE5 20F3             (   PSYMON120B.asm):00337                BRA   LOAD3
+FCE7 7CF3D7           (   PSYMON120B.asm):00338         LOAD4  INC   CKSUM    CHECK CHECKSUM
+FCEA 27C9             (   PSYMON120B.asm):00339                BEQ   LOAD1    LOOP IF GOOD
+FCEC 86FF             (   PSYMON120B.asm):00340         LOAD5  LDA   #$FF     SET ERROR FLAG
+FCEE B7F3D7           (   PSYMON120B.asm):00341                STA   CKSUM
+FCF1 1F24             (   PSYMON120B.asm):00342                TFR   Y,S      RESTORE STACK
+FCF3 39               (   PSYMON120B.asm):00343         LOADX  RTS
+                      (   PSYMON120B.asm):00344         
+                      (   PSYMON120B.asm):00345         *************************************************
+                      (   PSYMON120B.asm):00346         * INPUT BYTE                                    *
+                      (   PSYMON120B.asm):00347         *************************************************
+FCF4 8D33             (   PSYMON120B.asm):00348         INBYTE BSR   INHEX    GET HEX DIGIT
+FCF6 27EF             (   PSYMON120B.asm):00349                BEQ   LOAD4    GO IF ERROR
+FCF8 48               (   PSYMON120B.asm):00350                ASLA           SHIFT TO MS HALF
+FCF9 48               (   PSYMON120B.asm):00351                ASLA
+FCFA 48               (   PSYMON120B.asm):00352                ASLA
+FCFB 48               (   PSYMON120B.asm):00353                ASLA
+FCFC 3402             (   PSYMON120B.asm):00354                PSHS  A        SAVE DIGIT
+FCFE 8D29             (   PSYMON120B.asm):00355                BSR   INHEX    GET ANOTHER DIGIT
+FD00 27E5             (   PSYMON120B.asm):00356                BEQ   LOAD4    GO IF ERROR
+FD02 ABE4             (   PSYMON120B.asm):00357                ADDA  ,S       COMBINE HALVES
+FD04 A7E4             (   PSYMON120B.asm):00358                STA   ,S       SAVE ON STACK
+FD06 BBF3D7           (   PSYMON120B.asm):00359                ADDA  CKSUM    ADD TO CHECKSUM
+FD09 B7F3D7           (   PSYMON120B.asm):00360                STA   CKSUM
+FD0C 3582             (   PSYMON120B.asm):00361                PULS  A,PC     GET RESULT & RETURN
+                      (   PSYMON120B.asm):00362         
+                      (   PSYMON120B.asm):00363         *************************************************
+                      (   PSYMON120B.asm):00364         * GET HEX NUMBER FROM CONSOLE                   *
+                      (   PSYMON120B.asm):00365         *                                               *
+                      (   PSYMON120B.asm):00366         * ENTRY REQUIREMENTS:  NONE                     *
+                      (   PSYMON120B.asm):00367         *                                               *
+                      (   PSYMON120B.asm):00368         * EXIT CONDITIONS:  A - LAST CHAR INPUT         *
+                      (   PSYMON120B.asm):00369         *                   B - HEX DIGIT COUNT         *
+                      (   PSYMON120B.asm):00370         *                   X - HEX NUMBER              *
+                      (   PSYMON120B.asm):00371         *                   C - SET ACCORDING TO B      *
+                      (   PSYMON120B.asm):00372         *                                               *
+                      (   PSYMON120B.asm):00373         *************************************************
+FD0E 5F               (   PSYMON120B.asm):00374         GETHEX CLRB           INITIALIZE DIGIT COUNT, RESULT
+FD0F 8E0000           (   PSYMON120B.asm):00375                LDX   #0
+FD12 8D15             (   PSYMON120B.asm):00376         GETHX1 BSR   INHEX    GET A DIGIT
+FD14 2711             (   PSYMON120B.asm):00377                BEQ   GETHX2   GO IF NOT HEX
+FD16 1E01             (   PSYMON120B.asm):00378                EXG   D,X      OLD RESULT TO A,B
+FD18 58               (   PSYMON120B.asm):00379                ASLB           SHIFT LEFT 1 DIGIT
+FD19 49               (   PSYMON120B.asm):00380                ROLA
+FD1A 58               (   PSYMON120B.asm):00381                ASLB
+FD1B 49               (   PSYMON120B.asm):00382                ROLA
+FD1C 58               (   PSYMON120B.asm):00383                ASLB
+FD1D 49               (   PSYMON120B.asm):00384                ROLA
+FD1E 58               (   PSYMON120B.asm):00385                ASLB
+FD1F 49               (   PSYMON120B.asm):00386                ROLA
+FD20 1E01             (   PSYMON120B.asm):00387                EXG   D,X      REPLACE RESULT
+FD22 3086             (   PSYMON120B.asm):00388                LEAX  A,X      ADD IN NEW DIGIT
+FD24 5C               (   PSYMON120B.asm):00389                INCB           ADD TO DIGIT COUNT
+FD25 20EB             (   PSYMON120B.asm):00390                BRA   GETHX1   LOOP FOR MORE
+FD27 5D               (   PSYMON120B.asm):00391         GETHX2 TSTB           SET/RESET Z FLAG
+FD28 39               (   PSYMON120B.asm):00392                RTS
+                      (   PSYMON120B.asm):00393         
+                      (   PSYMON120B.asm):00394         *************************************************
+                      (   PSYMON120B.asm):00395         * GET HEX DIGIT FROM CONSOLE                    *
+                      (   PSYMON120B.asm):00396         *                                               *
+                      (   PSYMON120B.asm):00397         * ENTRY REQUIREMENTS:  NONE                     *
+                      (   PSYMON120B.asm):00398         *                                               *
+                      (   PSYMON120B.asm):00399         * EXIT CONDITIONS:  A - HEX DIGIT OR NON-HEX    *
+                      (   PSYMON120B.asm):00400         *                   C - Z FLAG SET IF A NOT HEX *
+                      (   PSYMON120B.asm):00401         *                   ALL OTHER REGS PRESERVED    *
+                      (   PSYMON120B.asm):00402         *                                               *
+                      (   PSYMON120B.asm):00403         *************************************************
+FD29 8D19             (   PSYMON120B.asm):00404         INHEX  BSR   INCHR    GET A CHARACTER
+FD2B 3402             (   PSYMON120B.asm):00405                PSHS  A        SAVE IT
+FD2D 8030             (   PSYMON120B.asm):00406                SUBA  #$30     CONVERT TO BINARY
+FD2F 2B0E             (   PSYMON120B.asm):00407                BMI   INHEX2   GO IF NOT A NUMBER
+FD31 8109             (   PSYMON120B.asm):00408                CMPA  #$09     GREATER THAN 9?
+FD33 2306             (   PSYMON120B.asm):00409                BLS   INHEX1   GO IF NOT
+FD35 8007             (   PSYMON120B.asm):00410                SUBA  #$07     CONVERT LETTER
+FD37 810A             (   PSYMON120B.asm):00411                CMPA  #$0A     LEGAL VALUE?
+FD39 2504             (   PSYMON120B.asm):00412                BLO   INHEX2   GO IF NOT
+FD3B 810F             (   PSYMON120B.asm):00413         INHEX1 CMPA  #$0F     GREATER THAN 15?
+FD3D 2302             (   PSYMON120B.asm):00414                BLS   INHEX3   GO IF NOT
+FD3F A6E4             (   PSYMON120B.asm):00415         INHEX2 LDA   ,S       GET ORIGINAL CHAR BACK
+FD41 A1E0             (   PSYMON120B.asm):00416         INHEX3 CMPA  ,S+      SET/RESET Z FLAG
+FD43 39               (   PSYMON120B.asm):00417                RTS
+                      (   PSYMON120B.asm):00418         
+                      (   PSYMON120B.asm):00419         *************************************************
+                      (   PSYMON120B.asm):00420         * CONSOLE INPUT ROUTINE                         *
+                      (   PSYMON120B.asm):00421         *                                               *
+                      (   PSYMON120B.asm):00422         * ENTRY REQUIREMENTS:  NONE                     *
+                      (   PSYMON120B.asm):00423         *                                               *
+                      (   PSYMON120B.asm):00424         * EXIT CONDITIONS:  A - CHARACTER WITH PARITY   *
+                      (   PSYMON120B.asm):00425         *                       REMOVED                 *
+                      (   PSYMON120B.asm):00426         *                   ALL OTHER REGS PRESERVED    *
+                      (   PSYMON120B.asm):00427         *                   EXCEPT C                    *
+                      (   PSYMON120B.asm):00428         *                                               *
+                      (   PSYMON120B.asm):00429         *************************************************
+FD44 3414             (   PSYMON120B.asm):00430         INCHR  PSHS  B,X      SAVE REGISTERS
+FD46 BEF3EA           (   PSYMON120B.asm):00431                LDX   CIDCB    POINT TO INPUT DCB
+FD49 C601             (   PSYMON120B.asm):00432                LDB   #READFN  SET UP FOR READ
+FD4B 8D16             (   PSYMON120B.asm):00433                BSR   REQIO    READ A CHARACTER
+FD4D 847F             (   PSYMON120B.asm):00434                ANDA  #$7F     REMOVE PARITY
+FD4F BEF3EC           (   PSYMON120B.asm):00435                LDX   CEDCB    POINT TO ECHO DCB
+FD52 3402             (   PSYMON120B.asm):00436                PSHS  A        SAVE CHARACTER
+FD54 2607             (   PSYMON120B.asm):00437                BNE   OUTCH1   GO IF ECHO
+FD56 3596             (   PSYMON120B.asm):00438                PULS  A,B,X,PC RESTORE & RETURN
+                      (   PSYMON120B.asm):00439         
+                      (   PSYMON120B.asm):00440         *************************************************
+                      (   PSYMON120B.asm):00441         * CONSOLE OUTPUT ROUTINE                        *
+                      (   PSYMON120B.asm):00442         *                                               *
+                      (   PSYMON120B.asm):00443         * ENTRY REQUIREMENTS:  A - CHARACTER TO BE      *
+                      (   PSYMON120B.asm):00444         *                          OUTPUT TO CONSOLE    *
+                      (   PSYMON120B.asm):00445         *                                               *
+                      (   PSYMON120B.asm):00446         * EXIT CONDITIONS:  ALL REGISTERS PRESERVED     *
+                      (   PSYMON120B.asm):00447         *                   EXCEPT C                    *
+                      (   PSYMON120B.asm):00448         *                                               *
+                      (   PSYMON120B.asm):00449         *************************************************
+FD58 3416             (   PSYMON120B.asm):00450         OUTCHR PSHS  A,B,X    SAVE REGISTERS
+FD5A BEF3EE           (   PSYMON120B.asm):00451                LDX   CODCB    POINT TO OUTPUT DCB
+FD5D C602             (   PSYMON120B.asm):00452         OUTCH1 LDB   #WRITFN  SET FUNCTION
+FD5F 8D02             (   PSYMON120B.asm):00453                BSR   REQIO    OUTPUT THE CHARACTER
+FD61 3596             (   PSYMON120B.asm):00454                PULS  A,B,X,PC RESTORE REGISTERS & RETURN
+                      (   PSYMON120B.asm):00455         
+                      (   PSYMON120B.asm):00456         *************************************************
+                      (   PSYMON120B.asm):00457         * PERFORM I/O REQUESTS                          *
+                      (   PSYMON120B.asm):00458         *                                               *
+                      (   PSYMON120B.asm):00459         * ENTRY REQUIREMENTS:  A - DRIVER PARAMETER     *
+                      (   PSYMON120B.asm):00460         *                      B - FUNCTION CODE        *
+                      (   PSYMON120B.asm):00461         *                      X - DCB ADDRESS          *
+                      (   PSYMON120B.asm):00462         *                                               *
+                      (   PSYMON120B.asm):00463         * EXIT CONDITIONS:  A - DRIVER RESULT           *
+                      (   PSYMON120B.asm):00464         *                   ALL OTHERS PRESERVED        *
+                      (   PSYMON120B.asm):00465         *                   EXCEPT C                    *
+                      (   PSYMON120B.asm):00466         *                                               *
+                      (   PSYMON120B.asm):00467         *************************************************
+FD63 347C             (   PSYMON120B.asm):00468         REQIO  PSHS  B,DP,X,Y,U  SAVE REGISTERS
+FD65 AD9804           (   PSYMON120B.asm):00469                JSR   [DCBDVR,X]  CALL DRIVER
+FD68 35FC             (   PSYMON120B.asm):00470                PULS  B,DP,X,Y,U,PC  RESTORE REGISTERS & EXIT
+                      (   PSYMON120B.asm):00471         
+                      (   PSYMON120B.asm):00472         *************************************************
+                      (   PSYMON120B.asm):00473         * DISPLAY DOUBLE BYTE                           *
+                      (   PSYMON120B.asm):00474         *                                               *
+                      (   PSYMON120B.asm):00475         * ENTRY REQUIREMENTS:  A,B - DOUBLE BYTE        *
+                      (   PSYMON120B.asm):00476         *                            TO BE PRINTED      *
+                      (   PSYMON120B.asm):00477         *                                               *
+                      (   PSYMON120B.asm):00478         * EXIT CONDITIONS:  ALL REGISTERS PRESERVED     *
+                      (   PSYMON120B.asm):00479         *                   EXCEPT C                    *
+                      (   PSYMON120B.asm):00480         *                                               *
+                      (   PSYMON120B.asm):00481         *************************************************
+FD6A 8D11             (   PSYMON120B.asm):00482         DSPDBY BSR   OUTHEX   DISPLAY A AS 2 HEX DIGITS
+FD6C 1E89             (   PSYMON120B.asm):00483                EXG   A,B      LS BYTE TO A
+FD6E 8D03             (   PSYMON120B.asm):00484                BSR   DSPSBY   DISPLAY AS 2 DIGITS, SPACE
+FD70 1E89             (   PSYMON120B.asm):00485                EXG   A,B      RESTORE A & B
+FD72 39               (   PSYMON120B.asm):00486                RTS
+                      (   PSYMON120B.asm):00487         
+                      (   PSYMON120B.asm):00488         *************************************************
+                      (   PSYMON120B.asm):00489         * DISPLAY A BYTE AND SPACE                      *
+                      (   PSYMON120B.asm):00490         *                                               *
+                      (   PSYMON120B.asm):00491         * ENTRY REQUIREMENTS:  A - BYTE TO BE DISPLAYED *
+                      (   PSYMON120B.asm):00492         *                                               *
+                      (   PSYMON120B.asm):00493         * EXIT CONDITIONS:  ALL REGISTERS PRESERVED     *
+                      (   PSYMON120B.asm):00494         *                   EXCEPT C                    *
+                      (   PSYMON120B.asm):00495         *                                               *
+                      (   PSYMON120B.asm):00496         *************************************************
+FD73 8D08             (   PSYMON120B.asm):00497         DSPSBY BSR   OUTHEX   DISPLAY BYTE IN A
+                      (   PSYMON120B.asm):00498         
+                      (   PSYMON120B.asm):00499         *************************************************
+                      (   PSYMON120B.asm):00500         * OUTPUT A SPACE TO THE CONSOLE                 *
+                      (   PSYMON120B.asm):00501         *                                               *
+                      (   PSYMON120B.asm):00502         * ENTRY REQUIREMENTS:  NONE                     *
+                      (   PSYMON120B.asm):00503         *                                               *
+                      (   PSYMON120B.asm):00504         * EXIT CONDITIONS:  ALL REGISTERS PRESERVED     *
+                      (   PSYMON120B.asm):00505         *                   EXCEPT C                    *
+                      (   PSYMON120B.asm):00506         *                                               *
+                      (   PSYMON120B.asm):00507         *************************************************
+FD75 3402             (   PSYMON120B.asm):00508         OUTSP  PSHS  A        SAVE A REGISTER
+FD77 8620             (   PSYMON120B.asm):00509                LDA   #SP      OUTPUT A SPACE
+                      (   PSYMON120B.asm):00510         
+                      (   PSYMON120B.asm):00511         *************************************************
+                      (   PSYMON120B.asm):00512         * OUTPUT CHARACTER, RESTORE A, & RETURN         *
+                      (   PSYMON120B.asm):00513         *************************************************
+FD79 8DDD             (   PSYMON120B.asm):00514         OUTCHX BSR   OUTCHR   DISPLAY CHARACTER
+FD7B 3582             (   PSYMON120B.asm):00515                PULS  A,PC     RESTORE & EXIT
+                      (   PSYMON120B.asm):00516         
+                      (   PSYMON120B.asm):00517         *************************************************
+                      (   PSYMON120B.asm):00518         * DISPLAY A REGISTER AS 2 HEX DIGITS            *
+                      (   PSYMON120B.asm):00519         *                                               *
+                      (   PSYMON120B.asm):00520         * ENTRY REQUIREMENTS:  A - BYTE TO DISPLAY      *
+                      (   PSYMON120B.asm):00521         *                                               *
+                      (   PSYMON120B.asm):00522         * EXIT CONDITIONS: ALL REGISTERS PRESERVED      *
+                      (   PSYMON120B.asm):00523         *                  EXCEPT C                     *
+                      (   PSYMON120B.asm):00524         *                                               * 
+                      (   PSYMON120B.asm):00525         *************************************************
+FD7D 3402             (   PSYMON120B.asm):00526         OUTHEX PSHS  A       SAVE THE BYTE
+FD7F 44               (   PSYMON120B.asm):00527                LSRA
+FD80 44               (   PSYMON120B.asm):00528                LSRA
+FD81 44               (   PSYMON120B.asm):00529                LSRA
+FD82 44               (   PSYMON120B.asm):00530                LSRA
+FD83 8D06             (   PSYMON120B.asm):00531                BSR   OUTDIG  DISPLAY IT
+FD85 A6E4             (   PSYMON120B.asm):00532                LDA   ,S      GET LS DIGIT
+FD87 8D02             (   PSYMON120B.asm):00533                BSR   OUTDIG  DISPLAY IT
+FD89 3582             (   PSYMON120B.asm):00534                PULS  A,PC    RESTORE A & RETURN
+                      (   PSYMON120B.asm):00535         
+                      (   PSYMON120B.asm):00536         *************************************************
+                      (   PSYMON120B.asm):00537         * DISPLAY A HEX DIGIT                           *
+                      (   PSYMON120B.asm):00538         *************************************************
+FD8B 840F             (   PSYMON120B.asm):00539         OUTDIG ANDA  #$0F     MASK OFF DIGIT
+FD8D 8B30             (   PSYMON120B.asm):00540                ADDA  #$30     CONVERT TO ASCII
+FD8F 8139             (   PSYMON120B.asm):00541                CMPA  #$39     BIGGER THAN 9?
+FD91 23C5             (   PSYMON120B.asm):00542                BLS   OUTCHR   GO IF NOT
+FD93 8B07             (   PSYMON120B.asm):00543                ADDA  #$07     CONVERT TO LETTER
+FD95 20C1             (   PSYMON120B.asm):00544                BRA   OUTCHR   PRINT AND EXIT
+                      (   PSYMON120B.asm):00545         
+                      (   PSYMON120B.asm):00546         *************************************************
+                      (   PSYMON120B.asm):00547         * PRINT A STRING TO THE CONSOLE                 *
+                      (   PSYMON120B.asm):00548         *                                               *
+                      (   PSYMON120B.asm):00549         * ENTRY CONDITIONS:  X - POINTS TO STRING       *
+                      (   PSYMON120B.asm):00550         *                    LAST BYTE HAS BIT 7 ON     *
+                      (   PSYMON120B.asm):00551         *                                               *
+                      (   PSYMON120B.asm):00552         * EXIT CONDITIONS:  X - POINTS 1 BYTE PAST END  *
+                      (   PSYMON120B.asm):00553         *                   A,C - CHANGED               *
+                      (   PSYMON120B.asm):00554         *                                               *
+                      (   PSYMON120B.asm):00555         *************************************************
+FD97 A684             (   PSYMON120B.asm):00556         PSTRNG LDA   ,X       GET A CHARACTER
+FD99 847F             (   PSYMON120B.asm):00557                ANDA  #$7F     MASK OFF
+FD9B 8DBB             (   PSYMON120B.asm):00558                BSR   OUTCHR   DISPLAY IT
+FD9D 6D80             (   PSYMON120B.asm):00559                TST   ,X+      WAS IT LAST?
+FD9F 2AF6             (   PSYMON120B.asm):00560                BPL   PSTRNG   LOOP IF NOT
+FDA1 39               (   PSYMON120B.asm):00561                RTS
+                      (   PSYMON120B.asm):00562         
+                      (   PSYMON120B.asm):00563         *************************************************
+                      (   PSYMON120B.asm):00564         * PRINT CR/LF ON CONSOLE                        *
+                      (   PSYMON120B.asm):00565         *                                               *
+                      (   PSYMON120B.asm):00566         * ENTRY REQUIREMENTS:  NONE                     *
+                      (   PSYMON120B.asm):00567         *                                               *
+                      (   PSYMON120B.asm):00568         * EXIT CONDITIONS:  ALL REGISTERS PRESERVED     *
+                      (   PSYMON120B.asm):00569         *                   EXCEPT C                    *
+                      (   PSYMON120B.asm):00570         *                                               *
+                      (   PSYMON120B.asm):00571         *************************************************
+FDA2 3402             (   PSYMON120B.asm):00572         CRLF   PSHS  A        SAVE A REGISTER
+FDA4 860D             (   PSYMON120B.asm):00573                LDA   #CR      OUTPUT CR
+FDA6 8DB0             (   PSYMON120B.asm):00574                BSR   OUTCHR
+FDA8 860A             (   PSYMON120B.asm):00575                LDA   #LF      OUTPUT LF & EXIT
+FDAA 20CD             (   PSYMON120B.asm):00576                BRA   OUTCHX
+                      (   PSYMON120B.asm):00577         
+                      (   PSYMON120B.asm):00578         *************************************************
+                      (   PSYMON120B.asm):00579         * SAVE PROGRAM ON TAPE                          *
+                      (   PSYMON120B.asm):00580         *************************************************
+FDAC 8D30             (   PSYMON120B.asm):00581         TSAVE  BSR   GETHX    GET START ADDRESS
+FDAE 270E             (   PSYMON120B.asm):00582                BEQ   TSAVE2   GO IF NONE
+FDB0 BFF3D8           (   PSYMON120B.asm):00583                STX   BEGADD   SAVE START
+FDB3 8D29             (   PSYMON120B.asm):00584                BSR   GETHX    GET END ADDRESS
+FDB5 2604             (   PSYMON120B.asm):00585                BNE   TSAVE1   GO IF ENTERED
+FDB7 BEF3D8           (   PSYMON120B.asm):00586                LDX   BEGADD   DUPLICATE ADDRESS
+FDBA 5C               (   PSYMON120B.asm):00587                INCB           SET ADDRESS INDICATOR
+FDBB BFF3DA           (   PSYMON120B.asm):00588         TSAVE1 STX   ENDADD   SAVE END
+FDBE BEF3EE           (   PSYMON120B.asm):00589         TSAVE2 LDX   CODCB    SAVE CONSOLE DCB
+FDC1 3412             (   PSYMON120B.asm):00590                PSHS  A,X      SAVE TERMINATOR TOO
+FDC3 BEF3F0           (   PSYMON120B.asm):00591                LDX   TPDCB    SET UP FOR TAPE
+FDC6 BFF3EE           (   PSYMON120B.asm):00592                STX   CODCB
+FDC9 5D               (   PSYMON120B.asm):00593                TSTB           ANY ADDRESS ENTERED?
+FDCA 2702             (   PSYMON120B.asm):00594                BEQ   TSAVE3   GO IF NOT
+FDCC 8D13             (   PSYMON120B.asm):00595                BSR   SAVE     SAVE THE PROGRAM
+FDCE 3502             (   PSYMON120B.asm):00596         TSAVE3 PULS  A        GET TERMINATOR
+FDD0 810D             (   PSYMON120B.asm):00597                CMPA  #CR      WAS IT RETURN?
+FDD2 2604             (   PSYMON120B.asm):00598                BNE   TSAVE4   GO IF NOT
+FDD4 C639             (   PSYMON120B.asm):00599                LDB   #'9      OUTPUT S9 RECORD
+FDD6 8D54             (   PSYMON120B.asm):00600                BSR   OUTSN
+FDD8 3510             (   PSYMON120B.asm):00601         TSAVE4 PULS  X        RESTORE DCB POINTER
+FDDA BFF3EE           (   PSYMON120B.asm):00602                STX   CODCB
+FDDD 39               (   PSYMON120B.asm):00603                RTS
+                      (   PSYMON120B.asm):00604         
+                      (   PSYMON120B.asm):00605         *************************************************
+                      (   PSYMON120B.asm):00606         * GET HEX NUMBER IN X                           *
+                      (   PSYMON120B.asm):00607         *************************************************
+FDDE 7EFD0E           (   PSYMON120B.asm):00608         GETHX  JMP   GETHEX   RELATIVE BRANCH BOOSTER
+                      (   PSYMON120B.asm):00609         
+                      (   PSYMON120B.asm):00610         *************************************************
+                      (   PSYMON120B.asm):00611         * SAVE A PROGRAM IN HEX                         *
+                      (   PSYMON120B.asm):00612         *                                               *
+                      (   PSYMON120B.asm):00613         * ENTRY REQUIREMENTS:  SAVE ADDRESSES ARE IN    *
+                      (   PSYMON120B.asm):00614         *                      BEGADDR & ENDADDR        *
+                      (   PSYMON120B.asm):00615         *                                               *
+                      (   PSYMON120B.asm):00616         * EXIT CONDITIONS:  ALL REGISTERS CHANGED       *
+                      (   PSYMON120B.asm):00617         *                                               *
+                      (   PSYMON120B.asm):00618         *************************************************
+FDE1 BEF3D8           (   PSYMON120B.asm):00619         SAVE   LDX   BEGADD   POINT AT FIRST BYTE
+FDE4 C631             (   PSYMON120B.asm):00620         SAVE1  LDB   #'1      BEGIN NEW S1 RECORD
+FDE6 8D44             (   PSYMON120B.asm):00621                BSR   OUTSN
+FDE8 7FF3D7           (   PSYMON120B.asm):00622                CLR   CKSUM    INIT CHECKSUM
+FDEB FCF3DA           (   PSYMON120B.asm):00623                LDD   ENDADD   CALCULATE BYTES TO SAVE
+FDEE 3410             (   PSYMON120B.asm):00624                PSHS  X
+FDF0 A3E1             (   PSYMON120B.asm):00625                SUBD  ,S++
+FDF2 4D               (   PSYMON120B.asm):00626                TSTA           GREATER THAN 255?
+FDF3 2604             (   PSYMON120B.asm):00627                BNE   SAVE2    GO IF YES
+FDF5 C110             (   PSYMON120B.asm):00628                CMPB  #16      LESS THAN FULL RECORD?
+FDF7 2502             (   PSYMON120B.asm):00629                BLO   SAVE3    GO IF YES
+FDF9 C60F             (   PSYMON120B.asm):00630         SAVE2  LDB   #15      SET FULL RECORD SIZE
+FDFB 5C               (   PSYMON120B.asm):00631         SAVE3  INCB           CORRECT RECORD SIZE
+FDFC 1F98             (   PSYMON120B.asm):00632                TFR   B,A      OUTPUT RECORD SIZE
+FDFE 8B03             (   PSYMON120B.asm):00633                ADDA  #3       ADJUST FOR ADDRESS,COUNT
+FE00 8D20             (   PSYMON120B.asm):00634                BSR   OUTBYT
+FE02 3410             (   PSYMON120B.asm):00635                PSHS  X        ADDRESS TO STACK
+FE04 3502             (   PSYMON120B.asm):00636                PULS  A        OUTPUT ADDRESS HI
+FE06 8D1A             (   PSYMON120B.asm):00637                BSR   OUTBYT
+FE08 3502             (   PSYMON120B.asm):00638                PULS  A        OUTPUT ADDRESS LO
+FE0A 8D16             (   PSYMON120B.asm):00639                BSR   OUTBYT
+FE0C A680             (   PSYMON120B.asm):00640         SAVE4  LDA   ,X+      SAVE A DATA BYTE
+FE0E 8D12             (   PSYMON120B.asm):00641                BSR   OUTBYT
+FE10 5A               (   PSYMON120B.asm):00642                DECB           LOOP UNTIL 0
+FE11 26F9             (   PSYMON120B.asm):00643                BNE   SAVE4
+FE13 B6F3D7           (   PSYMON120B.asm):00644                LDA   CKSUM    GET CHECKSUM
+FE16 43               (   PSYMON120B.asm):00645                COMA           COMPLIMENT IT
+FE17 8D09             (   PSYMON120B.asm):00646                BSR   OUTBYT   OUTPUT IT
+FE19 311F             (   PSYMON120B.asm):00647                LEAY  -1,X     CHECK FOR END
+FE1B 10BCF3DA         (   PSYMON120B.asm):00648                CMPY  ENDADD
+FE1F 26C3             (   PSYMON120B.asm):00649                BNE   SAVE1    LOOP IF NOT
+FE21 39               (   PSYMON120B.asm):00650                RTS
+                      (   PSYMON120B.asm):00651         
+                      (   PSYMON120B.asm):00652         *************************************************
+                      (   PSYMON120B.asm):00653         * OUTPUT BYTE AS HEX AND ADD TO CHECKSUM        *
+                      (   PSYMON120B.asm):00654         *************************************************
+FE22 BDFD7D           (   PSYMON120B.asm):00655         OUTBYT JSR   OUTHEX   OUTPUT BYTE AS HEX
+FE25 BBF3D7           (   PSYMON120B.asm):00656                ADDA  CKSUM    ADD TO CHECKSUM
+FE28 B7F3D7           (   PSYMON120B.asm):00657                STA   CKSUM
+FE2B 39               (   PSYMON120B.asm):00658                RTS
+                      (   PSYMON120B.asm):00659         
+                      (   PSYMON120B.asm):00660         *************************************************
+                      (   PSYMON120B.asm):00661         * OUTPUT 'S' TAPE RECORD HEADERS                *
+                      (   PSYMON120B.asm):00662         *************************************************
+FE2C BDFDA2           (   PSYMON120B.asm):00663         OUTSN  JSR   CRLF     BEGIN NEW LINE
+FE2F 8653             (   PSYMON120B.asm):00664                LDA   #'S      OUTPUT 'S' HEADER
+FE31 8D02             (   PSYMON120B.asm):00665                BSR   OUTC
+FE33 1F98             (   PSYMON120B.asm):00666                TFR   B,A      RECORD TYPE TO A
+                      (   PSYMON120B.asm):00667         
+                      (   PSYMON120B.asm):00668         *************************************************
+                      (   PSYMON120B.asm):00669         * OUTPUT CHARACTER TO CONSOLE                   *
+                      (   PSYMON120B.asm):00670         *************************************************
+FE35 7EFD58           (   PSYMON120B.asm):00671         OUTC   JMP   OUTCHR   RELATIVE BRANCH BOOSTER
+                      (   PSYMON120B.asm):00672         
+                      (   PSYMON120B.asm):00673         *************************************************
+                      (   PSYMON120B.asm):00674         * MEMORY EXAMINE AND CHANGE                     *
+                      (   PSYMON120B.asm):00675         *************************************************
+FE38 8DA4             (   PSYMON120B.asm):00676         MEMEC  BSR   GETHX    GET ADDRESS
+FE3A 2603             (   PSYMON120B.asm):00677                BNE   MEMEC1   GO IF GOOD
+FE3C BEF3D2           (   PSYMON120B.asm):00678                LDX   MEMPTR   USE PREVIOUS
+FE3F BFF3D2           (   PSYMON120B.asm):00679         MEMEC1 STX   MEMPTR   UPDATE RAM POINTER
+FE42 BDFDA2           (   PSYMON120B.asm):00680                JSR   CRLF     BEGIN NEW LINE
+FE45 1F10             (   PSYMON120B.asm):00681                TFR   X,D      DISPLAY ADDRESS
+FE47 BDFD6A           (   PSYMON120B.asm):00682                JSR   DSPDBY
+FE4A A680             (   PSYMON120B.asm):00683                LDA   ,X+      GET CONTENTS
+FE4C BDFD73           (   PSYMON120B.asm):00684                JSR   DSPSBY   DISPLAY THEM
+FE4F 1F12             (   PSYMON120B.asm):00685                TFR   X,Y      SAVE ADDRESS IN Y
+FE51 8D8B             (   PSYMON120B.asm):00686                BSR   GETHX    GET CHANGE DATA
+FE53 1E01             (   PSYMON120B.asm):00687                EXG   D,X      SAVE DELIM, GET NEW
+FE55 2709             (   PSYMON120B.asm):00688                BEQ   MEMEC2   GO IF NO CHANGE
+FE57 E73F             (   PSYMON120B.asm):00689                STB   -1,Y     UPDATE MEMORY
+FE59 E13F             (   PSYMON120B.asm):00690                CMPB  -1,Y     VERIFY GOOD STORE
+FE5B 2703             (   PSYMON120B.asm):00691                BEQ   MEMEC2   GO IF NO CHANGE
+FE5D BDFCAE           (   PSYMON120B.asm):00692                JSR   ERROR    DISPLAY ERROR
+FE60 1F10             (   PSYMON120B.asm):00693         MEMEC2 TFR   X,D      GET DELIMITER IN A
+FE62 1F21             (   PSYMON120B.asm):00694                TFR   Y,X      GET NEXT ADDRESS IN X
+FE64 810D             (   PSYMON120B.asm):00695                CMPA  #CR      END OF UPDATE?
+FE66 2708             (   PSYMON120B.asm):00696                BEQ   MEMEC3   GO IF YES
+FE68 815E             (   PSYMON120B.asm):00697                CMPA  #'^      BACKING UP?
+FE6A 26D3             (   PSYMON120B.asm):00698                BNE   MEMEC1   LOOP IF NOT
+FE6C 3083             (   PSYMON120B.asm):00699                LEAX  ,--X     BACK UP 2
+FE6E 20CF             (   PSYMON120B.asm):00700                BRA   MEMEC1   CONTINUE
+FE70 39               (   PSYMON120B.asm):00701         MEMEC3 RTS
+                      (   PSYMON120B.asm):00702         
+                      (   PSYMON120B.asm):00703         *************************************************
+                      (   PSYMON120B.asm):00704         * GO TO ADDRESS                                 *
+                      (   PSYMON120B.asm):00705         *************************************************
+FE71 10FEF3DC         (   PSYMON120B.asm):00706         GO     LDS   STKPTR   SET UP STACK
+FE75 BDFD0E           (   PSYMON120B.asm):00707                JSR   GETHEX   GET TARGET ADDRESS
+FE78 2702             (   PSYMON120B.asm):00708                BEQ   GO1      GO IF NONE
+FE7A AF6A             (   PSYMON120B.asm):00709                STX   10,S     STORE IN PC ON STACK
+FE7C A6E4             (   PSYMON120B.asm):00710         GO1    LDA   ,S       SET 'E' FLAG IN CC
+FE7E 8A80             (   PSYMON120B.asm):00711                ORA   #$80
+FE80 A7E4             (   PSYMON120B.asm):00712                STA   ,S
+FE82 3B               (   PSYMON120B.asm):00713         INTRET RTI            LOAD REGISTERS AND GO
+                      (   PSYMON120B.asm):00714         
+                      (   PSYMON120B.asm):00715         *************************************************
+                      (   PSYMON120B.asm):00716         * BREAKPOINT (SOFTWARE INTERRUPT) TRAP          *
+                      (   PSYMON120B.asm):00717         *************************************************
+FE83 AE6A             (   PSYMON120B.asm):00718         BRKPNT LDX   10,S     GET PROGRAM COUNTER
+FE85 301F             (   PSYMON120B.asm):00719                LEAX  -1,X     DECREMENT BY 1
+FE87 AF6A             (   PSYMON120B.asm):00720                STX   10,S     REPLACE ON STACK
+FE89 C6FF             (   PSYMON120B.asm):00721                LDB   #$FF     FLAG FOR SINGLE REMOVAL
+FE8B BDFF43           (   PSYMON120B.asm):00722                JSR   REMBK    REMOVE BREAKPOINT
+                      (   PSYMON120B.asm):00723         
+                      (   PSYMON120B.asm):00724         *************************************************
+                      (   PSYMON120B.asm):00725         * INTERRUPT (HARDWARE/SOFTWARE) TRAP            *
+                      (   PSYMON120B.asm):00726         *************************************************
+FE8E 10FFF3DC         (   PSYMON120B.asm):00727         TRAP   STS   STKPTR   SAVE STACK POINTER
+FE92 BDFDA2           (   PSYMON120B.asm):00728                JSR   CRLF     BEGIN NEW LINE
+FE95 8D3C             (   PSYMON120B.asm):00729                BSR   REGDMP   DUMP REGISTERS
+FE97 7EFC36           (   PSYMON120B.asm):00730                JMP   GETCMD   GET NEXT COMMAND
+                      (   PSYMON120B.asm):00731         
+                      (   PSYMON120B.asm):00732         *************************************************
+                      (   PSYMON120B.asm):00733         * REGISTER EXAMINE AND CHANGE                   *
+                      (   PSYMON120B.asm):00734         *************************************************
+FE9A BDFD44           (   PSYMON120B.asm):00735         REGEC  JSR   INCHR    GET REGISTER TO EXAMINE
+FE9D BDFDA2           (   PSYMON120B.asm):00736                JSR   CRLF     BEGIN NEW LINE
+FEA0 5F               (   PSYMON120B.asm):00737                CLRB           CLEAR OFFSET COUNT
+FEA1 8EFEC7           (   PSYMON120B.asm):00738                LDX   #REGIDS  POINT TO REGISTER ID STRING
+FEA4 A185             (   PSYMON120B.asm):00739         REGEC1 CMPA  B,X      CHECK REGISTER NAME
+FEA6 2707             (   PSYMON120B.asm):00740                BEQ   REGEC2   GO IF FOUND
+FEA8 5C               (   PSYMON120B.asm):00741                INCB           ADVANCE COUNTER
+FEA9 C10B             (   PSYMON120B.asm):00742                CMPB  #11      END OF LIST?
+FEAB 23F7             (   PSYMON120B.asm):00743                BLS   REGEC1   LOOP IF NOT
+FEAD 2024             (   PSYMON120B.asm):00744                BRA   REGDMP   BAD ID - DUMP ALL
+FEAF 3404             (   PSYMON120B.asm):00745         REGEC2 PSHS  B        SAVE OFFSET
+FEB1 8D37             (   PSYMON120B.asm):00746                BSR   RDUMP    DISPLAY THE REG & CONTENTS
+FEB3 BDFD0E           (   PSYMON120B.asm):00747                JSR   GETHEX   GET NEW VALUE
+FEB6 3504             (   PSYMON120B.asm):00748                PULS  B        RESTORE OFFSET
+FEB8 270C             (   PSYMON120B.asm):00749                BEQ   REGECX   GO IF NO CHANGE
+FEBA 31A5             (   PSYMON120B.asm):00750                LEAY  B,Y      POINT TO REG ON STACK
+FEBC C103             (   PSYMON120B.asm):00751                CMPB  #3       SINGLE BYTE REG?
+FEBE 1F10             (   PSYMON120B.asm):00752                TFR   X,D      GET NEW DATA IN A,B
+FEC0 2302             (   PSYMON120B.asm):00753                BLS   REGEC3   GO IF SINGLE
+FEC2 A7A0             (   PSYMON120B.asm):00754                STA   ,Y+      STORE MS BYTE
+FEC4 E7A4             (   PSYMON120B.asm):00755         REGEC3 STB   ,Y       STORE LS BYTE
+FEC6 39               (   PSYMON120B.asm):00756         REGECX RTS
+                      (   PSYMON120B.asm):00757         
+FEC7 4341424458585959 (   PSYMON120B.asm):00758         REGIDS FCC   'CABDXXYYUUPP'
+     55555050
+                      (   PSYMON120B.asm):00759         
+                      (   PSYMON120B.asm):00760         *************************************************
+                      (   PSYMON120B.asm):00761         * COMPLETE REGISTER DUMP                        *
+                      (   PSYMON120B.asm):00762         *************************************************
+FED3 8EFEC7           (   PSYMON120B.asm):00763         REGDMP LDX   #REGIDS  POINT TO ID STRING
+FED6 5F               (   PSYMON120B.asm):00764                CLRB           CLEAR OFFSET COUNTER
+FED7 A685             (   PSYMON120B.asm):00765         RGDMP1 LDA   B,X      GET REG NAME
+FED9 8D0F             (   PSYMON120B.asm):00766                BSR   RDUMP    DISPLAY IT
+FEDB 5C               (   PSYMON120B.asm):00767                INCB           BUMP TO NEXT REG
+FEDC C10B             (   PSYMON120B.asm):00768                CMPB  #11      ALL PRINTED?
+FEDE 23F7             (   PSYMON120B.asm):00769                BLS   RGDMP1   LOOP IF NOT
+FEE0 8653             (   PSYMON120B.asm):00770                LDA   #'S      DISPLAY STACK ID
+FEE2 8D1B             (   PSYMON120B.asm):00771                BSR   DSPID
+FEE4 108EF3D0         (   PSYMON120B.asm):00772                LDY   #STKPTR-12  Y+B=>STKPTR
+FEE8 200A             (   PSYMON120B.asm):00773                BRA   RDUMP1
+                      (   PSYMON120B.asm):00774         
+                      (   PSYMON120B.asm):00775         *************************************************
+                      (   PSYMON120B.asm):00776         * DISPLAY REGISTER CONTENTS                     *
+                      (   PSYMON120B.asm):00777         *************************************************
+FEEA 8D13             (   PSYMON120B.asm):00778         RDUMP  BSR   DSPID    DISPLAY REGISTER ID
+FEEC 10BEF3DC         (   PSYMON120B.asm):00779                LDY   STKPTR   POINT Y AT STACK
+FEF0 C103             (   PSYMON120B.asm):00780                CMPB  #3       SINGLE BYTE REG?
+FEF2 2306             (   PSYMON120B.asm):00781                BLS   RDUMP2   GO IF YES
+FEF4 A6A5             (   PSYMON120B.asm):00782         RDUMP1 LDA   B,Y      DISPLAY MS BYTE
+FEF6 BDFD7D           (   PSYMON120B.asm):00783                JSR   OUTHEX
+FEF9 5C               (   PSYMON120B.asm):00784                INCB           ADVANCE OFFSET
+FEFA A6A5             (   PSYMON120B.asm):00785         RDUMP2 LDA   B,Y      DISPLAY A BYTE
+FEFC 7EFD73           (   PSYMON120B.asm):00786                JMP   DSPSBY
+                      (   PSYMON120B.asm):00787         
+                      (   PSYMON120B.asm):00788         *************************************************
+                      (   PSYMON120B.asm):00789         * DISPLAY REGISTER ID                           *
+                      (   PSYMON120B.asm):00790         *************************************************
+FEFF 8D02             (   PSYMON120B.asm):00791         DSPID  BSR   OUTCH    DISPLAY REG NAME
+FF01 863D             (   PSYMON120B.asm):00792                LDA   #'=      DISPLAY '='
+                      (   PSYMON120B.asm):00793         
+                      (   PSYMON120B.asm):00794         *************************************************
+                      (   PSYMON120B.asm):00795         * OUTPUT CHARACTER TO CONSOLE                   *
+                      (   PSYMON120B.asm):00796         *************************************************
+FF03 7EFD58           (   PSYMON120B.asm):00797         OUTCH  JMP   OUTCHR   RELATIVE BRANCH BOOSTER
+                      (   PSYMON120B.asm):00798         
+                      (   PSYMON120B.asm):00799         *************************************************
+                      (   PSYMON120B.asm):00800         * SET A BREAKPOINT                              *
+                      (   PSYMON120B.asm):00801         *************************************************
+FF06 BDFD0E           (   PSYMON120B.asm):00802         SETBK  JSR   GETHEX   GET ADDRESS
+FF09 2718             (   PSYMON120B.asm):00803                BEQ   DSPBK    GO IF NONE ENTERED
+FF0B 8D27             (   PSYMON120B.asm):00804                BSR   INITBP   POINT Y AT BP TABLE
+FF0D ECA4             (   PSYMON120B.asm):00805         SETBK1 LDD   ,Y       EMPTY SLOT?
+FF0F 2706             (   PSYMON120B.asm):00806                BEQ   SETBK2   GO IF YES
+FF11 8D26             (   PSYMON120B.asm):00807                BSR   NEXTBP   ADVANCE TO NEXT SLOT
+FF13 26F8             (   PSYMON120B.asm):00808                BNE   SETBK1   LOOP IF NOT END
+FF15 200C             (   PSYMON120B.asm):00809                BRA   DSPBK    EXIT
+FF17 AFA4             (   PSYMON120B.asm):00810         SETBK2 STX   ,Y       SAVE ADDRESS
+FF19 2708             (   PSYMON120B.asm):00811                BEQ   DSPBK    GO IF ADDRESS = 0
+FF1B A684             (   PSYMON120B.asm):00812                LDA   ,X       GET CONTENTS
+FF1D A722             (   PSYMON120B.asm):00813                STA   2,Y      SAVE IN TABLE
+FF1F 863F             (   PSYMON120B.asm):00814                LDA   #$3F     SWI OP CODE
+FF21 A784             (   PSYMON120B.asm):00815                STA   ,X       SET BREAK
+                      (   PSYMON120B.asm):00816         
+                      (   PSYMON120B.asm):00817         *************************************************
+                      (   PSYMON120B.asm):00818         * DISPLAY ALL BREAKPOINTS                       *
+                      (   PSYMON120B.asm):00819         *************************************************
+FF23 BDFDA2           (   PSYMON120B.asm):00820         DSPBK  JSR   CRLF     BEGIN NEW LINE
+FF26 8D0C             (   PSYMON120B.asm):00821                BSR   INITBP   POINT Y AT BP TABLE
+FF28 ECA4             (   PSYMON120B.asm):00822         DSPBK1 LDD   ,Y       GET ADDRESS OF BP
+FF2A 2703             (   PSYMON120B.asm):00823                BEQ   DSPBK2   GO IF INACTIVE
+FF2C BDFD6A           (   PSYMON120B.asm):00824                JSR   DSPDBY   DISPLAY ADDRESS
+FF2F 8D08             (   PSYMON120B.asm):00825         DSPBK2 BSR   NEXTBP   ADVANCE POINTER
+FF31 26F5             (   PSYMON120B.asm):00826                BNE   DSPBK1   LOOP IF NOT END
+FF33 39               (   PSYMON120B.asm):00827                RTS
+                      (   PSYMON120B.asm):00828         
+                      (   PSYMON120B.asm):00829         *************************************************
+                      (   PSYMON120B.asm):00830         * INITIALIZE BREAKPOINT TABLE POINTER           *
+                      (   PSYMON120B.asm):00831         *************************************************
+FF34 108EF3C3         (   PSYMON120B.asm):00832         INITBP LDY   #BPTABL  POINT Y AT BP TABLE
+FF38 39               (   PSYMON120B.asm):00833                RTS
+                      (   PSYMON120B.asm):00834         
+                      (   PSYMON120B.asm):00835         *************************************************
+                      (   PSYMON120B.asm):00836         * ADVANCE BREAKPOINT TABLE POINTER              *
+                      (   PSYMON120B.asm):00837         *************************************************
+FF39 3123             (   PSYMON120B.asm):00838         NEXTBP LEAY  3,Y      ADVANCE TO NEXT ENTRY
+FF3B 108CF3D2         (   PSYMON120B.asm):00839                CMPY  #BPTEND  CHECK FOR END OF TABLE
+FF3F 39               (   PSYMON120B.asm):00840                RTS
+                      (   PSYMON120B.asm):00841         
+                      (   PSYMON120B.asm):00842         *************************************************
+                      (   PSYMON120B.asm):00843         * UNSET A BREAKPOINT                            *
+                      (   PSYMON120B.asm):00844         *************************************************
+FF40 BDFD0E           (   PSYMON120B.asm):00845         UNSBK  JSR   GETHEX   GET ADDRESS
+                      (   PSYMON120B.asm):00846         
+                      (   PSYMON120B.asm):00847         *************************************************
+                      (   PSYMON120B.asm):00848         * REMOVE ONE OR MORE BREAKPOINTS                *
+                      (   PSYMON120B.asm):00849         *************************************************
+FF43 8DEF             (   PSYMON120B.asm):00850         REMBK  BSR   INITBP   POINT Y AT BP TABLE
+FF45 5D               (   PSYMON120B.asm):00851         REMBK1 TSTB           REMOVE ALL?
+FF46 2706             (   PSYMON120B.asm):00852                BEQ   REMBK2   GO IF YES
+FF48 ACA4             (   PSYMON120B.asm):00853                CMPX  ,Y       FIND ADDRESS?
+FF4A 2709             (   PSYMON120B.asm):00854                BEQ   UNSET    GO IF YES
+FF4C 2002             (   PSYMON120B.asm):00855                BRA   REMBK3   LOOP IF NO
+FF4E 8D05             (   PSYMON120B.asm):00856         REMBK2 BSR   UNSET    UNSET IT
+FF50 8DE7             (   PSYMON120B.asm):00857         REMBK3 BSR   NEXTBP   ADVANCE POINTER
+FF52 26F1             (   PSYMON120B.asm):00858                BNE   REMBK1   LOOP IF NOT END
+FF54 39               (   PSYMON120B.asm):00859                RTS
+                      (   PSYMON120B.asm):00860         
+                      (   PSYMON120B.asm):00861         *************************************************
+                      (   PSYMON120B.asm):00862         * REMOVE A BREAKPOINT                           *
+                      (   PSYMON120B.asm):00863         *************************************************
+FF55 AEA4             (   PSYMON120B.asm):00864         UNSET  LDX   ,Y       GET ADDRESS OF BP
+FF57 2708             (   PSYMON120B.asm):00865                BEQ   UNSET1   GO IF INACTIVE
+FF59 A622             (   PSYMON120B.asm):00866                LDA   2,Y      GET CONTENTS
+FF5B A784             (   PSYMON120B.asm):00867                STA   ,X       REPLACE BP
+FF5D 6F20             (   PSYMON120B.asm):00868                CLR   0,Y      MARK BP INACTIVE
+FF5F 6F21             (   PSYMON120B.asm):00869                CLR   1,Y
+FF61 39               (   PSYMON120B.asm):00870         UNSET1 RTS
+                      (   PSYMON120B.asm):00871         
+                      (   PSYMON120B.asm):00872         *************************************************
+                      (   PSYMON120B.asm):00873         * TERMINAL DRIVER (ACIA)                        *
+                      (   PSYMON120B.asm):00874         *************************************************
+FF62 6F08             (   PSYMON120B.asm):00875         TERMDR CLR   DCBERR,X NO ERRORS POSSIBLE
+FF64 AE06             (   PSYMON120B.asm):00876                LDX   DCBIOA,X GET I/O ADDRESS
+FF66 54               (   PSYMON120B.asm):00877                LSRB           READ FUNCTION?
+FF67 250C             (   PSYMON120B.asm):00878                BCS   TERMRD   GO IF YES
+FF69 54               (   PSYMON120B.asm):00879                LSRB           WRITE FUNCTION?
+FF6A 2511             (   PSYMON120B.asm):00880                BCS   TERMWT   GO IF YES
+FF6C 54               (   PSYMON120B.asm):00881                LSRB           STATUS FUNCTION?
+FF6D 2517             (   PSYMON120B.asm):00882                BCS   TERMST   GO IF YES
+FF6F 54               (   PSYMON120B.asm):00883                LSRB           CONTROL FUNCTION?
+FF70 2402             (   PSYMON120B.asm):00884                BCC   TERM1    GO IF NOT
+FF72 A784             (   PSYMON120B.asm):00885                STA   ,X       STORE CONTROL CODE
+FF74 39               (   PSYMON120B.asm):00886         TERM1  RTS
+                      (   PSYMON120B.asm):00887         
+FF75 E684             (   PSYMON120B.asm):00888         TERMRD LDB   ,X       GET STATUS
+FF77 54               (   PSYMON120B.asm):00889                LSRB           INPUT BIT TO C
+FF78 24FB             (   PSYMON120B.asm):00890                BCC   TERMRD   LOOP IF NO INPUT
+FF7A A601             (   PSYMON120B.asm):00891                LDA   1,X      GET CHARACTER
+FF7C 39               (   PSYMON120B.asm):00892                RTS
+                      (   PSYMON120B.asm):00893         
+FF7D E684             (   PSYMON120B.asm):00894         TERMWT LDB   ,X       GET STATUS
+FF7F C502             (   PSYMON120B.asm):00895                BITB  #2       READY FOR OUTPUT?
+FF81 27FA             (   PSYMON120B.asm):00896                BEQ   TERMWT   LOOP IF NOT
+FF83 A701             (   PSYMON120B.asm):00897                STA   1,X      OUTPUT CHARACTER
+FF85 39               (   PSYMON120B.asm):00898                RTS
+                      (   PSYMON120B.asm):00899         
+FF86 A684             (   PSYMON120B.asm):00900         TERMST LDA   ,X       GET STATUS
+FF88 8403             (   PSYMON120B.asm):00901                ANDA  #3       MASK OFF READY BITS
+FF8A 39               (   PSYMON120B.asm):00902                RTS
+                      (   PSYMON120B.asm):00903         
+                      (   PSYMON120B.asm):00904         *************************************************
+                      (   PSYMON120B.asm):00905         * INTERRUPT HANDLERS                            *
+                      (   PSYMON120B.asm):00906         *************************************************
+FF8B 6E9FF3F2         (   PSYMON120B.asm):00907         SWI3   JMP   [SWI3V]  SOFTWARE INTERRUPT 3
+FF8F 6E9FF3F4         (   PSYMON120B.asm):00908         SWI2   JMP   [SWI2V]  SOFTWARE INTERRUPT 2
+FF93 6E9FF3F6         (   PSYMON120B.asm):00909         FIRQ   JMP   [FIRQV]  FAST INTERRUPT REQUEST
+FF97 6E9FF3F8         (   PSYMON120B.asm):00910         IRQ    JMP   [IRQV]   INTERRUPT REQUEST
+FF9B 6E9FF3FA         (   PSYMON120B.asm):00911         SWI    JMP   [SWIV]   SOFTWARE INTERRUPT
+FF9F 6E9FF3FC         (   PSYMON120B.asm):00912         NMI    JMP   [NMIV]   NON-MASKABLE INTERRUPT
+                      (   PSYMON120B.asm):00913         
+                      (   PSYMON120B.asm):00914         *************************************************
+                      (   PSYMON120B.asm):00915         * PSYMON COMMAND TABLE                          *
+                      (   PSYMON120B.asm):00916         *************************************************
+FFA3 01               (   PSYMON120B.asm):00917         CMDTBL FCB   1        ITEM LENGTH
+FFA4 4D               (   PSYMON120B.asm):00918                FCB   'M       MEMORY EXAMINE/CHANGE
+FFA5 FE38             (   PSYMON120B.asm):00919                FDB   MEMEC
+FFA7 47               (   PSYMON120B.asm):00920                FCB   'G       GOTO ADDRESS
+FFA8 FE71             (   PSYMON120B.asm):00921                FDB   GO
+FFAA 4C               (   PSYMON120B.asm):00922                FCB   'L       PROGRAM LOAD
+FFAB FC7D             (   PSYMON120B.asm):00923                FDB   TLOAD
+FFAD 53               (   PSYMON120B.asm):00924                FCB   'S       PROGRAM SAVE
+FFAE FDAC             (   PSYMON120B.asm):00925                FDB   TSAVE
+FFB0 52               (   PSYMON120B.asm):00926                FCB   'R       REGISTER EXAMINE/CHANGE
+FFB1 FE9A             (   PSYMON120B.asm):00927                FDB   REGEC
+FFB3 42               (   PSYMON120B.asm):00928                FCB   'B       SET/PRINT BREAKPOINTS
+FFB4 FF06             (   PSYMON120B.asm):00929                FDB   SETBK
+FFB6 55               (   PSYMON120B.asm):00930                FCB   'U       UNSET BREAKPOINTS
+FFB7 FF40             (   PSYMON120B.asm):00931                FDB   UNSBK
+FFB9 FF               (   PSYMON120B.asm):00932                FCB   $FF      END SENTINEL
+                      (   PSYMON120B.asm):00933         
+                      (   PSYMON120B.asm):00934         *************************************************
+                      (   PSYMON120B.asm):00935         * RAM INITIALIZATION DATA                       *
+                      (   PSYMON120B.asm):00936         *************************************************
+FFBA 434E             (   PSYMON120B.asm):00937         RAMINT FCC   'CN'     CONSOLE DCB ID
+FFBC FF62             (   PSYMON120B.asm):00938                FDB   TERMDR   CONSOLE DRIVER
+FFBE F7FE             (   PSYMON120B.asm):00939                FDB   TERMNL   CONSOLE I/O ADDRESS
+FFC0 0000             (   PSYMON120B.asm):00940                FDB   0        ERROR STATUS, EXT
+FFC2 F3DE             (   PSYMON120B.asm):00941                FDB   CONDCB   DCB CHAIN POINTER
+FFC4 F3DE             (   PSYMON120B.asm):00942                FDB   CONDCB   DCB POINTERS
+FFC6 F3DE             (   PSYMON120B.asm):00943                FDB   CONDCB
+FFC8 F3DE             (   PSYMON120B.asm):00944                FDB   CONDCB
+FFCA F3DE             (   PSYMON120B.asm):00945                FDB   CONDCB
+FFCC FE8E             (   PSYMON120B.asm):00946                FDB   TRAP     INTERRUPT VECTORS
+FFCE FE8E             (   PSYMON120B.asm):00947                FDB   TRAP
+FFD0 FE82             (   PSYMON120B.asm):00948                FDB   INTRET
+FFD2 FE8E             (   PSYMON120B.asm):00949                FDB   TRAP
+FFD4 FE83             (   PSYMON120B.asm):00950                FDB   BRKPNT
+FFD6 FE8E             (   PSYMON120B.asm):00951                FDB   TRAP
+FFD8 F000             (   PSYMON120B.asm):00952                FDB   FREE
+                      (   PSYMON120B.asm):00953         
+FFDA FFFFFFFF         (   PSYMON120B.asm):00954                FCB   $FF,$FF,$FF,$FF  RESERVED SPACE
+                      (   PSYMON120B.asm):00955         
+                      (   PSYMON120B.asm):00956         *************************************************
+                      (   PSYMON120B.asm):00957         * SOFTWARE VECTORS                              *
+                      (   PSYMON120B.asm):00958         *************************************************
+FFDE F380             (   PSYMON120B.asm):00959                FDB   RAM      BASE OF PSYMON RAM
+FFE0 FD73             (   PSYMON120B.asm):00960                FDB   DSPSBY   DISPLAY SINGLE BYTE ON CONSOLE
+FFE2 FD6A             (   PSYMON120B.asm):00961                FDB   DSPDBY   DISPLAY DOUBLE BYTE ON CONSOLE
+FFE4 FD0E             (   PSYMON120B.asm):00962                FDB   GETHEX   GET HEX NUMBER FROM CONSOLE
+FFE6 FD97             (   PSYMON120B.asm):00963                FDB   PSTRNG   PRINT STRING TO CONSOLE
+FFE8 FD44             (   PSYMON120B.asm):00964                FDB   INCHR    INPUT CHARACTER FROM CONSOLE
+FFEA FD58             (   PSYMON120B.asm):00965                FDB   OUTCHR   OUTPUT CHARACTER TO CONSOLE
+FFEC FD63             (   PSYMON120B.asm):00966                FDB   REQIO    PERFORM I/O REQUEST
+FFEE FC32             (   PSYMON120B.asm):00967                FDB   MONENT   MONITOR RE-ENTRY
+                      (   PSYMON120B.asm):00968         
+                      (   PSYMON120B.asm):00969         *************************************************
+                      (   PSYMON120B.asm):00970         * HARDWARE VECTORS                              *
+                      (   PSYMON120B.asm):00971         *************************************************
+FFF0 FC00             (   PSYMON120B.asm):00972                FDB   INIT     RESERVED BY MOTOROLA
+FFF2 FF8B             (   PSYMON120B.asm):00973                FDB   SWI3     SOFTWARE INTERRUPT 3
+FFF4 FF8F             (   PSYMON120B.asm):00974                FDB   SWI2     SOFTWARE INTERRUPT 2
+FFF6 FF93             (   PSYMON120B.asm):00975                FDB   FIRQ     FAST INTERRUPT REQUEST
+FFF8 FF97             (   PSYMON120B.asm):00976                FDB   IRQ      INTERRUPT REQUEST
+FFFA FF9B             (   PSYMON120B.asm):00977                FDB   SWI      SOFTWARE INTERRUPT
+FFFC FF9F             (   PSYMON120B.asm):00978                FDB   NMI      NON-MASKABLE INTERRUPT
+FFFE FC00             (   PSYMON120B.asm):00979                FDB   INIT     RESTART
+                      (   PSYMON120B.asm):00980         
+                      (   PSYMON120B.asm):00981                END
+
+Symbol Table:
+[ G] BEGADD                           F3D8
+[ G] BPTABL                           F3C3
+[ G] BPTEND                           F3D2
+[ G] BRKPNT                           FE83
+[ G] CEDCB                            F3EC
+[ G] CIDCB                            F3EA
+[ G] CKSUM                            F3D7
+[ G] CMDTBL                           FFA3
+[ G] CNTLFN                           0008
+[ G] CODCB                            F3EE
+[ G] COMAND                           F3D6
+[ G] COMP1                            FC72
+[ G] COMP2                            FC7B
+[ G] COMPAR                           FC70
+[ G] CONDCB                           F3DE
+[ G] CONFIG                           0051
+[ G] CR                               000D
+[ G] CRLF                             FDA2
+[ G] DCBAPP                           000A
+[ G] DCBCHN                           F3E8
+[ G] DCBDID                           0002
+[ G] DCBDVR                           0004
+[ G] DCBERR                           0008
+[ G] DCBEXT                           0009
+[ G] DCBIOA                           0006
+[ G] DCBLNK                           0000
+[ G] DSPBK                            FF23
+[ G] DSPBK1                           FF28
+[ G] DSPBK2                           FF2F
+[ G] DSPDBY                           FD6A
+[ G] DSPID                            FEFF
+[ G] DSPSBY                           FD73
+[ G] ENDADD                           F3DA
+[ G] ERROR                            FCAE
+[ G] FIRQ                             FF93
+[ G] FIRQV                            F3F6
+[ G] FREE                             F000
+[ G] FRERAM                           F3FE
+[ G] GETCMD                           FC36
+[ G] GETHEX                           FD0E
+[ G] GETHX                            FDDE
+[ G] GETHX1                           FD12
+[ G] GETHX2                           FD27
+[ G] GO                               FE71
+[ G] GO1                              FE7C
+[ G] INBYTE                           FCF4
+[ G] INCHR                            FD44
+[ G] INHEX                            FD29
+[ G] INHEX1                           FD3B
+[ G] INHEX2                           FD3F
+[ G] INHEX3                           FD41
+[ G] INIT                             FC00
+[ G] INIT1                            FC06
+[ G] INIT2                            FC11
+[ G] INITBP                           FF34
+[ G] INTRET                           FE82
+[ G] IRQ                              FF97
+[ G] IRQV                             F3F8
+[ G] LF                               000A
+[ G] LOAD                             FCB3
+[ G] LOAD1                            FCB5
+[ G] LOAD2                            FCB8
+[ G] LOAD3                            FCDA
+[ G] LOAD4                            FCE7
+[ G] LOAD5                            FCEC
+[ G] LOADX                            FCF3
+[ G] LOOK1                            FC5F
+[ G] LOOKUP                           FC50
+[ G] MEMEC                            FE38
+[ G] MEMEC1                           FE3F
+[ G] MEMEC2                           FE60
+[ G] MEMEC3                           FE70
+[ G] MEMPTR                           F3D2
+[ G] MONENT                           FC32
+[ G] NEXTBP                           FF39
+[ G] NMI                              FF9F
+[ G] NMIV                             F3FC
+[ G] OUTBYT                           FE22
+[ G] OUTC                             FE35
+[ G] OUTCH                            FF03
+[ G] OUTCH1                           FD5D
+[ G] OUTCHR                           FD58
+[ G] OUTCHX                           FD79
+[ G] OUTDIG                           FD8B
+[ G] OUTHEX                           FD7D
+[ G] OUTSN                            FE2C
+[ G] OUTSP                            FD75
+[ G] PROMPT                           FC4A
+[ G] PSTRNG                           FD97
+[ G] RAM                              F380
+[ G] RAMINT                           FFBA
+[ G] RDROFF                           0051
+[ G] RDRON                            0011
+[ G] RDUMP                            FEEA
+[ G] RDUMP1                           FEF4
+[ G] RDUMP2                           FEFA
+[ G] READFN                           0001
+[ G] REGA                             F3B8
+[ G] REGB                             F3B9
+[ G] REGC                             F3B7
+[ G] REGD                             F3BA
+[ G] REGDMP                           FED3
+[ G] REGEC                            FE9A
+[ G] REGEC1                           FEA4
+[ G] REGEC2                           FEAF
+[ G] REGEC3                           FEC4
+[ G] REGECX                           FEC6
+[ G] REGIDS                           FEC7
+[ G] REGP                             F3C1
+[ G] REGU                             F3BF
+[ G] REGX                             F3BB
+[ G] REGY                             F3BD
+[ G] REMBK                            FF43
+[ G] REMBK1                           FF45
+[ G] REMBK2                           FF4E
+[ G] REMBK3                           FF50
+[ G] REQIO                            FD63
+[ G] RESET                            0003
+[ G] RGDMP1                           FED7
+[ G] ROM1                             FC00
+[ G] ROM2                             F800
+[ G] SAVE                             FDE1
+[ G] SAVE1                            FDE4
+[ G] SAVE2                            FDF9
+[ G] SAVE3                            FDFB
+[ G] SAVE4                            FE0C
+[ G] SEARCH                           FC62
+[ G] SERCH1                           FC64
+[ G] SERCHX                           FC6F
+[ G] SETBK                            FF06
+[ G] SETBK1                           FF0D
+[ G] SETBK2                           FF17
+[ G] SP                               0020
+[ G] STACK                            F3B7
+[ G] STATFN                           0004
+[ G] STKPTR                           F3DC
+[ G] SWI                              FF9B
+[ G] SWI2                             FF8F
+[ G] SWI2V                            F3F4
+[ G] SWI3                             FF8B
+[ G] SWI3V                            F3F2
+[ G] SWIV                             F3FA
+[ G] TERM1                            FF74
+[ G] TERMDR                           FF62
+[ G] TERMNL                           F7FE
+[ G] TERMRD                           FF75
+[ G] TERMST                           FF86
+[ G] TERMWT                           FF7D
+[ G] TLOAD                            FC7D
+[ G] TPDCB                            F3F0
+[ G] TRAP                             FE8E
+[ G] TSAVE                            FDAC
+[ G] TSAVE1                           FDBB
+[ G] TSAVE2                           FDBE
+[ G] TSAVE3                           FDCE
+[ G] TSAVE4                           FDD8
+[ G] UNSBK                            FF40
+[ G] UNSET                            FF55
+[ G] UNSET1                           FF61
+[ G] USRTBL                           F3D4
+[ G] WRITFN                           0002
