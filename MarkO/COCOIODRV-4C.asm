@@ -31,20 +31,20 @@ POLCAT:     equ   $A000
 CHROUT:     equ   $A002
 
 
-            org   $7E00
-RESETP:     jmp   W5100_RST         ;$7E00
-CONFIG:     jmp   W5100_CFG         ;$7E03
-SETREG:     jmp   W5100_SETREG      ;$7E06
-GATEWAY:    jmp   W5100_GATEWAY     ;$7E09
-SUBNET:     jmp   W5100_SUBNET      ;$7E0C
-HARDWARE:   jmp   W5100_HARDWARE    ;$7E0F
-IPADDR:     jmp   W5100_IPADDR      ;$7E12
-MPISLOT:    jmp   MPISLOT1          ;$7E15
+            org   $7800
+RESETP:     jmp   W5100_RST         ;$7800
+CONFIG:     jmp   W5100_CFG         ;$7803
+SETREG:     jmp   W5100_SETREG      ;$7806
+GATEWAY:    jmp   W5100_GATEWAY     ;$7809
+SUBNET:     jmp   W5100_SUBNET      ;$780C
+HARDWARE:   jmp   W5100_HARDWARE    ;$780F
+IPADDR:     jmp   W5100_IPADDR      ;$7812
+MPISLOT:    jmp   MPISLOT1          ;$7815
 
-DISPGW:     jmp   DISP_GATEWAY      ;$7E18
-DISPSN:     jmp   DISP_SUBNET       ;$7E1B
-DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
-DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
+DISPGW:     jmp   DISP_GATEWAY      ;$7818
+DISPSN:     jmp   DISP_SUBNET       ;$781B
+DISPHW:     jmp   DISP_HARDWARE     ;$781E
+DISPIPADD:  jmp   DISP_IPADDR       ;$7821
 
 ;                 |12345678901234567890123456789012|
 LABEL01:    fcc   "COCOIO NIC DRIVER v0.00.04c"
