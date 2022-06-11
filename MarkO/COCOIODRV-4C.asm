@@ -31,20 +31,20 @@ POLCAT:     equ   $A000
 CHROUT:     equ   $A002
 
 
-            org   $7E00
-RESETP:     jmp   W5100_RST         ;$7E00
-CONFIG:     jmp   W5100_CFG         ;$7E03
-SETREG:     jmp   W5100_SETREG      ;$7E06
-GATEWAY:    jmp   W5100_GATEWAY     ;$7E09
-SUBNET:     jmp   W5100_SUBNET      ;$7E0C
-HARDWARE:   jmp   W5100_HARDWARE    ;$7E0F
-IPADDR:     jmp   W5100_IPADDR      ;$7E12
-MPISLOT:    jmp   MPISLOT1          ;$7E15
+            org   $7800
+RESETP:     jmp   W5100_RST         ;$7800
+CONFIG:     jmp   W5100_CFG         ;$7803
+SETREG:     jmp   W5100_SETREG      ;$7806
+GATEWAY:    jmp   W5100_GATEWAY     ;$7809
+SUBNET:     jmp   W5100_SUBNET      ;$780C
+HARDWARE:   jmp   W5100_HARDWARE    ;$780F
+IPADDR:     jmp   W5100_IPADDR      ;$7812
+MPISLOT:    jmp   MPISLOT1          ;$7815
 
-DISPGW:     jmp   DISP_GATEWAY      ;$7E18
-DISPSN:     jmp   DISP_SUBNET       ;$7E1B
-DISPHW:     jmp   DISP_HARDWARE     ;$7E1E
-DISPIPADD:  jmp   DISP_IPADDR       ;$7E21
+DISPGW:     jmp   DISP_GATEWAY      ;$7818
+DISPSN:     jmp   DISP_SUBNET       ;$781B
+DISPHW:     jmp   DISP_HARDWARE     ;$781E
+DISPIPADD:  jmp   DISP_IPADDR       ;$7821
 
 ;                 |12345678901234567890123456789012|
 LABEL01:    fcc   "COCOIO NIC DRIVER v0.00.04c"
@@ -100,6 +100,10 @@ MYIP:                         ; My Source IP Address
                               ; End of My CoCoIO configuration
 
 
+COCOIOTST1: fdb   $00
+COCOIOTST2: fdb   $00
+COCOIOTST3: fdb   $00
+COCOIOTST4: fdb   $00
 
 
 
@@ -108,7 +112,7 @@ MYIP:                         ; My Source IP Address
 
 
 W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S and Determine the I/O Port location
-            jsr   MPISLOT1
+;            jsr   MPISLOT1
 ;            jsr   DALLY
             ldd   #LABEL01    ; Driver Banner 01, Hello World Message 
             jsr   DISPSTR0    ; Display the Label
@@ -131,23 +135,27 @@ W5100_RST:                    ; Reset the CoCoIO WIZnet 5100S and Determine the 
             ldd   #LABEL13    ; Driver Banner 13, WizNet5100 NOT Located
             jsr   DISPSTR0    ; Display the Label
 INITEXIT:   rts            
-                              ; Try the First Address
+                              ;  Lets Check $FF68
 TRYCIO0:    lda   CIO0CMND    ; Read the current value of MR from CoCoIO Command
             ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
+            ldb   #3          ; Time Out Loop, Three Tries
             sta   CIO0CMND    ; Trigger the reset
 RST0DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
-            bmi   RST0DONE    ; if bit 7, then A was negative, keep checking bit
-            ldb   #3          ; Time Out Loop
+            anda  #%10000000  ; Mask bit 7 RST to 1
+            bmi   CONTCIO0	; Loop, Timed-Out, Move to Next Section
+            decb			; Loop Count-Down
+            bne   RST0DONE    ; if bit 7, then A was negative, keep checking bit
+CONTCIO0:   ldb   #3          ; Time Out Loop, Three Tries
 SET0MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
             sta   CIO0CMND    ; configure the chip and done
             lda   CIO0CMND    ; readback mode
-            cmpa  #3          ; is it what we want?
+            cmpa  #%00000011  ; is it what we want?
             beq   DISLAB0     ; Branch to Display Label
-            decb
+            decb			; Loop Count-Down
             bne   SET0MODE    ; no, try again
-            jmp   TRYCIO1
+            jmp   TRYCIO1	; OK, lets Check $FF78
 
-DISLAB0:    ldd   $FF68
+DISLAB0:    ldd   CIO0CMND    ; We Found the WizNet, save the I/O Location
             std   COCOIOPORT
             ldd   #LABEL11    ; Driver Banner 11, WizNet5100 @FF68
             jsr   DISPSTR0    ; Display the Label
@@ -155,20 +163,25 @@ DISLAB0:    ldd   $FF68
 
 TRYCIO1:    lda   CIO1CMND    ; Read the current value of MR from CoCoIO Command
             ora   #%10000000  ; Flip bit 7 RST to 1 = init all W5100S registers - autoclear in 3 SYS_CLK
-            sta   CIO1CMND    ; Trigger the reset
-RST1DONE:   lda   CIO1CMND    ; Now read command register to check bit 7 clears when reset is done
-            bmi   RST1DONE    ; if bit 7, then A was negative, keep checking bit
             ldb   #3          ; Time Out Loop
+            sta   CIO1CMND    ; Trigger the reset
+RST1DONE:   lda   CIO0CMND    ; Now read command register to check bit 7 clears when reset is done
+            anda  #%10000000  ; Mask bit 7 RST to 1
+            bmi   CONTCIO1	; Loop, Timed-Out, Move to Next Section
+            decb			; Loop Count-Down
+            bne   RST1DONE    ; if bit 7, then A was negative, keep checking bit
+
+CONTCIO1:   ldb   #3          ; Time Out Loop
 SET1MODE:   ora   #%00000011  ; bit 7 cleared, setup Ping Block disabled, no PPPoE, AutoIncrement, and Indirect Bus Mode
             sta   CIO1CMND    ; configure the chip and done
             lda   CIO1CMND    ; readback mode
-            cmpa  #3          ; is it what we want?
+            cmpa  #%00000011  ; is it what we want?
             beq   DISLAB1     ; Branch to Display Label
-            decb
+            decb			; Loop Count-Down
             bne   SET1MODE    ; no, try again
-            jmp   TRY1EXIT
+            jmp   TRY1EXIT	; Nope, CoCoIO is Not Here
 
-DISLAB1:    ldd   $FF78
+DISLAB1:    ldd   CIO1CMND    ; We Found the WizNet, save the I/O Location
             std   COCOIOPORT
             ldd   #LABEL12    ; Driver Banner 12, WizNet5100 @FF78
             jsr   DISPSTR0    ; Display the Label
@@ -177,7 +190,7 @@ TRY1EXIT:   rts
 
 
 W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
-            jsr   MPISLOT1
+;            jsr   MPISLOT1
 ;            jsr   DALLY
                                   ; Bring up layer 3 default route
             ldd   #GAR0           ; W5100S Gateway Address Register 0
@@ -205,12 +218,17 @@ W5100_CFG:                    ; Configure the CoCoIO WIZnet W5100S
             rts
 
 W5100_SETREG:                 ; Configure the Registers; D for Start, Y for Length, X for Data
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+            pshs  x,y         ; Save Data Address and Length
+            ldy   COCOIOPORT  
+            ldx   [,y]
+            sta   CIOADDR,x   ; CoCoIO Address Register MSB
+            stb   CIOADDR+1,x ; CoCoIO Address Register LSB
+            puls  x,y         ; Restore Data Address and Length
 ;            jsr   DALLY
             tfr   y,d         ; Setup B for loop counting
+            tfr   x,y         ; Copy COCOIOPORT value to Y
 SETLOOP:    lda   ,x+         ; Load A with the next byte of Gateway
-            sta   CIO0DATA    ; Store it to W5100S
+            sta   CIODATA,y    ; Store it to W5100S
 ;            jsr   DALLY
             decb              ; Decrement loop counter
             bne   SETLOOP     ; No, go back and do more
@@ -265,14 +283,18 @@ W5100_DISREG:                 ; Display the Registers; D for Start, Y for Length
 ;            ldd   #GWLABEL
 ;            jsr   DISPSTR0    ; Display the Label
 ;            ldd   #GAR0       ; W5100S Gateway Address Register 0
-            sta   CIO0ADDR    ; CoCoIO Address Register MSB
-            stb   CIO0ADDR+1  ; CoCoIO Address Register LSB
+            pshs  x           ; Save X
+            ldx   [COCOIOPORT]  
+            sta   CIOADDR,x   ; CoCoIO Address Register MSB
+            stb   CIOADDR+1,x ; CoCoIO Address Register LSB
             tfr   y,d         ; Setup B for loop counting
 DISLOOP:   
             jsr   BIN2HEX
             jsr   DISPB2H
             decb              ; Decrement loop counter
             bne   DISLOOP     ; No, go back and do more
+
+            puls  x           ; Restore X
 
             rts
 
@@ -303,8 +325,8 @@ DALLY1:     leax  -1,x        ; Decrement X
 BIN2HEX:    ; W5100 Read DATA and Output HEX in ASCII
 
             pshs  d           ; Save D ( A&B ) for later
-
-            lda   CIO0DATA    ; GET DATA from W5100, ( or BINVAL )
+;            ldx   [COCOIOPORT]     ; X is already Loaded with 
+            lda   CIODATA,x    ; GET DATA from W5100, ( or BINVAL )
             ;
             ; CONVERT MORE SIGNIFICANT DIGIT TO ASCII
             ;

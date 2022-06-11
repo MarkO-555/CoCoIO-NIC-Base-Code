@@ -19,6 +19,12 @@
 ;* 00     2021         RAM     Initial equates from Rick Ulland's Notes
 ;*********************************************************************
 
+
+           org   0
+CIOCMND:   rmb   1           ; CoCoIO Command Register 
+CIOADDR:   rmb   2           ; CoCoIO Address Register (MSB/LSB)
+CIODATA:   rmb   1           ; CoCoIO Read/Write Data Register
+
                               ; CoCoIO with Jumper set to 0xFF6x Range
 CIO0CMND:   equ   $FF68       ; CoCoIO Command Register 
 CIO0ADDR:   equ   $FF69       ; CoCoIO Address Register MSB

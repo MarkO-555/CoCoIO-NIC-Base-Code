@@ -412,10 +412,7 @@ MR2_FARP:   equ   %00000010   ; UDP Mode, Force ARP on every Packet
 
 
 
-                        ; PPPoE Mode Registers
-
-
-                        ; PHY Mode Registers
+                        ; PHY Mode Registers ( W5100S Datasheet v1.2.5, Pg 31)
 ;PHYSR0
 ;PHYSR1
 ;PHYRAR

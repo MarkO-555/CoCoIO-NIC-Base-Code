@@ -1,0 +1,32 @@
+ASSEMBLING PSYMON
+
+Download or setup William “lostwizard” Astle's LWTools
+
+Example assembly command, assuming the source is saved as PSYMON120B.s
+
+lwasm -9 -f raw --list=PSY120B.txt --symbols=PSY120B-sym.txt -o PSY120B.BIN PSYMON120B.s
+
+This will give you a 1KiB raw binary output file.
+
+
+For a Motorola S-record format used by some tools:
+
+lwasm -9 -f srec -o PSY120B.srec PSYMON120B.s
+
+
+For an Intel hexdump format used by some tools:
+
+lwasm -9 -f ihex -o PSY120B.ihex PSYMON120B.s
+
+
+COCO MODIFICATIONS
+
+The version I uploaded to the Color Computer Archive contains additional modified versions for the Color Computer 1, 2, and 3: https://colorcomputerarchive.com/repo/Programming/Source/PSYMON%20-%20Percom%206809%20System%20Monitor/PSYMON120B.zip
+
+The CoCo1 version loads and runs Psymon at $6C00 so its for a 32K coco - but could be moved much lower for 16K or 4K. It's probably best to run CLEAR 200,&H6C00 before LOADM so that its protected from BASIC itself.
+
+The CoCo3 version is sneakier - it loads in at $FC0A and uses RAM at $FE69 so that it can be co-resident with Super Extended BASIC without conflict rather than taking away a bit of the BASIC workspace RAM.
+
+Both of these use the POLCAT and CHROUT ROM routines for simplicity as a quick port.
+
+Providing standalone keyboard and screen output console drivers is left as an exercise for the reader.
