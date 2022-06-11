@@ -1,0 +1,150 @@
+Blockhead (C) 2021 Brett M Gordon, GPLv2
+
+A first stab at a datagram based harddrive block server.
+
+This will provide connecting clients with a rudimentry block access
+random storage, e.i. a network harddrive.  Block access tends to be
+quite simple to interface, mainly just read and write block
+transactions, with a few supporting methods: initialize/open,
+deinitialize/close, identify, eject, lock media, and so on.  Also,
+block device drivers are usually quite simple to institute in most
+operating systems.
+
+
+Prior work:
+
+NBD
+ATA over Ethernet (AoE)
+iSCSI
+drivewire
+SMB
+NFS
+TNFS
+
+---------------------------
+NBD
+
+Linux's version of a network block device.  It is a packet style
+system, encompassing a request/reply design that is ment to run over
+(more) reliable stream links, such as TCP or Unix sockets. Minimum
+packet sizes are in the range of 20-30 bytes. Routable over IP, of
+course.
+
+---------------------------
+ATA over Ethernet (AoE)
+
+AoE is a fairly simple, straight foreward implementation of IDE.
+Because ATA/IDE is so pervasive this protocol makes it quite easy to
+implement just by glueing standard IDE code to network code.  AoE
+packets are in the 28 byte range. AoE runs atop Ethernet frame, making
+it unroutable over IP.
+
+---------------------------
+iSCSI
+
+Fairly similar to AoE, where a tradisional hardware bus is emulated
+over a network protocol.  iSCSI works over TCP streams, making it
+routable over IP.
+
+---------------------------
+SMB (Server Message Block)
+
+SMB is ubiquitous on Windows machines as SMB makes up a large portion
+of Microsoft Network.  SMB works at the filesystem level, providing
+integration to traditional VFS type methods: Files, Open, Read, Write,
+directories, making files, deleting files, meaning it can be
+incorporated into hosts' systems operating systems Virtual File System
+layer.
+
+---------------------------
+NFS (Network File System)
+
+NFS is similar to SMB as it provides a *file system* type interface to
+connecting clients.  NFS version 2 runs over UDP, version 3 runs over
+UDP and TCP, and version 4 only reliable links, like TCP.
+
+---------------------------
+TNFS (Trivial Network File System)
+
+TNFS is similar to SMB and NFS where it provides *file system* type
+interface to connecting client.  It is quite literally a lightweight
+version of traditional NFS. It runs over only over UDP, however the
+apparent need for UDP is questionable, and any packeting protocol
+would seem to work.
+
+---------------------------
+Drivewire
+
+Drivewire (also known as DriveWire 3) is a block device protocol that
+designed to work over a (more) reliable streaming protocol, such as
+RS232 or TCP. Drivewire was designed to be light and bandwidth
+efficient, as implementations run on very old sub-Mhz CPUs with few
+helpers or memory.
+
+
+
+Design Notes:
+
+* Multiple client access to a volume is inherently dangerous to the
+  integretey of the drives.
+
+* dont depend on network addressing as we don't know what our
+  transport will be, instead use session IDs to match up commands to
+  their respective image files.  
+
+* need to figure out a equitable way of closing out unused volumes and
+  releasing server's resources.
+
+* sequence numbers are transmited from commanding clients to the
+  server.  the server responses also include this number.
+
+* try to keep things simple for block drivers on stupid underpowered,
+  underresourced retro systems
+
+
+testing:
+
+ncat -4u 127.0.0.1 4444
+
+
+
+KEEP PACKET:
+0       1         type (TYPE_KEEP)
+
+CONNECT PACKET:
+0       1         type (TYPE_CONNECT)
+1       1	  sequence no
+2       1         flags
+3       256	  image file name
+
+CONNECT REPLY:
+0       1         type (TYPE_REPLY)
+1	1	  sequence no
+2	1	  error code
+3	2	  session ID
+
+COMMAND PACKET:
+0       1         type (TYPE_COMMAND)
+1       1         sequence no
+2       2         session ID
+4       1         command type (SUBT_WRITE, SUBT_READ)
+5       4         32 bit LSN
+9	1	  padding to 16 bit align sector data
+10      ?         if OP_WRITE then sector data
+
+COMMAND REPLY:
+0       1         type (TYPE_REPLY)
+1       1         sequence no
+2       1         error code
+3	1	  padding to 16 align sector data
+4       ?         if OP_READ then sector data
+
+DISCONNECT PACKET:
+0       1         type (TYPE_DISCON)
+1       1         sequence no
+2       2         session ID
+
+DISCONNECT REPLY:
+0       1         type (TYPE_REPLY)
+1	1 	  sequence ID
+2       1         error code
